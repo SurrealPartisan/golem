@@ -5,7 +5,8 @@ import numpy as np
 pygame.init()
 
 mapwidth, mapheight = 80, 40
-win = pygcurse.PygcurseWindow(mapwidth, mapheight)
+logheight = 8
+win = pygcurse.PygcurseWindow(mapwidth, mapheight + logheight, 'Golem: A Self-Made Person')
 win.autoupdate = False
 cave = np.ones((mapwidth, mapheight))
 
@@ -74,36 +75,99 @@ class Creature():
         if cave[self.x+x, self.y+y] == 0:
             self.y += y
             self.x += x
+            return True
+        else:
+            return False
         
 
 player = Creature()
+log = []
+logback = 0 # How far the log has been scrolled
 while cave[player.x, player.y] != 0:
     player.x= np.random.randint(mapwidth)
     player.y = np.random.randint(mapheight)
 
 def draw():
+    # Background
     win.setscreencolors(None, 'black', clear=True)
     for i in range(mapwidth):
         for j in range(mapheight):
             if cave[i,j] == 1:
                 win.putchars(' ', x=i, y=j, bgcolor='white')
+    
+    # Creatures
     win.putchars(player.char, x=player.x, y=player.y, 
                  bgcolor='black', fgcolor='white')
+    
+    # Log
+    logrows = min(logheight,len(log))
+    for i in range(logrows):
+        j = i-logrows-logback
+        c = 255 + (max(j+1, -logheight))*128//logheight
+        win.write(log[j], x=0, y=mapheight+i, fgcolor=(c,c,c))
     win.update()
 
 draw()
 while True:
     for event in pygame.event.get():
-        if event.type == KEYDOWN:
-            if event.key == K_UP:
-                player.move(0, -1)
-            if event.key == K_DOWN:
-                player.move(0, 1)
-            if event.key == K_LEFT:
-                player.move(-1, 0)
-            if event.key == K_RIGHT:
-                player.move(1, 0)
-            if event.key == K_ESCAPE:
+        try:
+            if event.type == KEYDOWN:
+                # Player movements
+                if event.key == K_UP:
+                    if player.move(0, -1):
+                        log.append('You moved north.')
+                        logback = 0
+                    else:
+                        log.append("There's a wall in your way.")
+                        logback = 0
+                if event.key == K_DOWN:
+                    if player.move(0, 1):
+                        log.append('You moved south.')
+                        logback = 0
+                    else:
+                        log.append("There's a wall in your way.")
+                        logback = 0
+                if event.key == K_LEFT:
+                    if player.move(-1, 0):
+                        log.append('You moved west.')
+                        logback = 0
+                    else:
+                        log.append("There's a wall in your way.")
+                        logback = 0
+                if event.key == K_RIGHT:
+                    if player.move(1, 0):
+                        log.append('You moved east.')
+                        logback = 0
+                    else:
+                        log.append("There's a wall in your way.")
+                        logback = 0
+                        
+                # Log scrolling
+                if event.key == K_PAGEUP:
+                    if len(log) >= logheight:
+                        logback = min(logback+1, len(log)-logheight)
+                if event.key == K_PAGEDOWN:
+                    logback = max(logback-1, 0)
+                if event.key == K_HOME:
+                    if len(log) >= logheight:
+                        logback = len(log)-logheight
+                if event.key == K_END:
+                    logback = 0
+                
+                # Quitting via Esc
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+                
+                # Update window after any command or keypress
+                draw()
+            if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            draw()
+                
+        
+        # Make sure the window is closed if the game crashes
+        except Exception as e:
+            pygame.quit()
+            sys.exit()
+            raise e
