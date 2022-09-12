@@ -2,11 +2,14 @@ import sys, pygame
 from pygame.locals import *
 import pygcurse
 import numpy as np
+import item
+import creature
 pygame.init()
 
 mapwidth, mapheight = 80, 40
 logheight = 8
-win = pygcurse.PygcurseWindow(mapwidth, mapheight + logheight, 'Golem: A Self-Made Person')
+statuslines = 1
+win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person')
 win.autoupdate = False
 cave = np.ones((mapwidth, mapheight))
 
@@ -65,27 +68,23 @@ def rooms():
     
 rooms()     
 
-class Creature():
-    def __init__(self):
-        self.char = '@'
-        self.x = 0
-        self.y = 0
-    
-    def move(self, x, y):
-        if cave[self.x+x, self.y+y] == 0:
-            self.y += y
-            self.x += x
-            return True
-        else:
-            return False
-        
-
-player = Creature()
-log = []
-logback = 0 # How far the log has been scrolled
+player = creature.Creature(cave)
 while cave[player.x, player.y] != 0:
     player.x= np.random.randint(mapwidth)
     player.y = np.random.randint(mapheight)
+
+caveitems = []
+for i in range(10):
+    x = y = 0
+    while cave[x, y] != 0:
+        x = np.random.randint(mapwidth)
+        y = np.random.randint(mapheight)
+    item.create_medication(caveitems, x, y)
+
+log = ['Welcome to the cave!', "Press 'h' for help."]
+logback = 0 # How far the log has been scrolled
+
+
 
 def draw():
     # Background
@@ -95,28 +94,47 @@ def draw():
             if cave[i,j] == 1:
                 win.putchars(' ', x=i, y=j, bgcolor='white')
     
+    # Items
+    for it in caveitems:
+        win.putchars(it.char, x=it.x, y=it.y, 
+                 bgcolor='black', fgcolor=it.color)
+    
     # Creatures
     win.putchars(player.char, x=player.x, y=player.y, 
                  bgcolor='black', fgcolor='white')
+    
+    # Status
+    for i in range(mapwidth):
+        win.putchars(' ', x=i, y=mapheight, bgcolor=((128,128,128)))
+    win.putchars('hp: ' + repr(player.hp), x=2, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
+    win.putchars('items in inventory: ' + repr(len(player.inventory)), x=15, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
+    win.putchars('items in the cave: ' + repr(len(caveitems)), x=40, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     
     # Log
     logrows = min(logheight,len(log))
     for i in range(logrows):
         j = i-logrows-logback
         c = 255 + (max(j+1, -logheight))*128//logheight
-        win.write(log[j], x=0, y=mapheight+i, fgcolor=(c,c,c))
+        win.write(log[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
     win.update()
+
+def checkitems(x,y):
+    for it in caveitems:
+        if it.x == x and it.y == y:
+            log.append('There is a ' + it.name + ' here.')
+            logback = 0
 
 draw()
 while True:
     for event in pygame.event.get():
         try:
             if event.type == KEYDOWN:
-                # Player movements
+                # Player movements. This code needs some drying.
                 if event.key == K_UP:
                     if player.move(0, -1):
                         log.append('You moved north.')
                         logback = 0
+                        checkitems(player.x,player.y)
                     else:
                         log.append("There's a wall in your way.")
                         logback = 0
@@ -124,6 +142,7 @@ while True:
                     if player.move(0, 1):
                         log.append('You moved south.')
                         logback = 0
+                        checkitems(player.x,player.y)
                     else:
                         log.append("There's a wall in your way.")
                         logback = 0
@@ -131,6 +150,7 @@ while True:
                     if player.move(-1, 0):
                         log.append('You moved west.')
                         logback = 0
+                        checkitems(player.x,player.y)
                     else:
                         log.append("There's a wall in your way.")
                         logback = 0
@@ -138,10 +158,60 @@ while True:
                     if player.move(1, 0):
                         log.append('You moved east.')
                         logback = 0
+                        checkitems(player.x,player.y)
                     else:
                         log.append("There's a wall in your way.")
                         logback = 0
-                        
+                
+                # Items
+                if event.key == K_COMMA:
+                    pickcount = 0
+                    for it in caveitems:
+                        if it.x == player.x and it.y == player.y:
+                            pickcount += 1
+                            caveitems.remove(it)
+                            player.inventory.append(it)
+                            it.owner = player.inventory
+                            log.append('You pick up the ' + it.name + '.')
+                            logback = 0
+                    if pickcount == 0:
+                        log.append('Nothing to pick up here.')
+                        logback = 0
+                if event.key == K_i:
+                    log.append('Items in your backpack:')
+                    if len(player.inventory) == 0:
+                        log.append('  - nothing')
+                        logback = 0
+                    else:
+                        for it in player.inventory:
+                            log.append('  - a ' + it.name)
+                            if len(player.inventory) > logheight - 1:
+                                logback = len(player.inventory) - logheight + 1
+                            else:
+                                logback = 0
+                if event.key == K_m:
+                    medicated = 0
+                    for it in player.inventory:
+                        if it.consumable and it.hpgiven > 0:
+                            medicated = 1
+                            it.consume(player)
+                            log.append('You consumed a ' + it.name + ', healing ' + repr(it.hpgiven) + ' points.')
+                            break
+                    if medicated == 0:
+                        log.append("You don't have any drugs to take.")
+                    logback = 0
+                
+                # Help
+                if event.key == K_h:
+                    log.append('Commands:')
+                    log.append('  - arrows: move')
+                    log.append('  - comma: pick up an item')
+                    log.append('  - i: check your inventory')
+                    log.append('  - m: take some medication')
+                    log.append('  - page up, page down, home, end: explore the log')
+                    log.append('  - h: this list of commands')
+                    logback = 0 # Increase when adding commands
+                
                 # Log scrolling
                 if event.key == K_PAGEUP:
                     if len(log) >= logheight:
