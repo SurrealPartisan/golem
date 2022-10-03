@@ -88,6 +88,7 @@ for i in range(10):
 log = ['Welcome to the cave!', "Press 'h' for help."]
 logback = 0 # How far the log has been scrolled
 
+gamestate = 'free'
 
 
 def draw():
@@ -115,11 +116,16 @@ def draw():
     win.putchars('items in the cave: ' + repr(len(caveitems)), x=40, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     
     # Log
-    logrows = min(logheight,len(log))
-    for i in range(logrows):
-        j = i-logrows-logback
-        c = 255 + (max(j+1, -logheight))*128//logheight
-        win.write(log[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
+    if gamestate == 'free':
+        logrows = min(logheight,len(log))
+        for i in range(logrows):
+            j = i-logrows-logback
+            c = 255 + (max(j+1, -logheight))*128//logheight
+            win.write(log[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
+    elif gamestate == 'mine':
+        minemessage = 'Choose the direction to mine!'
+        win.write(minemessage, x=0, y=mapheight+statuslines, fgcolor=(255,255,255))
+        
     win.update()
 
 def checkitems(x,y):
@@ -133,102 +139,144 @@ while True:
     for event in pygame.event.get():
         try:
             if event.type == KEYDOWN:
-                # Player movements. This code needs some drying.
-                if event.key == K_UP:
-                    if player.move(0, -1):
-                        log.append('You moved north.')
-                        logback = 0
-                        checkitems(player.x,player.y)
-                    else:
-                        log.append("There's a wall in your way.")
-                        logback = 0
-                if event.key == K_DOWN:
-                    if player.move(0, 1):
-                        log.append('You moved south.')
-                        logback = 0
-                        checkitems(player.x,player.y)
-                    else:
-                        log.append("There's a wall in your way.")
-                        logback = 0
-                if event.key == K_LEFT:
-                    if player.move(-1, 0):
-                        log.append('You moved west.')
-                        logback = 0
-                        checkitems(player.x,player.y)
-                    else:
-                        log.append("There's a wall in your way.")
-                        logback = 0
-                if event.key == K_RIGHT:
-                    if player.move(1, 0):
-                        log.append('You moved east.')
-                        logback = 0
-                        checkitems(player.x,player.y)
-                    else:
-                        log.append("There's a wall in your way.")
-                        logback = 0
-                
-                # Items
-                if event.key == K_COMMA:
-                    pickcount = 0
-                    for it in caveitems:
-                        if it.x == player.x and it.y == player.y:
-                            pickcount += 1
-                            caveitems.remove(it)
-                            player.inventory.append(it)
-                            it.owner = player.inventory
-                            log.append('You pick up the ' + it.name + '.')
+                if gamestate == 'free':
+                    # Player movements. This code needs some drying.
+                    if event.key == K_UP:
+                        if player.move(0, -1):
+                            log.append('You moved north.')
                             logback = 0
-                    if pickcount == 0:
-                        log.append('Nothing to pick up here.')
-                        logback = 0
-                if event.key == K_i:
-                    log.append('Items in your backpack:')
-                    if len(player.inventory) == 0:
-                        log.append('  - nothing')
-                        logback = 0
-                    else:
-                        for it in player.inventory:
-                            log.append('  - a ' + it.name)
-                            if len(player.inventory) > logheight - 1:
-                                logback = len(player.inventory) - logheight + 1
-                            else:
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    if event.key == K_DOWN:
+                        if player.move(0, 1):
+                            log.append('You moved south.')
+                            logback = 0
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    if event.key == K_LEFT:
+                        if player.move(-1, 0):
+                            log.append('You moved west.')
+                            logback = 0
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    if event.key == K_RIGHT:
+                        if player.move(1, 0):
+                            log.append('You moved east.')
+                            logback = 0
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    
+                    if event.key == K_m:
+                        gamestate = 'mine'
+                    
+                    # Items
+                    if event.key == K_COMMA:
+                        pickcount = 0
+                        for it in caveitems:
+                            if it.x == player.x and it.y == player.y:
+                                pickcount += 1
+                                caveitems.remove(it)
+                                player.inventory.append(it)
+                                it.owner = player.inventory
+                                log.append('You pick up the ' + it.name + '.')
                                 logback = 0
-                if event.key == K_c:
-                    medicated = 0
-                    selected = None
-                    for it in player.inventory:
-                        if medicated == 0 and it.consumable and it.hpgiven() > 0:
-                            medicated = 1
-                            selected = it
-                    if medicated == 1:
-                        selected.consume(player)
-                        log.append('You consumed a ' + it.name + ', healing ' + repr(it.hpgiven()) + ' points.')
-                    else:
-                        log.append("You don't have any drugs to take.")
-                    logback = 0
-                
-                # Help
-                if event.key == K_h:
-                    log.append('Commands:')
-                    log.append('  - arrows: move')
-                    log.append('  - comma: pick up an item')
-                    log.append('  - i: check your inventory')
-                    log.append('  - c: take some medication')
-                    log.append('  - page up, page down, home, end: explore the log')
-                    log.append('  - h: this list of commands')
-                    logback = 0 # Increase when adding commands
-                
-                # Log scrolling
-                if event.key == K_PAGEUP:
-                    if len(log) >= logheight:
-                        logback = min(logback+1, len(log)-logheight)
-                if event.key == K_PAGEDOWN:
-                    logback = max(logback-1, 0)
-                if event.key == K_HOME:
-                    if len(log) >= logheight:
-                        logback = len(log)-logheight
-                if event.key == K_END:
-                    logback = 0
+                        if pickcount == 0:
+                            log.append('Nothing to pick up here.')
+                            logback = 0
+                    if event.key == K_i:
+                        log.append('Items in your backpack:')
+                        if len(player.inventory) == 0:
+                            log.append('  - nothing')
+                            logback = 0
+                        else:
+                            for it in player.inventory:
+                                log.append('  - a ' + it.name)
+                                if len(player.inventory) > logheight - 1:
+                                    logback = len(player.inventory) - logheight + 1
+                                else:
+                                    logback = 0
+                    if event.key == K_c:
+                        medicated = 0
+                        selected = None
+                        for it in player.inventory:
+                            if medicated == 0 and it.consumable and it.hpgiven() > 0:
+                                medicated = 1
+                                selected = it
+                        if medicated == 1:
+                            selected.consume(player)
+                            log.append('You consumed a ' + it.name + ', healing ' + repr(it.hpgiven()) + ' points.')
+                        else:
+                            log.append("You don't have any drugs to take.")
+                        logback = 0
+                    
+                    # Help
+                    if event.key == K_h:
+                        log.append('Commands:')
+                        log.append('  - arrows: move')
+                        log.append('  - comma: pick up an item')
+                        log.append('  - i: check your inventory')
+                        log.append('  - c: take some medication')
+                        log.append('  - page up, page down, home, end: explore the log')
+                        log.append('  - h: this list of commands')
+                        logback = 0 # Increase when adding commands
+                    
+                    # Log scrolling
+                    if event.key == K_PAGEUP:
+                        if len(log) >= logheight:
+                            logback = min(logback+1, len(log)-logheight)
+                    if event.key == K_PAGEDOWN:
+                        logback = max(logback-1, 0)
+                    if event.key == K_HOME:
+                        if len(log) >= logheight:
+                            logback = len(log)-logheight
+                    if event.key == K_END:
+                        logback = 0
+                        
+                elif gamestate == 'mine':
+                    if event.key == K_UP:
+                        if cave[player.x, player.y-1] == 1:
+                            log.append('You mined north.')
+                            logback = 0
+                            cave[player.x, player.y-1] = 0
+                        else:
+                            log.append("There's no wall there.")
+                            logback = 0
+                        gamestate = 'free'
+                    if event.key == K_DOWN:
+                        if cave[player.x, player.y+1] == 1:
+                            log.append('You mined south.')
+                            logback = 0
+                            cave[player.x, player.y+1] = 0
+                        else:
+                            log.append("There's no wall there.")
+                            logback = 0
+                        gamestate = 'free'
+                    if event.key == K_LEFT:
+                        if cave[player.x-1, player.y] == 1:
+                            log.append('You mined west.')
+                            logback = 0
+                            cave[player.x-1, player.y] = 0
+                        else:
+                            log.append("There's no wall there.")
+                            logback = 0
+                        gamestate = 'free'
+                    if event.key == K_RIGHT:
+                        if cave[player.x+1, player.y] == 1:
+                            log.append('You mined east.')
+                            logback = 0
+                            cave[player.x+1, player.y] = 0
+                        else:
+                            log.append("There's no wall there.")
+                            logback = 0
+                        gamestate = 'free'
                 
                 # Quitting via Esc
                 if event.key == K_ESCAPE:
