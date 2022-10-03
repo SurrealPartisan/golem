@@ -22,12 +22,15 @@ class Consumable(Item):
     def __init__(self, owner, x, y, name, char, color):
         super().__init__(owner, x, y, name, char, color)
         self.consumable = True
-        self.hpgiven = 0
+        self._hpgiven = 0
+    
+    def hpgiven(self):
+        return self._hpgiven
     
     def consume(self, user):
-        user.heal(self.hpgiven)
+        user.heal(self.hpgiven())
         self.owner.remove(self)
 
 def create_medication(owner, x, y):
     drugs = Consumable(owner, x, y, 'packet of drugs', '!', (0, 255, 255))
-    drugs.hpgiven = 10
+    drugs._hpgiven = 10

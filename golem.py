@@ -1,9 +1,13 @@
-import sys, pygame
+import sys
+
+import pygame
 from pygame.locals import *
 import pygcurse
 import numpy as np
+
 import item
 import creature
+
 pygame.init()
 
 mapwidth, mapheight = 80, 40
@@ -189,15 +193,17 @@ while True:
                                 logback = len(player.inventory) - logheight + 1
                             else:
                                 logback = 0
-                if event.key == K_m:
+                if event.key == K_c:
                     medicated = 0
+                    selected = None
                     for it in player.inventory:
-                        if it.consumable and it.hpgiven > 0:
+                        if medicated == 0 and it.consumable and it.hpgiven() > 0:
                             medicated = 1
-                            it.consume(player)
-                            log.append('You consumed a ' + it.name + ', healing ' + repr(it.hpgiven) + ' points.')
-                            break
-                    if medicated == 0:
+                            selected = it
+                    if medicated == 1:
+                        selected.consume(player)
+                        log.append('You consumed a ' + it.name + ', healing ' + repr(it.hpgiven()) + ' points.')
+                    else:
                         log.append("You don't have any drugs to take.")
                     logback = 0
                 
@@ -207,7 +213,7 @@ while True:
                     log.append('  - arrows: move')
                     log.append('  - comma: pick up an item')
                     log.append('  - i: check your inventory')
-                    log.append('  - m: take some medication')
+                    log.append('  - c: take some medication')
                     log.append('  - page up, page down, home, end: explore the log')
                     log.append('  - h: this list of commands')
                     logback = 0 # Increase when adding commands
