@@ -242,7 +242,10 @@ while True:
                         
                 elif gamestate == 'mine':
                     if event.key == K_UP:
-                        if cave[player.x, player.y-1] == 1:
+                        if player.y-1 == 0:
+                            log.append('That is too hard for you to mine.')
+                            logback = 0
+                        elif cave[player.x, player.y-1] == 1:
                             log.append('You mined north.')
                             logback = 0
                             cave[player.x, player.y-1] = 0
@@ -251,7 +254,10 @@ while True:
                             logback = 0
                         gamestate = 'free'
                     if event.key == K_DOWN:
-                        if cave[player.x, player.y+1] == 1:
+                        if player.y+1 == mapheight-1:
+                            log.append('That is too hard for you to mine.')
+                            logback = 0
+                        elif cave[player.x, player.y+1] == 1:
                             log.append('You mined south.')
                             logback = 0
                             cave[player.x, player.y+1] = 0
@@ -260,7 +266,10 @@ while True:
                             logback = 0
                         gamestate = 'free'
                     if event.key == K_LEFT:
-                        if cave[player.x-1, player.y] == 1:
+                        if player.x-1 == 0:
+                            log.append('That is too hard for you to mine.')
+                            logback = 0
+                        elif cave[player.x-1, player.y] == 1:
                             log.append('You mined west.')
                             logback = 0
                             cave[player.x-1, player.y] = 0
@@ -269,7 +278,10 @@ while True:
                             logback = 0
                         gamestate = 'free'
                     if event.key == K_RIGHT:
-                        if cave[player.x+1, player.y] == 1:
+                        if player.x+1 == mapwidth-1:
+                            log.append('That is too hard for you to mine.')
+                            logback = 0
+                        elif cave[player.x+1, player.y] == 1:
                             log.append('You mined east.')
                             logback = 0
                             cave[player.x+1, player.y] = 0
