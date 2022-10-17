@@ -87,6 +87,7 @@ for i in range(10):
 
 log = ['Welcome to the cave!', "Press 'h' for help."]
 logback = 0 # How far the log has been scrolled
+chosen = 0 # Used for different item choosing gamestates
 
 gamestate = 'free'
 
@@ -122,10 +123,27 @@ def draw():
             j = i-logrows-logback
             c = 255 + (max(j+1, -logheight))*128//logheight
             win.write(log[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
+            
     elif gamestate == 'mine':
         minemessage = 'Choose the direction to mine!'
         win.write(minemessage, x=0, y=mapheight+statuslines, fgcolor=(255,255,255))
         
+    elif gamestate == 'drop':
+        dropmessage = 'Choose the item to drop:'
+        win.write(dropmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len(player.inventory))
+        for i in range(logrows):
+            if len(player.inventory) <= logheight-1:
+                j = i
+            else:
+                j = len(player.inventory)+i-logrows-logback
+            print(j)
+            print(player.inventory[j].name)
+            if j != chosen:
+                win.write(player.inventory[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write(player.inventory[j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+    
     win.update()
 
 def checkitems(x,y):
@@ -191,6 +209,13 @@ while True:
                         if pickcount == 0:
                             log.append('Nothing to pick up here.')
                             logback = 0
+                    if event.key == K_d:
+                        if len(player.inventory) > 0:
+                            gamestate = 'drop'
+                            logback = len(player.inventory) - logheight + 1
+                            chosen = 0
+                        else:
+                            log.append('You have nothing to drop!')
                     if event.key == K_i:
                         log.append('Items in your backpack:')
                         if len(player.inventory) == 0:
@@ -207,12 +232,12 @@ while True:
                         medicated = 0
                         selected = None
                         for it in player.inventory:
-                            if medicated == 0 and it.consumable and it.hpgiven() > 0:
+                            if medicated == 0 and it.consumable:
                                 medicated = 1
                                 selected = it
                         if medicated == 1:
                             selected.consume(player)
-                            log.append('You consumed a ' + it.name + ', healing ' + repr(it.hpgiven()) + ' points.')
+                            log.append('You consumed a ' + selected.name + ', healing ' + repr(selected.hpgiven()) + ' points.')
                         else:
                             log.append("You don't have any drugs to take.")
                         logback = 0
@@ -289,11 +314,32 @@ while True:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
                 
-                # Quitting via Esc
-                if event.key == K_ESCAPE:
-                    pygame.quit()
-                    sys.exit()
+                elif gamestate == 'drop':
+                    if event.key == K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len(player.inventory) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == K_DOWN:
+                        chosen = min(len(player.inventory)-1, chosen+1)
+                        if chosen == len(player.inventory) - logback:
+                            logback -= 1
+                    if event.key == K_RETURN:
+                        selected = player.inventory[chosen]
+                        selected.owner = caveitems
+                        caveitems.append(selected)
+                        player.inventory.remove(selected)
+                        selected.x = player.x
+                        selected.y = player.y
+                        log.append('You dropped' + selected.name + '.')
+                        logback = 0
+                        gamestate = 'free'
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
                 
                 # Update window after any command or keypress
                 draw()

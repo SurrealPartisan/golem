@@ -5,6 +5,10 @@ Created on Mon Sep 12 20:48:19 2022
 @author: SurrealPartisan
 """
 
+import numpy as np
+
+import utils
+
 class Item():
     def __init__(self, owner, x, y, name, char, color):
         self.owner = owner # A list, such as inventory or list of map items
@@ -32,5 +36,5 @@ class Consumable(Item):
         self.owner.remove(self)
 
 def create_medication(owner, x, y):
-    drugs = Consumable(owner, x, y, 'packet of drugs', '!', (0, 255, 255))
-    drugs._hpgiven = 10
+    drugs = Consumable(owner, x, y, 'packet of ' + utils.drugname(), '!', (0, 255, 255))
+    drugs._hpgiven = np.random.randint(-2, 11)
