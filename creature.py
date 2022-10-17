@@ -13,6 +13,7 @@ class Creature():
         self.y = 0
         self.inventory = []
         self.hp = 100
+        self.log = []
     
     def move(self, x, y):
         if self.world[self.x+x, self.y+y] == 0:

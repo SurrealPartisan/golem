@@ -85,7 +85,8 @@ for i in range(10):
         y = np.random.randint(mapheight)
     item.create_medication(caveitems, x, y)
 
-log = ['Welcome to the cave!', "Press 'h' for help."]
+player.log = ['Welcome to the cave!', "Press 'h' for help."]
+log = player.log
 logback = 0 # How far the log has been scrolled
 chosen = 0 # Used for different item choosing gamestates
 
