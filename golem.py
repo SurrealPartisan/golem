@@ -92,23 +92,35 @@ chosen = 0 # Used for different item choosing gamestates
 
 gamestate = 'free'
 
+def sees(x1, y1, x2, y2, sight):
+    return np.sqrt((x1 - x2)**2 + (y1 - y2)**2) <= sight
 
 def draw():
     # Background
     win.setscreencolors(None, 'black', clear=True)
     for i in range(mapwidth):
         for j in range(mapheight):
-            if cave[i,j] == 1:
-                win.putchars(' ', x=i, y=j, bgcolor='white')
-    
+            if sees(player.x, player.y, i, j, player.sight):
+                if cave[i,j] == 1:
+                    win.putchars(' ', x=i, y=j, bgcolor='white')
+                else:
+                    win.putchars(' ', x=i, y=j, bgcolor=(64,64,64))
+                player.seen[i,j] = 1
+            elif player.seen[i,j] == 1:
+                if cave[i,j] == 1:
+                    win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
     # Items
     for it in caveitems:
-        win.putchars(it.char, x=it.x, y=it.y, 
-                 bgcolor='black', fgcolor=it.color)
+        if sees(player.x, player.y, it.x, it.y, player.sight):
+            win.putchars(it.char, x=it.x, y=it.y, 
+                 bgcolor=(64,64,64), fgcolor=it.color)
+        elif player.seen[it.x,it.y] == 1:
+            win.putchars('?', x=it.x, y=it.y, 
+                 bgcolor='black', fgcolor=(128,128,128))
     
     # Creatures
     win.putchars(player.char, x=player.x, y=player.y, 
-                 bgcolor='black', fgcolor='white')
+                 bgcolor=(64,64,64), fgcolor='white')
     
     # Status
     for i in range(mapwidth):

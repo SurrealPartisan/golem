@@ -4,6 +4,7 @@ Created on Mon Sep 12 21:16:44 2022
 
 @author: SurrealPartisan
 """
+import numpy as np
 
 class Creature():
     def __init__(self, world):
@@ -14,6 +15,8 @@ class Creature():
         self.inventory = []
         self.hp = 100
         self.log = []
+        self.sight = 7
+        self.seen = np.zeros((len(world), len(world[0])))
     
     def move(self, x, y):
         if self.world[self.x+x, self.y+y] == 0:
