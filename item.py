@@ -36,5 +36,5 @@ class Consumable(Item):
         self.owner.remove(self)
 
 def create_medication(owner, x, y):
-    drugs = Consumable(owner, x, y, 'packet of ' + utils.drugname(), '!', (0, 255, 255))
+    drugs = Consumable(owner, x, y, 'dose of ' + utils.drugname(), '!', (0, 255, 255))
     drugs._hpgiven = np.random.randint(-2, 11)
