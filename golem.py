@@ -138,8 +138,6 @@ def draw():
                 j = i
             else:
                 j = len(player.inventory)+i-logrows-logback
-            print(j)
-            print(player.inventory[j].name)
             if j != chosen:
                 win.write(player.inventory[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
