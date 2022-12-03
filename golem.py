@@ -85,6 +85,14 @@ for i in range(10):
         y = np.random.randint(mapheight)
     item.create_medication(caveitems, x, y)
 
+cavenpcs = []
+for i in range(10):
+    x = y = 0
+    while cave[x, y] != 0:
+        x = np.random.randint(mapwidth)
+        y = np.random.randint(mapheight)
+    cavenpcs.append(creature.Blind_zombie(cave, x, y))
+
 player.log = ['Welcome to the cave!', "Press 'h' for help."]
 log = player.log
 logback = 0 # How far the log has been scrolled
@@ -119,6 +127,10 @@ def draw():
                  bgcolor='black', fgcolor=(128,128,128))
     
     # Creatures
+    for npc in cavenpcs:
+        if sees(player.x, player.y, npc.x, npc.y, player.sight):
+            win.putchars(npc.char, npc.x, npc.y, bgcolor=(64,64,64),
+                         fgcolor='white')
     win.putchars(player.char, x=player.x, y=player.y, 
                  bgcolor=(64,64,64), fgcolor='white')
     
@@ -171,6 +183,10 @@ def draw():
     
     win.update()
 
+def updatetime(time):
+    for npc in cavenpcs:
+        npc.update(time)
+
 def checkitems(x,y):
     for it in caveitems:
         if it.x == x and it.y == y:
@@ -186,48 +202,56 @@ while True:
                     # Player movements. This code needs some drying.
                     if event.key == K_UP or event.key == K_KP8:
                         if player.move(0, -1):
+                            updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_DOWN or event.key == K_KP2:
                         if player.move(0, 1):
+                            updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_LEFT or event.key == K_KP4:
                         if player.move(-1, 0):
+                            updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_RIGHT or event.key == K_KP6:
                         if player.move(1, 0):
+                            updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP7:
                         if player.move(-1, -1):
+                            updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP9:
                         if player.move(1, -1):
+                            updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP1:
                         if player.move(-1, 1):
+                            updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP3:
                         if player.move(1, 1):
+                            updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
@@ -247,6 +271,7 @@ while True:
                                 it.owner = player.inventory
                                 log.append('You pick up the ' + it.name + '.')
                                 logback = 0
+                            updatetime(0.5)
                         if pickcount == 0:
                             log.append('Nothing to pick up here.')
                             logback = 0
@@ -302,7 +327,7 @@ while True:
                         logback = 0
                         
                 elif gamestate == 'mine':
-                    if event.key == K_UP:
+                    if event.key == K_UP or event.key == K_KP8:
                         if player.y-1 == 0:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -310,11 +335,12 @@ while True:
                             log.append('You mined north.')
                             logback = 0
                             cave[player.x, player.y-1] = 0
+                            updatetime(3)
                         else:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
-                    if event.key == K_DOWN:
+                    if event.key == K_DOWN or event.key == K_KP2:
                         if player.y+1 == mapheight-1:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -322,11 +348,12 @@ while True:
                             log.append('You mined south.')
                             logback = 0
                             cave[player.x, player.y+1] = 0
+                            updatetime(3)
                         else:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
-                    if event.key == K_LEFT:
+                    if event.key == K_LEFT or event.key == K_KP4:
                         if player.x-1 == 0:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -334,11 +361,12 @@ while True:
                             log.append('You mined west.')
                             logback = 0
                             cave[player.x-1, player.y] = 0
+                            updatetime(3)
                         else:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
-                    if event.key == K_RIGHT:
+                    if event.key == K_RIGHT or event.key == K_KP6:
                         if player.x+1 == mapwidth-1:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -346,6 +374,7 @@ while True:
                             log.append('You mined east.')
                             logback = 0
                             cave[player.x+1, player.y] = 0
+                            updatetime(3)
                         else:
                             log.append("There's no wall there.")
                             logback = 0
@@ -373,6 +402,7 @@ while True:
                         log.append('You dropped' + selected.name + '.')
                         logback = 0
                         gamestate = 'free'
+                        updatetime(0.5)
                     if event.key == K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
@@ -392,6 +422,7 @@ while True:
                         log.append('You consumed a ' + selected.name + ', healing ' + repr(selected.hpgiven()) + ' points.')
                         logback = 0
                         gamestate = 'free'
+                        updatetime(1)
                     if event.key == K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
