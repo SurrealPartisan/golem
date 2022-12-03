@@ -186,32 +186,24 @@ while True:
                     # Player movements. This code needs some drying.
                     if event.key == K_UP:
                         if player.move(0, -1):
-                            log.append('You moved north.')
-                            logback = 0
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_DOWN:
                         if player.move(0, 1):
-                            log.append('You moved south.')
-                            logback = 0
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_LEFT:
                         if player.move(-1, 0):
-                            log.append('You moved west.')
-                            logback = 0
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_RIGHT:
                         if player.move(1, 0):
-                            log.append('You moved east.')
-                            logback = 0
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
