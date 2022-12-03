@@ -184,26 +184,50 @@ while True:
             if event.type == KEYDOWN:
                 if gamestate == 'free':
                     # Player movements. This code needs some drying.
-                    if event.key == K_UP:
+                    if event.key == K_UP or event.key == K_KP8:
                         if player.move(0, -1):
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_DOWN:
+                    if event.key == K_DOWN or event.key == K_KP2:
                         if player.move(0, 1):
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_LEFT:
+                    if event.key == K_LEFT or event.key == K_KP4:
                         if player.move(-1, 0):
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_RIGHT:
+                    if event.key == K_RIGHT or event.key == K_KP6:
                         if player.move(1, 0):
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    if event.key == K_KP7:
+                        if player.move(-1, -1):
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    if event.key == K_KP9:
+                        if player.move(1, -1):
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    if event.key == K_KP1:
+                        if player.move(-1, 1):
+                            checkitems(player.x,player.y)
+                        else:
+                            log.append("There's a wall in your way.")
+                            logback = 0
+                    if event.key == K_KP3:
+                        if player.move(1, 1):
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
