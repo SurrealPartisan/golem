@@ -154,6 +154,20 @@ def draw():
                 win.write(player.inventory[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write(player.inventory[j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+    elif gamestate == 'consume':
+        consumemessage = 'Choose the item to consume:'
+        win.write(consumemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len([item for item in player.inventory if item.consumable]))
+        for i in range(logrows):
+            if len([item for item in player.inventory if item.consumable]) <= logheight-1:
+                j = i
+            else:
+                j = len([item for item in player.inventory if item.consumable])+i-logrows-logback
+            if j != chosen:
+                win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
     
     win.update()
 
@@ -240,17 +254,12 @@ while True:
                                 else:
                                     logback = 0
                     if event.key == K_c:
-                        medicated = 0
-                        selected = None
-                        for it in player.inventory:
-                            if medicated == 0 and it.consumable:
-                                medicated = 1
-                                selected = it
-                        if medicated == 1:
-                            selected.consume(player)
-                            log.append('You consumed a ' + selected.name + ', healing ' + repr(selected.hpgiven()) + ' points.')
+                        if len([item for item in player.inventory if item.consumable]) > 0:
+                            gamestate = 'consume'
+                            logback = len([item for item in player.inventory if item.consumable]) - logheight + 1
+                            chosen = 0
                         else:
-                            log.append("You don't have any drugs to take.")
+                            log.append("You don't have anything to consume.")
                         logback = 0
                     
                     # Help
@@ -346,6 +355,25 @@ while True:
                         selected.x = player.x
                         selected.y = player.y
                         log.append('You dropped' + selected.name + '.')
+                        logback = 0
+                        gamestate = 'free'
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+                
+                elif gamestate == 'consume':
+                    if event.key == K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len([item for item in player.inventory if item.consumable]) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == K_DOWN:
+                        chosen = min(len([item for item in player.inventory if item.consumable])-1, chosen+1)
+                        if chosen == len([item for item in player.inventory if item.consumable]) - logback:
+                            logback -= 1
+                    if event.key == K_RETURN:
+                        selected = [item for item in player.inventory if item.consumable][chosen]
+                        selected.consume(player)
+                        log.append('You consumed a ' + selected.name + ', healing ' + repr(selected.hpgiven()) + ' points.')
                         logback = 0
                         gamestate = 'free'
                     if event.key == K_ESCAPE:
