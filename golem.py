@@ -7,6 +7,7 @@ import numpy as np
 
 import item
 import creature
+import world
 
 pygame.init()
 
@@ -15,83 +16,29 @@ logheight = 8
 statuslines = 1
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person')
 win.autoupdate = False
-cave = np.ones((mapwidth, mapheight))
-
-def rooms():
-    roomcenters = []
-    def binroom(corners, axis):
-        #print(repr(corners))
-        if np.random.randint(5) < 4 and corners[axis+2] - corners[axis] > 7:
-            lim = np.random.randint(corners[axis]+2, corners[axis+2]-2)
-            newax = int(not axis)
-            newcors1 = [0, 0, 0, 0]
-            newcors2 = [0, 0, 0, 0]
-            newcors1[newax], newcors1[newax+2] = corners[newax], corners[newax+2]
-            newcors1[axis], newcors1[axis+2] = corners[axis], lim
-            newcors2[newax], newcors2[newax+2] = corners[newax], corners[newax+2]
-            newcors2[axis], newcors2[axis+2] = lim+1, corners[axis+2]
-            binroom(newcors1, newax)
-            binroom(newcors2, newax)
-        else:
-            #print('rageg')
-            x1 = np.random.randint(corners[0], (corners[2] + corners[0])/2)
-            x2 = np.random.randint((corners[2] + corners[0])/2, corners[2])
-            y1 = np.random.randint(corners[1], (corners[3] + corners[1])/2)
-            y2 = np.random.randint((corners[3] + corners[1])/2, corners[3])
-            cave[x1:x2, y1:y2] = 0
-            roomcenters.append([int((x1+x2)/2), int((y1+y2)/2)])
-    
-    binroom([1, 1, mapwidth, mapheight], 0)
-    
-    def erode(x, y):
-        cave[x, y] = 0
-        for neighbor in [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
-            if 0 < neighbor[0] < mapwidth-1 and 0 < neighbor[1] < mapheight-1 and cave[neighbor] == 1 and np.random.randint(4) == 0:
-                erode(neighbor[0], neighbor[1])
-    for i in range(mapwidth):
-        for j in range(mapheight):
-            if cave[i,j] == 0:
-                erode(i, j)
-                
-    roomsconnected = np.zeros(len(roomcenters))
-    roomsconnected[np.random.randint(len(roomcenters))] = 1
-    while not roomsconnected.all():
-        i = np.random.choice(np.where(1 - roomsconnected)[0])
-        start = roomcenters[i]
-        j = np.random.choice(np.where(roomsconnected)[0])
-        end = roomcenters[j]
-        coords = [start[0], start[1]]
-        while not coords == end:
-            axis = np.random.randint(2)
-            if coords[axis] < end[axis]:
-                coords[axis] += 1
-            elif coords[axis] > end[axis]:
-                coords[axis] -= 1
-            cave[coords[0], coords[1]] = 0
-        roomsconnected[i] = 1
-    
-rooms()     
+cave = world.World(mapwidth, mapheight)
+cave.rooms()
 
 player = creature.Creature(cave)
-while cave[player.x, player.y] != 0:
+player.faction = 'player'
+while cave.walls[player.x, player.y] != 0:
     player.x= np.random.randint(mapwidth)
     player.y = np.random.randint(mapheight)
+cave.creatures.append(player)
 
-caveitems = []
 for i in range(10):
     x = y = 0
-    while cave[x, y] != 0:
+    while cave.walls[x, y] != 0:
         x = np.random.randint(mapwidth)
         y = np.random.randint(mapheight)
-    item.create_medication(caveitems, x, y)
+    item.create_medication(cave.items, x, y)
 
-cavenpcs = []
 for i in range(10):
     x = y = 0
-    while cave[x, y] != 0:
+    while cave.walls[x, y] != 0:
         x = np.random.randint(mapwidth)
         y = np.random.randint(mapheight)
-    cavenpcs.append(creature.Blind_zombie(cave, x, y))
+    cave.creatures.append(creature.Blind_zombie(cave, x, y))
 
 player.log = ['Welcome to the cave!', "Press 'h' for help."]
 log = player.log
@@ -109,16 +56,16 @@ def draw():
     for i in range(mapwidth):
         for j in range(mapheight):
             if sees(player.x, player.y, i, j, player.sight):
-                if cave[i,j] == 1:
+                if cave.walls[i,j] == 1:
                     win.putchars(' ', x=i, y=j, bgcolor='white')
                 else:
                     win.putchars(' ', x=i, y=j, bgcolor=(64,64,64))
                 player.seen[i,j] = 1
             elif player.seen[i,j] == 1:
-                if cave[i,j] == 1:
+                if cave.walls[i,j] == 1:
                     win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
     # Items
-    for it in caveitems:
+    for it in cave.items:
         if sees(player.x, player.y, it.x, it.y, player.sight):
             win.putchars(it.char, x=it.x, y=it.y, 
                  bgcolor=(64,64,64), fgcolor=it.color)
@@ -127,7 +74,7 @@ def draw():
                  bgcolor='black', fgcolor=(128,128,128))
     
     # Creatures
-    for npc in cavenpcs:
+    for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
         if sees(player.x, player.y, npc.x, npc.y, player.sight):
             win.putchars(npc.char, npc.x, npc.y, bgcolor=(64,64,64),
                          fgcolor='white')
@@ -139,7 +86,7 @@ def draw():
         win.putchars(' ', x=i, y=mapheight, bgcolor=((128,128,128)))
     win.putchars('hp: ' + repr(player.hp), x=2, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     win.putchars('items in inventory: ' + repr(len(player.inventory)), x=15, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
-    win.putchars('items in the cave: ' + repr(len(caveitems)), x=40, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
+    win.putchars('items in the cave: ' + repr(len(cave.items)), x=40, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     
     # Log
     if gamestate == 'free':
@@ -184,11 +131,11 @@ def draw():
     win.update()
 
 def updatetime(time):
-    for npc in cavenpcs:
+    for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
         npc.update(time)
 
 def checkitems(x,y):
-    for it in caveitems:
+    for it in cave.items:
         if it.x == x and it.y == y:
             log.append('There is a ' + it.name + ' here.')
             logback = 0
@@ -263,10 +210,10 @@ while True:
                     # Items
                     if event.key == K_COMMA:
                         pickcount = 0
-                        for it in caveitems:
+                        for it in cave.items:
                             if it.x == player.x and it.y == player.y:
                                 pickcount += 1
-                                caveitems.remove(it)
+                                cave.items.remove(it)
                                 player.inventory.append(it)
                                 it.owner = player.inventory
                                 log.append('You pick up the ' + it.name + '.')
@@ -331,10 +278,10 @@ while True:
                         if player.y-1 == 0:
                             log.append('That is too hard for you to mine.')
                             logback = 0
-                        elif cave[player.x, player.y-1] == 1:
+                        elif cave.walls[player.x, player.y-1] == 1:
                             log.append('You mined north.')
                             logback = 0
-                            cave[player.x, player.y-1] = 0
+                            cave.walls[player.x, player.y-1] = 0
                             updatetime(3)
                         else:
                             log.append("There's no wall there.")
@@ -344,10 +291,10 @@ while True:
                         if player.y+1 == mapheight-1:
                             log.append('That is too hard for you to mine.')
                             logback = 0
-                        elif cave[player.x, player.y+1] == 1:
+                        elif cave.walls[player.x, player.y+1] == 1:
                             log.append('You mined south.')
                             logback = 0
-                            cave[player.x, player.y+1] = 0
+                            cave.walls[player.x, player.y+1] = 0
                             updatetime(3)
                         else:
                             log.append("There's no wall there.")
@@ -357,10 +304,10 @@ while True:
                         if player.x-1 == 0:
                             log.append('That is too hard for you to mine.')
                             logback = 0
-                        elif cave[player.x-1, player.y] == 1:
+                        elif cave.walls[player.x-1, player.y] == 1:
                             log.append('You mined west.')
                             logback = 0
-                            cave[player.x-1, player.y] = 0
+                            cave.walls[player.x-1, player.y] = 0
                             updatetime(3)
                         else:
                             log.append("There's no wall there.")
@@ -370,10 +317,10 @@ while True:
                         if player.x+1 == mapwidth-1:
                             log.append('That is too hard for you to mine.')
                             logback = 0
-                        elif cave[player.x+1, player.y] == 1:
+                        elif cave.walls[player.x+1, player.y] == 1:
                             log.append('You mined east.')
                             logback = 0
-                            cave[player.x+1, player.y] = 0
+                            cave.walls[player.x+1, player.y] = 0
                             updatetime(3)
                         else:
                             log.append("There's no wall there.")
@@ -394,8 +341,8 @@ while True:
                             logback -= 1
                     if event.key == K_RETURN:
                         selected = player.inventory[chosen]
-                        selected.owner = caveitems
-                        caveitems.append(selected)
+                        selected.owner = cave.items
+                        cave.items.append(selected)
                         player.inventory.remove(selected)
                         selected.x = player.x
                         selected.y = player.y

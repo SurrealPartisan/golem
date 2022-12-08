@@ -9,6 +9,7 @@ import numpy as np
 class Creature():
     def __init__(self, world):
         self.world = world
+        self.faction = ''
         self.char = '@'
         self.x = 0
         self.y = 0
@@ -16,7 +17,7 @@ class Creature():
         self.hp = 100
         self.log = []
         self.sight = 7
-        self.seen = np.zeros((len(world), len(world[0])))
+        self.seen = np.zeros((world.width, world.height))
         self.speed = 1
         self.nextaction = ['wait', 1]
         
@@ -24,7 +25,7 @@ class Creature():
         return 1/self.speed
     
     def move(self, x, y):
-        if self.world[self.x+x, self.y+y] == 0:
+        if self.world.walls[self.x+x, self.y+y] == 0:
             self.y += y
             self.x += x
             return True
@@ -57,6 +58,7 @@ class Creature():
 class Blind_zombie(Creature):
     def __init__(self, world, x, y):
         super().__init__(world)
+        self.faction = 'zombie'
         self.char = 'z'
         self.x = x
         self.y = y
@@ -66,7 +68,7 @@ class Blind_zombie(Creature):
     def ai(self):
         x = 0
         y = 0
-        while (x,y) == (0,0) or self.world[self.x+x, self.y+y] != 0:
+        while (x,y) == (0,0) or self.world.walls[self.x+x, self.y+y] != 0:
             x = np.random.choice([-1,0,1])
             y = np.random.choice([-1,0,1])
         time = np.sqrt(x**2 + y**2) * self.steptime()
