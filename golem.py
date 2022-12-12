@@ -89,7 +89,7 @@ def draw():
     win.putchars('items in the cave: ' + repr(len(cave.items)), x=40, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     
     # Log
-    if gamestate == 'free':
+    if gamestate == 'free' or gamestate == 'dead':
         logrows = min(logheight,len(log))
         for i in range(logrows):
             j = i-logrows-logback
@@ -148,56 +148,88 @@ while True:
                 if gamestate == 'free':
                     # Player movements. This code needs some drying.
                     if event.key == K_UP or event.key == K_KP8:
-                        if player.move(0, -1):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y-1]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(0, -1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_DOWN or event.key == K_KP2:
-                        if player.move(0, 1):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y+1]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(0, 1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_LEFT or event.key == K_KP4:
-                        if player.move(-1, 0):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(-1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_RIGHT or event.key == K_KP6:
-                        if player.move(1, 0):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP7:
-                        if player.move(-1, -1):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y-1]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(-1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP9:
-                        if player.move(1, -1):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y-1]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP1:
-                        if player.move(-1, 1):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y+1]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(-1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
                     if event.key == K_KP3:
-                        if player.move(1, 1):
+                        targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y+1]
+                        if len(targets) > 0:
+                            updatetime(player.attackslist()[0][2])
+                            player.fight(targets[0], player.attackslist()[0])
+                        elif player.move(1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
                         else:
@@ -373,6 +405,10 @@ while True:
                     if event.key == K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
+                
+                
+                if player.hp <= 0:
+                    gamestate = 'dead'
                 
                 # Update window after any command or keypress
                 draw()
