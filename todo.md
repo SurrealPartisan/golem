@@ -6,4 +6,3 @@
 * Make things work in the right order (update time -> check if alive -> act)
 * Properly stop zombies from sharing a square
 * Better field of vision
-* Cleaner cave, with corridors only between closest rooms

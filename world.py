@@ -57,10 +57,22 @@ class World():
         roomsconnected = np.zeros(len(roomcenters))
         roomsconnected[np.random.randint(len(roomcenters))] = 1
         while not roomsconnected.all():
-            i = np.random.choice(np.where(1 - roomsconnected)[0])
-            start = roomcenters[i]
-            j = np.random.choice(np.where(roomsconnected)[0])
-            end = roomcenters[j]
+            #i = np.random.choice(np.where(1 - roomsconnected)[0])
+            #start = roomcenters[i]
+            #j = np.random.choice(np.where(roomsconnected)[0])
+            #end = roomcenters[j]
+            dist = np.inf
+            start = [0,0]
+            end = [0,0]
+            newroom = 0
+            for i in [i for i in range(len(roomcenters)) if not roomsconnected[i]]:
+                for j in [i for i in range(len(roomcenters)) if roomsconnected[i]]:
+                    newdist = np.sqrt((roomcenters[i][0] - roomcenters[j][0])**2 + (roomcenters[i][1] - roomcenters[j][1])**2)
+                    if newdist < dist:
+                        dist = newdist
+                        start = roomcenters[i]
+                        end = roomcenters[j]
+                        newroom = i
             coords = [start[0], start[1]]
             while not coords == end:
                 axis = np.random.randint(2)
@@ -69,4 +81,4 @@ class World():
                 elif coords[axis] > end[axis]:
                     coords[axis] -= 1
                 self.walls[coords[0], coords[1]] = 0
-            roomsconnected[i] = 1
+            roomsconnected[newroom] = 1
