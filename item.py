@@ -5,9 +5,12 @@ Created on Mon Sep 12 20:48:19 2022
 @author: SurrealPartisan
 """
 
+from collections import namedtuple
 import numpy as np
 
 import utils
+
+Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage'])
 
 class Item():
     def __init__(self, owner, x, y, name, char, color):
@@ -21,6 +24,10 @@ class Item():
         self.consumable = False
         self.wieldable = False
         self.weapon = False
+        self.bodypart = False
+
+    def attackslist(self):
+        return []
 
 class Consumable(Item):
     def __init__(self, owner, x, y, name, char, color):
@@ -32,8 +39,10 @@ class Consumable(Item):
         return self._hpgiven
     
     def consume(self, user):
-        user.heal(self.hpgiven())
+        part = max([part for part in user.bodyparts if not part.destroyed()], key=lambda part : part.damagetaken)
+        healed = user.heal(part, self.hpgiven())
         self.owner.remove(self)
+        return part, healed
 
 def create_medication(owner, x, y):
     drugs = Consumable(owner, x, y, 'dose of ' + utils.drugname(), '!', (0, 255, 255))

@@ -8,6 +8,7 @@ import numpy as np
 import item
 import creature
 import world
+import bodypart
 
 pygame.init()
 
@@ -20,6 +21,16 @@ cave = world.World(mapwidth, mapheight)
 cave.rooms()
 
 player = creature.Creature(cave)
+player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
+player.bodyparts[0].connect('left arm', bodypart.HumanArm(player.bodyparts, 0, 0))
+player.bodyparts[0].connect('right arm', bodypart.HumanArm(player.bodyparts, 0, 0))
+player.bodyparts[0].connect('left leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
+player.bodyparts[0].connect('right leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
+player.bodyparts[0].connect('heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
+player.bodyparts[0].connect('head', bodypart.HumanHead(player.bodyparts, 0, 0))
+player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
+player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
+player.bodyparts[-3].connect('right eye', bodypart.HumanEye(player.bodyparts, 0, 0))
 player.faction = 'player'
 while cave.walls[player.x, player.y] != 0:
     player.x= np.random.randint(mapwidth)
@@ -44,6 +55,7 @@ player.log = ['Welcome to the cave!', "Press 'h' for help."]
 log = player.log
 logback = 0 # How far the log has been scrolled
 chosen = 0 # Used for different item choosing gamestates
+target = None # Target of an attack
 
 gamestate = 'free'
 
@@ -55,7 +67,7 @@ def draw():
     win.setscreencolors(None, 'black', clear=True)
     for i in range(mapwidth):
         for j in range(mapheight):
-            if sees(player.x, player.y, i, j, player.sight):
+            if sees(player.x, player.y, i, j, player.sight()):
                 if cave.walls[i,j] == 1:
                     win.putchars(' ', x=i, y=j, bgcolor='white')
                 else:
@@ -66,7 +78,7 @@ def draw():
                     win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
     # Items
     for it in cave.items:
-        if sees(player.x, player.y, it.x, it.y, player.sight):
+        if sees(player.x, player.y, it.x, it.y, player.sight()):
             win.putchars(it.char, x=it.x, y=it.y, 
                  bgcolor=(64,64,64), fgcolor=it.color)
         elif player.seen[it.x,it.y] == 1:
@@ -75,7 +87,7 @@ def draw():
     
     # Creatures
     for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
-        if sees(player.x, player.y, npc.x, npc.y, player.sight):
+        if sees(player.x, player.y, npc.x, npc.y, player.sight()):
             win.putchars(npc.char, npc.x, npc.y, bgcolor=(64,64,64),
                          fgcolor='white')
     win.putchars(player.char, x=player.x, y=player.y, 
@@ -84,7 +96,7 @@ def draw():
     # Status
     for i in range(mapwidth):
         win.putchars(' ', x=i, y=mapheight, bgcolor=((128,128,128)))
-    win.putchars('hp: ' + repr(player.hp), x=2, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
+    # win.putchars('hp: ' + repr(player.hp), x=2, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     win.putchars('items in inventory: ' + repr(len(player.inventory)), x=15, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     win.putchars('items in the cave: ' + repr(len(cave.items)), x=40, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
     
@@ -128,6 +140,34 @@ def draw():
             if j == chosen:
                 win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
     
+    elif gamestate == 'chooseattack':
+        attackmessage = 'Choose how to attack the ' + target.name + ':'
+        win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len(player.attackslist()))
+        for i in range(logrows):
+            if len(player.attackslist()) <= logheight-1:
+                j = i
+            else:
+                j = len(player.attackslist())+i-logrows-logback
+            if j != chosen:
+                win.write(player.attackslist()[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write(player.attackslist()[j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+    elif gamestate == 'choosetargetbodypart':
+        attackmessage = 'Choose where to attack the ' + target.name + ':'
+        win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len([part for part in target.bodyparts if not part.destroyed()]))
+        for i in range(logrows):
+            if len([part for part in target.bodyparts if not part.destroyed()]) <= logheight-1:
+                j = i
+            else:
+                j = len([part for part in target.bodyparts if not part.destroyed()])+i-logrows-logback
+            if j != chosen:
+                win.write([part for part in target.bodyparts if not part.destroyed()][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write([part for part in target.bodyparts if not part.destroyed()][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+    
     win.update()
 
 def updatetime(time):
@@ -150,8 +190,8 @@ while True:
                     if event.key == K_UP or event.key == K_KP8:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y-1]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(0, -1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -161,8 +201,8 @@ while True:
                     if event.key == K_DOWN or event.key == K_KP2:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y+1]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(0, 1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -172,8 +212,8 @@ while True:
                     if event.key == K_LEFT or event.key == K_KP4:
                         targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(-1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -183,8 +223,8 @@ while True:
                     if event.key == K_RIGHT or event.key == K_KP6:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -194,8 +234,8 @@ while True:
                     if event.key == K_KP7:
                         targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y-1]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(-1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -205,8 +245,8 @@ while True:
                     if event.key == K_KP9:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y-1]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -216,8 +256,8 @@ while True:
                     if event.key == K_KP1:
                         targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y+1]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(-1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -227,8 +267,8 @@ while True:
                     if event.key == K_KP3:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y+1]
                         if len(targets) > 0:
-                            updatetime(player.attackslist()[0][2])
-                            player.fight(targets[0], player.attackslist()[0])
+                            target = targets[0]
+                            gamestate = 'chooseattack'
                         elif player.move(1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -397,8 +437,12 @@ while True:
                             logback -= 1
                     if event.key == K_RETURN:
                         selected = [item for item in player.inventory if item.consumable][chosen]
-                        selected.consume(player)
-                        log.append('You consumed a ' + selected.name + ', healing ' + repr(selected.hpgiven()) + ' points.')
+                        part, healed = selected.consume(player)
+                        if part.parentalconnection != None:
+                            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                        elif part == player.torso:
+                            partname = 'torso'
+                        log.append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(selected.hpgiven()) + ' points.')
                         logback = 0
                         gamestate = 'free'
                         updatetime(1)
@@ -406,8 +450,42 @@ while True:
                         logback = 0
                         gamestate = 'free'
                 
+                elif gamestate == 'chooseattack':
+                    if event.key == K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len(player.attackslist()) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == K_DOWN:
+                        chosen = min(len(player.attackslist())-1, chosen+1)
+                        if chosen == len(player.attackslist()) - logback:
+                            logback -= 1
+                    if event.key == K_RETURN:
+                        selectedattack = player.attackslist()[chosen]
+                        gamestate = 'choosetargetbodypart'
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
                 
-                if player.hp <= 0:
+                elif gamestate == 'choosetargetbodypart':
+                    if event.key == K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == K_DOWN:
+                        chosen = min(len([part for part in target.bodyparts if not part.destroyed()])-1, chosen+1)
+                        if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback:
+                            logback -= 1
+                    if event.key == K_RETURN:
+                        selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
+                        updatetime(selectedattack[6])
+                        player.fight(target, selected, selectedattack)
+                        logback = 0
+                        gamestate = 'free'
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+                
+                if player.dying():
                     gamestate = 'dead'
                 
                 # Update window after any command or keypress

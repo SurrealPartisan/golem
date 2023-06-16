@@ -4,10 +4,11 @@ Created on Mon Sep 12 21:16:44 2022
 
 @author: SurrealPartisan
 """
-from collections import namedtuple
-import numpy as np
 
-Attack = namedtuple('Attack', ['name', 'hitprobability', 'time', 'mindamage', 'maxdamage'])
+import numpy as np
+import item
+from item import Attack
+import bodypart
 
 class Creature():
     def __init__(self, world):
@@ -18,16 +19,20 @@ class Creature():
         self.x = 0
         self.y = 0
         self.inventory = []
-        self.hp = 100
-        self.defensecoefficient = 0.8
         self.log = []
-        self.sight = 7
         self.seen = np.zeros((world.width, world.height))
-        self.speed = 1
         self.nextaction = ['wait', 1]
-        
+        self.bodyparts = []
+        self.torso = None
+
+    def speed(self):
+        return max([part.speed() for part in self.bodyparts])
+
+    def sight(self):
+        return 1 + sum([part.sight() for part in self.bodyparts])
+
     def steptime(self):
-        return 1/self.speed
+        return 1/self.speed()
     
     def move(self, x, y):
         if self.world.walls[self.x+x, self.y+y] == 0:
@@ -37,26 +42,58 @@ class Creature():
         else:
             return False
     
-    def heal(self, hpgiven):
-        self.hp += hpgiven
-    
+    def heal(self, part, hpgiven):
+        healed = max(hpgiven, part.damagetaken)
+        part.damagetaken -= healed
+        return healed
+
+    def dying(self):
+        return sum([part.damagetaken for part in self.bodyparts]) > sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
+
     def die(self):
         self.world.creatures.remove(self)
-    
+        for item in self.inventory:
+            item.owner = self.world.items
+            self.world.items.append(item)
+            self.inventory.remove(item)
+            item.x = self.x
+            item.y = self.y
+        for part in self.bodyparts:
+            self.bodyparts.remove(part)
+            if not part.destroyed():
+                part.owner = self.world.items
+                self.world.items.append(part)
+                part.x = self.x
+                part.y = self.y
+            part.parentalconnection = None
+            for con in part.childconnections:
+                part.childconnections[con].child = None
+            if part.capableofwielding:
+                for item in part.wielded:
+                    item.owner = self.world.items
+                    self.world.items.append(item)
+                    part.wielded.remove(item)
+                    item.x = self.x
+                    item.y = self.y
+
     def attackslist(self):
-        return [Attack('fist', 0.8, 1, 1, 10)]
+        return [attack for part in self.bodyparts for attack in part.attackslist()]
     
-    def fight(self, target, attack):
+    def fight(self, target, targetbodypart, attack):
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
-            if np.random.rand() < max(min(attack.hitprobability*target.defensecoefficient, 0.95), 0.05):
+            if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
                 damage = np.random.randint(attack.mindamage, attack.maxdamage+1)
-                target.hp -= damage
-                if target.hp > 0:
-                    self.log.append('You hit the ' + target.name + ' with your ' + attack.name + ', dealing ' + repr(damage) + ' damage!')
-                    target.log.append('The ' + self.name + ' hit you, dealing ' + repr(damage) + ' damage!')
+                targetbodypart.damagetaken += damage
+                if targetbodypart.parentalconnection != None:
+                    partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
+                elif targetbodypart == target.torso:
+                    partname = 'torso'
+                if not target.dying():
+                    self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' to its ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
+                    target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you to your ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
                 else:
-                    self.log.append('You hit the ' + target.name + ' with your ' + attack.name + ', killing it!')
-                    target.log.append('The ' + self.name + ' hit you, killing you!')
+                    self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' to its ' + partname + attack.post2nd + ', killing it!')
+                    target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you to your ' + partname + attack.post3rd + ', killing you!')
                     target.log.append('You are dead!')
                     target.die()
             else:
@@ -76,7 +113,7 @@ class Creature():
         if self.nextaction[0] == 'move':
             self.move(self.nextaction[1], self.nextaction[2])
         elif self.nextaction[0] == 'fight':
-            self.fight(self.nextaction[1], self.nextaction[2])
+            self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
     
     def update(self, time):
         if time < self.nextaction[-1]:
@@ -96,15 +133,22 @@ class Blind_zombie(Creature):
         self.x = x
         self.y = y
         self.sight = 0
-        self.speed = 0.5
         self.hp = 10
+        self.torso = bodypart.ZombieTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.ZombieBrain(self.bodyparts, 0, 0))
         
     def ai(self):
         target = None
         for creature in self.world.creatures:
             if creature.faction != 'zombie' and abs(self.x - creature.x) <= 1 and abs(self.y - creature.y) <= 1:
                 target = creature
-        if target == None:
+        if target == None or len(self.attackslist()) == 0:
             x = 0
             y = 0
             while (x,y) == (0,0) or self.world.walls[self.x+x, self.y+y] != 0:
@@ -116,4 +160,4 @@ class Blind_zombie(Creature):
             else:
                 return(['wait', 1])
         else:
-            return(['fight', target, self.attackslist()[0], self.attackslist()[0][2]])
+            return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), self.attackslist()[0], self.attackslist()[0][6]])
