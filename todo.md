@@ -2,7 +2,6 @@
 
 * Make the body building system
 * Show hp
-* Fix bug in choosing from a list that doesn't fit into the logscreen
 * Make log and revealed map belong to brain
 * Make mining depend on tools / body parts
 * Choosing what to pick

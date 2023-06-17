@@ -199,6 +199,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(0, -1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -211,6 +212,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(0, 1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -223,6 +225,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(-1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -235,6 +238,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -247,6 +251,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(-1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -259,6 +264,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -271,6 +277,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(-1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -283,6 +290,7 @@ while True:
                             target = targets[0]
                             gamestate = 'chooseattack'
                             chosen = 0
+                            logback = len(player.attackslist()) - logheight + 1
                         elif player.move(1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -334,7 +342,6 @@ while True:
                             chosen = 0
                         else:
                             log.append("You don't have anything to consume.")
-                        logback = 0
                     
                     # Help
                     if event.key == K_h:
@@ -476,6 +483,7 @@ while True:
                     if event.key == K_RETURN:
                         selectedattack = player.attackslist()[chosen]
                         gamestate = 'choosetargetbodypart'
+                        logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
                         chosen = 0
                     if event.key == K_ESCAPE:
                         logback = 0
