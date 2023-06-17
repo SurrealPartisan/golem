@@ -107,7 +107,7 @@ class HumanArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack('fist', 'punch', 'punches', '', '', 0.8, 1, 1, 10)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -206,7 +206,7 @@ class ZombieArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack('fist', 'punch', 'punches', '', '', 0.8, 1, 1, 10)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10)]
             else:
                 return self.wielded[0].attackslist()
         else:

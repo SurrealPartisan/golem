@@ -164,10 +164,15 @@ def draw():
                 j = i
             else:
                 j = len([part for part in target.bodyparts if not part.destroyed()])+i-logrows-logback
+            targetbodypart = [part for part in target.bodyparts if not part.destroyed()][j]
+            if targetbodypart.parentalconnection != None:
+                partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
+            elif targetbodypart == target.torso:
+                partname = 'torso'
             if j != chosen:
-                win.write([part for part in target.bodyparts if not part.destroyed()][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                win.write(partname, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
-                win.write([part for part in target.bodyparts if not part.destroyed()][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                win.write(partname, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
     
     win.update()
 
@@ -193,6 +198,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(0, -1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -204,6 +210,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(0, 1):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -215,6 +222,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(-1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -226,6 +234,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(1, 0):
                             updatetime(player.steptime())
                             checkitems(player.x,player.y)
@@ -237,6 +246,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(-1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -248,6 +258,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(1, -1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -259,6 +270,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(-1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -270,6 +282,7 @@ while True:
                         if len(targets) > 0:
                             target = targets[0]
                             gamestate = 'chooseattack'
+                            chosen = 0
                         elif player.move(1, 1):
                             updatetime(player.steptime() * np.sqrt(2))
                             checkitems(player.x,player.y)
@@ -463,6 +476,7 @@ while True:
                     if event.key == K_RETURN:
                         selectedattack = player.attackslist()[chosen]
                         gamestate = 'choosetargetbodypart'
+                        chosen = 0
                     if event.key == K_ESCAPE:
                         logback = 0
                         gamestate = 'free'

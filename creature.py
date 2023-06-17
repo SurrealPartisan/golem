@@ -59,7 +59,6 @@ class Creature():
             item.x = self.x
             item.y = self.y
         for part in self.bodyparts:
-            self.bodyparts.remove(part)
             if not part.destroyed():
                 part.owner = self.world.items
                 self.world.items.append(part)
@@ -82,18 +81,22 @@ class Creature():
     def fight(self, target, targetbodypart, attack):
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
-                damage = np.random.randint(attack.mindamage, attack.maxdamage+1)
+                damage = min(np.random.randint(attack.mindamage, attack.maxdamage+1), targetbodypart.hp())
                 targetbodypart.damagetaken += damage
                 if targetbodypart.parentalconnection != None:
                     partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                 elif targetbodypart == target.torso:
                     partname = 'torso'
                 if not target.dying():
-                    self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' to its ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
-                    target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you to your ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                    if not targetbodypart.destroyed():
+                        self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
+                        target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                    else:
+                        self.log.append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                        target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
                 else:
-                    self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' to its ' + partname + attack.post2nd + ', killing it!')
-                    target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you to your ' + partname + attack.post3rd + ', killing you!')
+                    self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
+                    target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
                     target.log.append('You are dead!')
                     target.die()
             else:
