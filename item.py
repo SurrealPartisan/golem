@@ -47,3 +47,12 @@ class Consumable(Item):
 def create_medication(owner, x, y):
     drugs = Consumable(owner, x, y, 'dose of ' + utils.drugname(), '!', (0, 255, 255))
     drugs._hpgiven = np.random.randint(-2, 11)
+
+class HumanIronDagger(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'human-made iron dagger', '/', (128, 128, 128))
+        self.wieldable = True
+        self.weapon = True
+    
+    def attackslist(self):
+        return[Attack('human-made iron dagger', 'stabbed', 'stabbed', '', '', 0.8, 1, 1, 20)]

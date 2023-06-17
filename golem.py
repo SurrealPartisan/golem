@@ -45,6 +45,12 @@ for i in range(10):
         y = np.random.randint(mapheight)
     item.create_medication(cave.items, x, y)
 
+x = y = 0
+while cave.walls[x, y] != 0:
+    x = np.random.randint(mapwidth)
+    y = np.random.randint(mapheight)
+item.HumanIronDagger(cave.items, x, y)
+
 for i in range(10):
     x = y = 0
     while cave.walls[x, y] != 0:
@@ -155,6 +161,34 @@ def draw():
                 win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+    
+    elif gamestate == 'wieldchooseitem':
+        wieldmessage = 'Choose the item to wield:'
+        win.write(wieldmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len([item for item in player.inventory if item.wieldable]))
+        for i in range(logrows):
+            if len([item for item in player.inventory if item.wieldable]) <= logheight-1:
+                j = i
+            else:
+                j = len([item for item in player.inventory if item.wieldable])+i-logrows-logback
+            if j != chosen:
+                win.write([item for item in player.inventory if item.wieldable][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write([item for item in player.inventory if item.wieldable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+    
+    elif gamestate == 'wieldchoosebodypart':
+        wieldmessage = 'Choose where to wield the ' + selecteditem.name + ':'
+        win.write(wieldmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len([part for part in player.bodyparts if part.capableofwielding]))
+        for i in range(logrows):
+            if len([part for part in player.bodyparts if part.capableofwielding]) <= logheight-1:
+                j = i
+            else:
+                j = len([part for part in player.bodyparts if part.capableofwielding])+i-logrows-logback
+            if j != chosen:
+                win.write([part for part in player.bodyparts if part.capableofwielding][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write([part for part in player.bodyparts if part.capableofwielding][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
     
     elif gamestate == 'chooseattack':
         attackmessage = 'Choose how to attack the ' + target.name + ':'
@@ -360,6 +394,15 @@ while True:
                             chosen = 0
                         else:
                             log.append("You don't have anything to consume.")
+                    if event.key == K_w and not (event.mod & pygame.KMOD_SHIFT):
+                        if len([item for item in player.inventory if item.wieldable]) > 0:
+                            gamestate = 'wieldchooseitem'
+                            logback = len([item for item in player.inventory if item.wieldable]) - logheight + 1
+                            chosen = 0
+                        else:
+                            log.append("You don't have anything to consume.")
+                    if event.key == K_w and (event.mod & pygame.KMOD_SHIFT):
+                        log.append('Wearing not yet implemented!')
                     
                     # Help
                     if event.key == K_h:
@@ -508,6 +551,45 @@ while True:
                         logback = 0
                         gamestate = 'free'
                         updatetime(1)
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+                
+                elif gamestate == 'wieldchooseitem':
+                    if event.key == K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len([item for item in player.inventory if item.wieldable]) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == K_DOWN:
+                        chosen = min(len([item for item in player.inventory if item.wieldable])-1, chosen+1)
+                        if chosen == len([item for item in player.inventory if item.wieldable]) - logback:
+                            logback -= 1
+                    if event.key == K_RETURN:
+                        selecteditem = [item for item in player.inventory if item.wieldable][chosen]
+                        logback = len([part for part in player.bodyparts if part.capableofwielding]) - logheight + 1
+                        gamestate = 'wieldchoosebodypart'
+                        chosen = 0
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+                
+                elif gamestate == 'wieldchoosebodypart':
+                    if event.key == K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len([part for part in player.bodyparts if part.capableofwielding]) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == K_DOWN:
+                        chosen = min(len([part for part in player.bodyparts if part.capableofwielding])-1, chosen+1)
+                        if chosen == len([part for part in player.bodyparts if part.capableofwielding]) - logback:
+                            logback -= 1
+                    if event.key == K_RETURN:
+                        selected = [part for part in player.bodyparts if part.capableofwielding][chosen]
+                        player.inventory.remove(selecteditem)
+                        selected.wielded.append(selecteditem)
+                        selecteditem.owner = selected.wielded
+                        log.append('You are now wielding ' + selecteditem.name)
+                        logback = 0
+                        gamestate = 'free'
                     if event.key == K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
