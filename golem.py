@@ -16,6 +16,7 @@ mapwidth, mapheight = 80, 40
 logheight = 8
 statuslines = 1
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person')
+win.font = pygame.font.Font('Hack-Regular.ttf', 12)
 win.autoupdate = False
 cave = world.World(mapwidth, mapheight)
 cave.rooms()
@@ -418,7 +419,7 @@ while True:
                         player.inventory.remove(selected)
                         selected.x = player.x
                         selected.y = player.y
-                        log.append('You dropped' + selected.name + '.')
+                        log.append('You dropped the ' + selected.name + '.')
                         logback = 0
                         gamestate = 'free'
                         updatetime(0.5)
