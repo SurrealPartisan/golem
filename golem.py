@@ -112,7 +112,22 @@ def draw():
     elif gamestate == 'mine':
         minemessage = 'Choose the direction to mine!'
         win.write(minemessage, x=0, y=mapheight+statuslines, fgcolor=(255,255,255))
-        
+
+    elif gamestate == 'pick':
+        pickmessage = 'Choose the item to pick:'
+        win.write(pickmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
+        logrows = min(logheight-1,len(picklist))
+        for i in range(logrows):
+            if len(picklist) <= logheight-1:
+                j = i
+            else:
+                j = len(picklist)+i-logrows-logback
+            if j != chosen:
+                win.write(picklist[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write(picklist[j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
     elif gamestate == 'drop':
         dropmessage = 'Choose the item to drop:'
         win.write(dropmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
@@ -303,19 +318,22 @@ while True:
                     
                     # Items
                     if event.key == K_COMMA:
-                        pickcount = 0
-                        for it in cave.items:
-                            if it.x == player.x and it.y == player.y:
-                                pickcount += 1
-                                cave.items.remove(it)
-                                player.inventory.append(it)
-                                it.owner = player.inventory
-                                log.append('You pick up the ' + it.name + '.')
-                                logback = 0
-                            updatetime(0.5)
-                        if pickcount == 0:
+                        picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
+                        if len(picklist) == 0:
                             log.append('Nothing to pick up here.')
                             logback = 0
+                        elif len(picklist) == 1:
+                            it = picklist[0]
+                            cave.items.remove(it)
+                            player.inventory.append(it)
+                            it.owner = player.inventory
+                            log.append('You pick up the ' + it.name + '.')
+                            logback = 0
+                            updatetime(0.5)
+                        else:
+                            gamestate = 'pick'
+                            logback = len(picklist) - logheight + 1
+                            chosen = 0
                     if event.key == K_d:
                         if len(player.inventory) > 0:
                             gamestate = 'drop'
@@ -419,6 +437,29 @@ while True:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
+                    if event.key == K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+                
+                elif gamestate == 'pick':
+                    picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
+                    if event.key == K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len(picklist) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == K_DOWN:
+                        chosen = min(len(picklist)-1, chosen+1)
+                        if chosen == len(picklist) - logback:
+                            logback -= 1
+                    if event.key == K_RETURN:
+                        selected = picklist[chosen]
+                        selected.owner = player.inventory
+                        player.inventory.append(selected)
+                        cave.items.remove(selected)
+                        log.append('You picked up the ' + selected.name + '.')
+                        logback = 0
+                        gamestate = 'free'
+                        updatetime(0.5)
                     if event.key == K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
