@@ -65,15 +65,27 @@ target = None # Target of an attack
 
 gamestate = 'free'
 
-def sees(x1, y1, x2, y2, sight):
-    return np.sqrt((x1 - x2)**2 + (y1 - y2)**2) <= sight
+def fov(walls, x, y, sight):
+    fovmap = np.zeros((mapwidth, mapheight))
+    fovmap[x,y] = 1
+    for angle in np.arange(16*sight)*2*np.pi/(16*sight):
+        cont = True
+        r = 0
+        while cont:
+            r += 0.5
+            x2 = round(x + r*np.cos(angle))
+            y2 = round(y + r*np.sin(angle))
+            fovmap[x2,y2] = 1
+            if walls[x2,y2] == 1 or r >= sight: cont = False
+    return fovmap
 
 def draw():
+    fovmap = fov(cave.walls, player.x, player.y, player.sight())
     # Background
     win.setscreencolors(None, 'black', clear=True)
     for i in range(mapwidth):
         for j in range(mapheight):
-            if sees(player.x, player.y, i, j, player.sight()):
+            if fovmap[i,j]:
                 if cave.walls[i,j] == 1:
                     win.putchars(' ', x=i, y=j, bgcolor='white')
                 else:
@@ -84,7 +96,7 @@ def draw():
                     win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
     # Items
     for it in cave.items:
-        if sees(player.x, player.y, it.x, it.y, player.sight()):
+        if fovmap[it.x, it.y]:
             win.putchars(it.char, x=it.x, y=it.y, 
                  bgcolor=(64,64,64), fgcolor=it.color)
         elif player.seen[it.x,it.y] == 1:
@@ -93,7 +105,7 @@ def draw():
     
     # Creatures
     for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
-        if sees(player.x, player.y, npc.x, npc.y, player.sight()):
+        if fovmap[npc.x, npc.y]:
             win.putchars(npc.char, npc.x, npc.y, bgcolor=(64,64,64),
                          fgcolor='white')
     win.putchars(player.char, x=player.x, y=player.y, 

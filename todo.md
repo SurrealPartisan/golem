@@ -6,7 +6,6 @@
 * Make mining depend on tools / body parts
 * Make things work in the right order (update time -> check if alive -> act)
 * Properly stop zombies from sharing a square
-* Better field of vision
 * Better AI
 * More enemies
 * Items
