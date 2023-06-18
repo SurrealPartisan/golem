@@ -185,9 +185,23 @@ def draw():
             else:
                 j = len([part for part in player.bodyparts if part.capableofwielding])+i-logrows-logback
             if j != chosen:
-                win.write([part for part in player.bodyparts if part.capableofwielding][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
-                win.write([part for part in player.bodyparts if part.capableofwielding][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding][j], x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+    
+    elif gamestate == 'unwield':
+        wieldmessage = 'Choose the item to unwield:'
+        win.write(wieldmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]))
+        for i in range(logrows):
+            if len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) <= logheight-1:
+                j = i
+            else:
+                j = len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0])+i-logrows-logback
+            if j != chosen:
+                win.write([part.wielded[0].name + ' in the ' + part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write([part.wielded[0].name + ' in the ' + part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][j], x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
     
     elif gamestate == 'chooseattack':
         attackmessage = 'Choose how to attack the ' + target.name + ':'
@@ -394,14 +408,23 @@ while True:
                         else:
                             log.append("You don't have anything to consume.")
                     if event.key == pygame.locals.K_w and not (event.mod & pygame.KMOD_SHIFT):
-                        if len([item for item in player.inventory if item.wieldable]) > 0:
+                        if len([item for item in player.inventory if item.wieldable]) > 0 and len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) > 0:
                             gamestate = 'wieldchooseitem'
                             logback = len([item for item in player.inventory if item.wieldable]) - logheight + 1
                             chosen = 0
                         else:
-                            log.append("You don't have anything to wield.")
+                            log.append("You cannot wield anything.")
                     if event.key == pygame.locals.K_w and (event.mod & pygame.KMOD_SHIFT):
                         log.append('Wearing not yet implemented!')
+                    if event.key == pygame.locals.K_u and not (event.mod & pygame.KMOD_SHIFT):
+                        if len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) > 0:
+                            gamestate = 'unwield'
+                            logback = len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logheight + 1
+                            chosen = 0
+                        else:
+                            log.append("You have nothing to unwield.")
+                    if event.key == pygame.locals.K_u and (event.mod & pygame.KMOD_SHIFT):
+                        log.append('Undressing not yet implemented!')
                     
                     # Help
                     if event.key == pygame.locals.K_h:
@@ -586,7 +609,29 @@ while True:
                         player.inventory.remove(selecteditem)
                         selected.wielded.append(selecteditem)
                         selecteditem.owner = selected.wielded
-                        log.append('You are now wielding ' + selecteditem.name)
+                        log.append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                        logback = 0
+                        gamestate = 'free'
+                    if event.key == pygame.locals.K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+                
+                elif gamestate == 'unwield':
+                    if event.key == pygame.locals.K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == pygame.locals.K_DOWN:
+                        chosen = min(len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0])-1, chosen+1)
+                        if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback:
+                            logback -= 1
+                    if event.key == pygame.locals.K_RETURN:
+                        part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
+                        selected = part.wielded[0]
+                        part.wielded.remove(selected)
+                        player.inventory.append(selected)
+                        selected.owner = player.inventory
+                        log.append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
                         logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:

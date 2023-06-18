@@ -11,5 +11,3 @@
 * More enemies
 * Items
 * Dungeon levels
-* Unwielding
-* Proper names for bodyparts when wielding

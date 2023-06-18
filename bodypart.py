@@ -39,6 +39,7 @@ class BodyPart(item.Item):
         self.capableofwielding = False
         self.material = "living flesh"
         self._defensecoefficient = 0.8
+        self._wearwieldname = name
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -70,6 +71,12 @@ class BodyPart(item.Item):
         else:
             return self.parentalconnection.defensecoefficient*self._defensecoefficient
 
+    def wearwieldname(self):
+        if self.parentalconnection == None:
+            return self._wearwieldname
+        else:
+            return self.parentalconnection.prefix + self._wearwieldname
+
 
 
 class HumanTorso(BodyPart):
@@ -94,6 +101,7 @@ class HumanArm(BodyPart):
         self.maxhp = 40
         self.capableofwielding = True
         self.wielded = [] # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
 
     def speed(self):
         if not self.destroyed():
@@ -119,6 +127,7 @@ class HumanLeg(BodyPart):
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 40
+        self._wearwieldname = 'foot'
 
     def speed(self):
         if not self.destroyed():
@@ -193,6 +202,7 @@ class ZombieArm(BodyPart):
         self.material = "undead flesh"
         self.capableofwielding = True
         self.wielded = [] # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
 
     def speed(self):
         if not self.destroyed():
@@ -219,6 +229,7 @@ class ZombieLeg(BodyPart):
         self.childconnections = {}
         self.maxhp = 4
         self.material = "undead flesh"
+        self._wearwieldname = 'foot'
 
     def speed(self):
         if not self.destroyed():
