@@ -1,7 +1,6 @@
 import sys
 
 import pygame
-from pygame.locals import *
 import pygcurse
 import numpy as np
 
@@ -239,10 +238,10 @@ draw()
 while True:
     for event in pygame.event.get():
         try:
-            if event.type == KEYDOWN:
+            if event.type == pygame.locals.KEYDOWN:
                 if gamestate == 'free':
                     # Player movements. This code needs some drying.
-                    if event.key == K_UP or event.key == K_KP8:
+                    if event.key == pygame.locals.K_UP or event.key == pygame.locals.K_KP8:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y-1]
                         if len(targets) > 0:
                             target = targets[0]
@@ -255,7 +254,7 @@ while True:
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_DOWN or event.key == K_KP2:
+                    if event.key == pygame.locals.K_DOWN or event.key == pygame.locals.K_KP2:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y+1]
                         if len(targets) > 0:
                             target = targets[0]
@@ -268,7 +267,7 @@ while True:
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_LEFT or event.key == K_KP4:
+                    if event.key == pygame.locals.K_LEFT or event.key == pygame.locals.K_KP4:
                         targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y]
                         if len(targets) > 0:
                             target = targets[0]
@@ -281,7 +280,7 @@ while True:
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_RIGHT or event.key == K_KP6:
+                    if event.key == pygame.locals.K_RIGHT or event.key == pygame.locals.K_KP6:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y]
                         if len(targets) > 0:
                             target = targets[0]
@@ -294,7 +293,7 @@ while True:
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_KP7:
+                    if event.key == pygame.locals.K_KP7:
                         targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y-1]
                         if len(targets) > 0:
                             target = targets[0]
@@ -307,7 +306,7 @@ while True:
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_KP9:
+                    if event.key == pygame.locals.K_KP9:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y-1]
                         if len(targets) > 0:
                             target = targets[0]
@@ -320,7 +319,7 @@ while True:
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_KP1:
+                    if event.key == pygame.locals.K_KP1:
                         targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y+1]
                         if len(targets) > 0:
                             target = targets[0]
@@ -333,7 +332,7 @@ while True:
                         else:
                             log.append("There's a wall in your way.")
                             logback = 0
-                    if event.key == K_KP3:
+                    if event.key == pygame.locals.K_KP3:
                         targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y+1]
                         if len(targets) > 0:
                             target = targets[0]
@@ -347,11 +346,11 @@ while True:
                             log.append("There's a wall in your way.")
                             logback = 0
                     
-                    if event.key == K_m:
+                    if event.key == pygame.locals.K_m:
                         gamestate = 'mine'
                     
                     # Items
-                    if event.key == K_COMMA:
+                    if event.key == pygame.locals.K_COMMA:
                         picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
                         if len(picklist) == 0:
                             log.append('Nothing to pick up here.')
@@ -368,14 +367,14 @@ while True:
                             gamestate = 'pick'
                             logback = len(picklist) - logheight + 1
                             chosen = 0
-                    if event.key == K_d:
+                    if event.key == pygame.locals.K_d:
                         if len(player.inventory) > 0:
                             gamestate = 'drop'
                             logback = len(player.inventory) - logheight + 1
                             chosen = 0
                         else:
                             log.append('You have nothing to drop!')
-                    if event.key == K_i:
+                    if event.key == pygame.locals.K_i:
                         log.append('Items in your backpack:')
                         if len(player.inventory) == 0:
                             log.append('  - nothing')
@@ -387,25 +386,25 @@ while True:
                                     logback = len(player.inventory) - logheight + 1
                                 else:
                                     logback = 0
-                    if event.key == K_c:
+                    if event.key == pygame.locals.K_c:
                         if len([item for item in player.inventory if item.consumable]) > 0:
                             gamestate = 'consume'
                             logback = len([item for item in player.inventory if item.consumable]) - logheight + 1
                             chosen = 0
                         else:
                             log.append("You don't have anything to consume.")
-                    if event.key == K_w and not (event.mod & pygame.KMOD_SHIFT):
+                    if event.key == pygame.locals.K_w and not (event.mod & pygame.KMOD_SHIFT):
                         if len([item for item in player.inventory if item.wieldable]) > 0:
                             gamestate = 'wieldchooseitem'
                             logback = len([item for item in player.inventory if item.wieldable]) - logheight + 1
                             chosen = 0
                         else:
-                            log.append("You don't have anything to consume.")
-                    if event.key == K_w and (event.mod & pygame.KMOD_SHIFT):
+                            log.append("You don't have anything to wield.")
+                    if event.key == pygame.locals.K_w and (event.mod & pygame.KMOD_SHIFT):
                         log.append('Wearing not yet implemented!')
                     
                     # Help
-                    if event.key == K_h:
+                    if event.key == pygame.locals.K_h:
                         log.append('Commands:')
                         log.append('  - arrows: move')
                         log.append('  - comma: pick up an item')
@@ -416,19 +415,19 @@ while True:
                         logback = 0 # Increase when adding commands
                     
                     # Log scrolling
-                    if event.key == K_PAGEUP:
+                    if event.key == pygame.locals.K_PAGEUP:
                         if len(log) >= logheight:
                             logback = min(logback+1, len(log)-logheight)
-                    if event.key == K_PAGEDOWN:
+                    if event.key == pygame.locals.K_PAGEDOWN:
                         logback = max(logback-1, 0)
-                    if event.key == K_HOME:
+                    if event.key == pygame.locals.K_HOME:
                         if len(log) >= logheight:
                             logback = len(log)-logheight
-                    if event.key == K_END:
+                    if event.key == pygame.locals.K_END:
                         logback = 0
                         
                 elif gamestate == 'mine':
-                    if event.key == K_UP or event.key == K_KP8:
+                    if event.key == pygame.locals.K_UP or event.key == pygame.locals.K_KP8:
                         if player.y-1 == 0:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -441,7 +440,7 @@ while True:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
-                    if event.key == K_DOWN or event.key == K_KP2:
+                    if event.key == pygame.locals.K_DOWN or event.key == pygame.locals.K_KP2:
                         if player.y+1 == mapheight-1:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -454,7 +453,7 @@ while True:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
-                    if event.key == K_LEFT or event.key == K_KP4:
+                    if event.key == pygame.locals.K_LEFT or event.key == pygame.locals.K_KP4:
                         if player.x-1 == 0:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -467,7 +466,7 @@ while True:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
-                    if event.key == K_RIGHT or event.key == K_KP6:
+                    if event.key == pygame.locals.K_RIGHT or event.key == pygame.locals.K_KP6:
                         if player.x+1 == mapwidth-1:
                             log.append('That is too hard for you to mine.')
                             logback = 0
@@ -480,21 +479,21 @@ while True:
                             log.append("There's no wall there.")
                             logback = 0
                         gamestate = 'free'
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
                 elif gamestate == 'pick':
                     picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
-                    if event.key == K_UP:
+                    if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
                         if chosen == len(picklist) - logback - (logheight - 1) - 1:
                             logback += 1
-                    if event.key == K_DOWN:
+                    if event.key == pygame.locals.K_DOWN:
                         chosen = min(len(picklist)-1, chosen+1)
                         if chosen == len(picklist) - logback:
                             logback -= 1
-                    if event.key == K_RETURN:
+                    if event.key == pygame.locals.K_RETURN:
                         selected = picklist[chosen]
                         selected.owner = player.inventory
                         player.inventory.append(selected)
@@ -503,20 +502,20 @@ while True:
                         logback = 0
                         gamestate = 'free'
                         updatetime(0.5)
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
                 elif gamestate == 'drop':
-                    if event.key == K_UP:
+                    if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
                         if chosen == len(player.inventory) - logback - (logheight - 1) - 1:
                             logback += 1
-                    if event.key == K_DOWN:
+                    if event.key == pygame.locals.K_DOWN:
                         chosen = min(len(player.inventory)-1, chosen+1)
                         if chosen == len(player.inventory) - logback:
                             logback -= 1
-                    if event.key == K_RETURN:
+                    if event.key == pygame.locals.K_RETURN:
                         selected = player.inventory[chosen]
                         selected.owner = cave.items
                         cave.items.append(selected)
@@ -527,20 +526,20 @@ while True:
                         logback = 0
                         gamestate = 'free'
                         updatetime(0.5)
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
                 elif gamestate == 'consume':
-                    if event.key == K_UP:
+                    if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
                         if chosen == len([item for item in player.inventory if item.consumable]) - logback - (logheight - 1) - 1:
                             logback += 1
-                    if event.key == K_DOWN:
+                    if event.key == pygame.locals.K_DOWN:
                         chosen = min(len([item for item in player.inventory if item.consumable])-1, chosen+1)
                         if chosen == len([item for item in player.inventory if item.consumable]) - logback:
                             logback -= 1
-                    if event.key == K_RETURN:
+                    if event.key == pygame.locals.K_RETURN:
                         selected = [item for item in player.inventory if item.consumable][chosen]
                         part, healed = selected.consume(player)
                         if part.parentalconnection != None:
@@ -551,38 +550,38 @@ while True:
                         logback = 0
                         gamestate = 'free'
                         updatetime(1)
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
                 elif gamestate == 'wieldchooseitem':
-                    if event.key == K_UP:
+                    if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
                         if chosen == len([item for item in player.inventory if item.wieldable]) - logback - (logheight - 1) - 1:
                             logback += 1
-                    if event.key == K_DOWN:
+                    if event.key == pygame.locals.K_DOWN:
                         chosen = min(len([item for item in player.inventory if item.wieldable])-1, chosen+1)
                         if chosen == len([item for item in player.inventory if item.wieldable]) - logback:
                             logback -= 1
-                    if event.key == K_RETURN:
+                    if event.key == pygame.locals.K_RETURN:
                         selecteditem = [item for item in player.inventory if item.wieldable][chosen]
                         logback = len([part for part in player.bodyparts if part.capableofwielding]) - logheight + 1
                         gamestate = 'wieldchoosebodypart'
                         chosen = 0
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
                 elif gamestate == 'wieldchoosebodypart':
-                    if event.key == K_UP:
+                    if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
                         if chosen == len([part for part in player.bodyparts if part.capableofwielding]) - logback - (logheight - 1) - 1:
                             logback += 1
-                    if event.key == K_DOWN:
+                    if event.key == pygame.locals.K_DOWN:
                         chosen = min(len([part for part in player.bodyparts if part.capableofwielding])-1, chosen+1)
                         if chosen == len([part for part in player.bodyparts if part.capableofwielding]) - logback:
                             logback -= 1
-                    if event.key == K_RETURN:
+                    if event.key == pygame.locals.K_RETURN:
                         selected = [part for part in player.bodyparts if part.capableofwielding][chosen]
                         player.inventory.remove(selecteditem)
                         selected.wielded.append(selecteditem)
@@ -590,44 +589,44 @@ while True:
                         log.append('You are now wielding ' + selecteditem.name)
                         logback = 0
                         gamestate = 'free'
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
                 elif gamestate == 'chooseattack':
-                    if event.key == K_UP:
+                    if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
                         if chosen == len(player.attackslist()) - logback - (logheight - 1) - 1:
                             logback += 1
-                    if event.key == K_DOWN:
+                    if event.key == pygame.locals.K_DOWN:
                         chosen = min(len(player.attackslist())-1, chosen+1)
                         if chosen == len(player.attackslist()) - logback:
                             logback -= 1
-                    if event.key == K_RETURN:
+                    if event.key == pygame.locals.K_RETURN:
                         selectedattack = player.attackslist()[chosen]
                         gamestate = 'choosetargetbodypart'
                         logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
                         chosen = 0
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
                 elif gamestate == 'choosetargetbodypart':
-                    if event.key == K_UP:
+                    if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
                         if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback - (logheight - 1) - 1:
                             logback += 1
-                    if event.key == K_DOWN:
+                    if event.key == pygame.locals.K_DOWN:
                         chosen = min(len([part for part in target.bodyparts if not part.destroyed()])-1, chosen+1)
                         if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback:
                             logback -= 1
-                    if event.key == K_RETURN:
+                    if event.key == pygame.locals.K_RETURN:
                         selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
                         updatetime(selectedattack[6])
                         player.fight(target, selected, selectedattack)
                         logback = 0
                         gamestate = 'free'
-                    if event.key == K_ESCAPE:
+                    if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
                 
