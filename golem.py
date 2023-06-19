@@ -272,12 +272,13 @@ def moveorattack(dx, dy):
         target = None
     else:
         updatetime(np.sqrt(dx**2 + dy**2) * player.steptime())
-        creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
-        if len(creaturesintheway) == 0:
-            player.move(dx, dy)
-            checkitems(player.x,player.y)
-        else:
-            log.append("There's a " + creaturesintheway[0].name + " in your way.")
+        if not player.dying():
+            creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
+            if len(creaturesintheway) == 0:
+                player.move(dx, dy)
+                checkitems(player.x,player.y)
+            else:
+                log.append("There's a " + creaturesintheway[0].name + " in your way.")
         logback = 0
         gamestate = 'free'
         target = None
@@ -320,13 +321,14 @@ while True:
                             log.append('Nothing to pick up here.')
                             logback = 0
                         elif len(picklist) == 1:
-                            it = picklist[0]
-                            cave.items.remove(it)
-                            player.inventory.append(it)
-                            it.owner = player.inventory
-                            log.append('You pick up the ' + it.name + '.')
-                            logback = 0
                             updatetime(0.5)
+                            if not player.dying():
+                                it = picklist[0]
+                                cave.items.remove(it)
+                                player.inventory.append(it)
+                                it.owner = player.inventory
+                                log.append('You pick up the ' + it.name + '.')
+                                logback = 0
                         else:
                             gamestate = 'pick'
                             logback = len(picklist) - logheight + 1
@@ -405,10 +407,11 @@ while True:
                             log.append('That is too hard for you to mine.')
                             logback = 0
                         elif cave.walls[player.x, player.y-1] == 1:
-                            log.append('You mined north.')
-                            logback = 0
-                            cave.walls[player.x, player.y-1] = 0
                             updatetime(3)
+                            if not player.dying():
+                                log.append('You mined north.')
+                                logback = 0
+                                cave.walls[player.x, player.y-1] = 0
                         else:
                             log.append("There's no wall there.")
                             logback = 0
@@ -418,10 +421,11 @@ while True:
                             log.append('That is too hard for you to mine.')
                             logback = 0
                         elif cave.walls[player.x, player.y+1] == 1:
-                            log.append('You mined south.')
-                            logback = 0
-                            cave.walls[player.x, player.y+1] = 0
                             updatetime(3)
+                            if not player.dying():
+                                log.append('You mined south.')
+                                logback = 0
+                                cave.walls[player.x, player.y+1] = 0
                         else:
                             log.append("There's no wall there.")
                             logback = 0
@@ -431,10 +435,11 @@ while True:
                             log.append('That is too hard for you to mine.')
                             logback = 0
                         elif cave.walls[player.x-1, player.y] == 1:
-                            log.append('You mined west.')
-                            logback = 0
-                            cave.walls[player.x-1, player.y] = 0
                             updatetime(3)
+                            if not player.dying():
+                                log.append('You mined west.')
+                                logback = 0
+                                cave.walls[player.x-1, player.y] = 0
                         else:
                             log.append("There's no wall there.")
                             logback = 0
@@ -444,10 +449,11 @@ while True:
                             log.append('That is too hard for you to mine.')
                             logback = 0
                         elif cave.walls[player.x+1, player.y] == 1:
-                            log.append('You mined east.')
-                            logback = 0
-                            cave.walls[player.x+1, player.y] = 0
                             updatetime(3)
+                            if not player.dying():
+                                log.append('You mined east.')
+                                logback = 0
+                                cave.walls[player.x+1, player.y] = 0
                         else:
                             log.append("There's no wall there.")
                             logback = 0
@@ -467,14 +473,15 @@ while True:
                         if chosen == len(picklist) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        selected = picklist[chosen]
-                        selected.owner = player.inventory
-                        player.inventory.append(selected)
-                        cave.items.remove(selected)
-                        log.append('You picked up the ' + selected.name + '.')
-                        logback = 0
-                        gamestate = 'free'
                         updatetime(0.5)
+                        if not player.dying():
+                            selected = picklist[chosen]
+                            selected.owner = player.inventory
+                            player.inventory.append(selected)
+                            cave.items.remove(selected)
+                            log.append('You picked up the ' + selected.name + '.')
+                            logback = 0
+                        gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
@@ -489,16 +496,17 @@ while True:
                         if chosen == len(player.inventory) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        selected = player.inventory[chosen]
-                        selected.owner = cave.items
-                        cave.items.append(selected)
-                        player.inventory.remove(selected)
-                        selected.x = player.x
-                        selected.y = player.y
-                        log.append('You dropped the ' + selected.name + '.')
-                        logback = 0
-                        gamestate = 'free'
                         updatetime(0.5)
+                        if not player.dying():
+                            selected = player.inventory[chosen]
+                            selected.owner = cave.items
+                            cave.items.append(selected)
+                            player.inventory.remove(selected)
+                            selected.x = player.x
+                            selected.y = player.y
+                            log.append('You dropped the ' + selected.name + '.')
+                            logback = 0
+                        gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
@@ -513,16 +521,17 @@ while True:
                         if chosen == len([item for item in player.inventory if item.consumable]) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        selected = [item for item in player.inventory if item.consumable][chosen]
-                        part, healed = selected.consume(player)
-                        if part.parentalconnection != None:
-                            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
-                        elif part == player.torso:
-                            partname = 'torso'
-                        log.append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(selected.hpgiven()) + ' points.')
-                        logback = 0
-                        gamestate = 'free'
                         updatetime(1)
+                        if not player.dying():
+                            selected = [item for item in player.inventory if item.consumable][chosen]
+                            part, healed = selected.consume(player)
+                            if part.parentalconnection != None:
+                                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                            elif part == player.torso:
+                                partname = 'torso'
+                            log.append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(selected.hpgiven()) + ' points.')
+                            logback = 0
+                        gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
@@ -618,7 +627,8 @@ while True:
                     if event.key == pygame.locals.K_RETURN:
                         selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
                         updatetime(selectedattack[6])
-                        player.fight(target, selected, selectedattack)
+                        if not player.dying():
+                            player.fight(target, selected, selectedattack)
                         logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:

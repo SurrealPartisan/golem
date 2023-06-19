@@ -50,7 +50,7 @@ def create_medication(owner, x, y):
 
 class HumanIronDagger(Item):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'human-made iron dagger', '/', (128, 128, 128))
+        super().__init__(owner, x, y, 'human-made iron dagger', '/', (200, 200, 200))
         self.wieldable = True
         self.weapon = True
     
