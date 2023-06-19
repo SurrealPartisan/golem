@@ -258,7 +258,33 @@ def checkitems(x,y):
     for it in cave.items:
         if it.x == x and it.y == y:
             log.append('There is a ' + it.name + ' here.')
-            logback = 0
+
+def moveorattack(dx, dy):
+    targets = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
+    if len(targets) > 0:
+        target = targets[0]
+        gamestate = 'chooseattack'
+        logback = len(player.attackslist()) - logheight + 1
+    elif cave.walls[player.x+dx, player.y+dy]:
+        log.append("There's a wall in your way.")
+        logback = 0
+        gamestate = 'free'
+        target = None
+    else:
+        updatetime(player.steptime())
+        creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
+        if len(creaturesintheway) == 0:
+            player.move(dx, dy)
+            checkitems(player.x,player.y)
+        else:
+            log.append("There's a " + creaturesintheway[0].name + " in your way.")
+        logback = 0
+        gamestate = 'free'
+        target = None
+    chosen = 0
+    return(gamestate, logback, target, chosen)
+
+
 
 draw()
 while True:
@@ -268,109 +294,21 @@ while True:
                 if gamestate == 'free':
                     # Player movements. This code needs some drying.
                     if event.key == pygame.locals.K_UP or event.key == pygame.locals.K_KP8:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y-1]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(0, -1):
-                            updatetime(player.steptime())
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(0, -1)
                     if event.key == pygame.locals.K_DOWN or event.key == pygame.locals.K_KP2:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x+0 and creature.y == player.y+1]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(0, 1):
-                            updatetime(player.steptime())
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(0, 1)
                     if event.key == pygame.locals.K_LEFT or event.key == pygame.locals.K_KP4:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(-1, 0):
-                            updatetime(player.steptime())
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(-1, 0)
                     if event.key == pygame.locals.K_RIGHT or event.key == pygame.locals.K_KP6:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(1, 0):
-                            updatetime(player.steptime())
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(1, 0)
                     if event.key == pygame.locals.K_KP7:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y-1]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(-1, -1):
-                            updatetime(player.steptime() * np.sqrt(2))
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(-1, -1)
                     if event.key == pygame.locals.K_KP9:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y-1]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(1, -1):
-                            updatetime(player.steptime() * np.sqrt(2))
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(1, -1)
                     if event.key == pygame.locals.K_KP1:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x-1 and creature.y == player.y+1]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(-1, 1):
-                            updatetime(player.steptime() * np.sqrt(2))
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(-1, 1)
                     if event.key == pygame.locals.K_KP3:
-                        targets = [creature for creature in cave.creatures if creature.x == player.x+1 and creature.y == player.y+1]
-                        if len(targets) > 0:
-                            target = targets[0]
-                            gamestate = 'chooseattack'
-                            chosen = 0
-                            logback = len(player.attackslist()) - logheight + 1
-                        elif player.move(1, 1):
-                            updatetime(player.steptime() * np.sqrt(2))
-                            checkitems(player.x,player.y)
-                        else:
-                            log.append("There's a wall in your way.")
-                            logback = 0
+                        gamestate, logback, target, chosen = moveorattack(1, 1)
                     
                     if event.key == pygame.locals.K_m:
                         gamestate = 'mine'

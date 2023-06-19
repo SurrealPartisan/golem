@@ -34,13 +34,10 @@ class Creature():
     def steptime(self):
         return 1/self.speed()
     
-    def move(self, x, y):
-        if self.world.walls[self.x+x, self.y+y] == 0:
-            self.y += y
-            self.x += x
-            return True
-        else:
-            return False
+    def move(self, dx, dy):
+        self.y += dy
+        self.x += dx
+
     
     def heal(self, part, hpgiven):
         healed = max(hpgiven, part.damagetaken)
@@ -114,7 +111,11 @@ class Creature():
     
     def resolveaction(self):
         if self.nextaction[0] == 'move':
-            self.move(self.nextaction[1], self.nextaction[2])
+            creaturesintheway = [creature for creature in self.world.creatures if creature.x == self.x+self.nextaction[1] and creature.y == self.y+self.nextaction[2]]
+            if len(creaturesintheway) == 0:
+                self.move(self.nextaction[1], self.nextaction[2])
+            else:
+                self.log.append("There's a " + creaturesintheway[0].name + " in your way.")
         elif self.nextaction[0] == 'fight':
             self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
     
