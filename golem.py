@@ -271,7 +271,7 @@ def moveorattack(dx, dy):
         gamestate = 'free'
         target = None
     else:
-        updatetime(player.steptime())
+        updatetime(np.sqrt(dx**2 + dy**2) * player.steptime())
         creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
         if len(creaturesintheway) == 0:
             player.move(dx, dy)
