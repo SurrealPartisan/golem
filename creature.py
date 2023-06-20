@@ -6,9 +6,8 @@ Created on Mon Sep 12 21:16:44 2022
 """
 
 import numpy as np
-import item
-from item import Attack
 import bodypart
+from utils import fov, anglebetween
 
 class Creature():
     def __init__(self, world):
@@ -49,12 +48,12 @@ class Creature():
 
     def die(self):
         self.world.creatures.remove(self)
-        for item in self.inventory:
-            item.owner = self.world.items
-            self.world.items.append(item)
-            self.inventory.remove(item)
-            item.x = self.x
-            item.y = self.y
+        for it in self.inventory:
+            it.owner = self.world.items
+            self.world.items.append(it)
+            self.inventory.remove(it)
+            it.x = self.x
+            it.y = self.y
         for part in self.bodyparts:
             if not part.destroyed():
                 part.owner = self.world.items
@@ -65,12 +64,12 @@ class Creature():
             for con in part.childconnections:
                 part.childconnections[con].child = None
             if part.capableofwielding:
-                for item in part.wielded:
-                    item.owner = self.world.items
-                    self.world.items.append(item)
-                    part.wielded.remove(item)
-                    item.x = self.x
-                    item.y = self.y
+                for it in part.wielded:
+                    it.owner = self.world.items
+                    self.world.items.append(it)
+                    part.wielded.remove(it)
+                    it.x = self.x
+                    it.y = self.y
 
     def attackslist(self):
         return [attack for part in self.bodyparts for attack in part.attackslist()]
@@ -128,15 +127,14 @@ class Creature():
             self.nextaction = self.ai()
             self.update(timeleft)
 
-class Blind_zombie(Creature):
+class Zombie(Creature):
     def __init__(self, world, x, y):
         super().__init__(world)
         self.faction = 'zombie'
         self.char = 'z'
-        self.name = 'blind zombie'
+        self.name = 'zombie'
         self.x = x
         self.y = y
-        self.sight = 0
         self.hp = 10
         self.torso = bodypart.ZombieTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
@@ -146,22 +144,37 @@ class Blind_zombie(Creature):
         self.bodyparts[0].connect('heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.ZombieBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
         
     def ai(self):
+        player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        fovmap = fov(self.world.walls, self.x, self.y, self.sight())
         target = None
-        for creature in self.world.creatures:
-            if creature.faction != 'zombie' and abs(self.x - creature.x) <= 1 and abs(self.y - creature.y) <= 1:
-                target = creature
-        if target == None or len(self.attackslist()) == 0:
-            x = 0
-            y = 0
-            while (x,y) == (0,0) or self.world.walls[self.x+x, self.y+y] != 0:
-                x = np.random.choice([-1,0,1])
-                y = np.random.choice([-1,0,1])
-            time = np.sqrt(x**2 + y**2) * self.steptime()
-            if len([creature for creature in self.world.creatures if creature.x == self.x+x and creature.y == self.y+y]) == 0:
-                return(['move', x, y, time])
+        if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+            target = player
+        elif fovmap[player.x, player.y]:
+            self.targetcoords = (player.x, player.y)
+        if target != None and len(self.attackslist()) > 0:
+            return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), self.attackslist()[0], self.attackslist()[0][6]])
+        elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+            dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+            time = np.sqrt(dx**2 + dy**2) * self.steptime()
+            if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]:
+                return(['move', dx, dy, time])
             else:
                 return(['wait', 1])
         else:
-            return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), self.attackslist()[0], self.attackslist()[0][6]])
+            self.targetcoords = None
+            dx = 0
+            dy = 0
+            while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                dx = np.random.choice([-1,0,1])
+                dy = np.random.choice([-1,0,1])
+            time = np.sqrt(dx**2 + dy**2) * self.steptime()
+            if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                return(['move', dx, dy, time])
+            else:
+                return(['wait', 1])

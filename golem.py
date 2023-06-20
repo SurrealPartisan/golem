@@ -8,10 +8,10 @@ import item
 import creature
 import world
 import bodypart
+from utils import mapwidth, mapheight, fov
 
 pygame.init()
 
-mapwidth, mapheight = 80, 40
 logheight = 8
 statuslines = 1
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person')
@@ -55,7 +55,7 @@ for i in range(10):
     while cave.walls[x, y] != 0:
         x = np.random.randint(mapwidth)
         y = np.random.randint(mapheight)
-    cave.creatures.append(creature.Blind_zombie(cave, x, y))
+    cave.creatures.append(creature.Zombie(cave, x, y))
 
 player.log = ['Welcome to the cave!', "Press 'h' for help."]
 log = player.log
@@ -64,20 +64,6 @@ chosen = 0 # Used for different item choosing gamestates
 target = None # Target of an attack
 
 gamestate = 'free'
-
-def fov(walls, x, y, sight):
-    fovmap = np.zeros((mapwidth, mapheight))
-    fovmap[x,y] = 1
-    for angle in np.arange(16*sight)*2*np.pi/(16*sight):
-        cont = True
-        r = 0
-        while cont:
-            r += 0.5
-            x2 = round(x + r*np.cos(angle))
-            y2 = round(y + r*np.sin(angle))
-            fovmap[x2,y2] = 1
-            if walls[x2,y2] == 1 or r >= sight: cont = False
-    return fovmap
 
 def draw():
     fovmap = fov(cave.walls, player.x, player.y, player.sight())
