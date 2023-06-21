@@ -151,32 +151,35 @@ class Zombie(Creature):
         self.targetcoords = None
         
     def ai(self):
-        player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
-        fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-        target = None
-        if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
-            target = player
-        elif fovmap[player.x, player.y]:
-            self.targetcoords = (player.x, player.y)
-        if target != None and len(self.attackslist()) > 0:
-            return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), self.attackslist()[0], self.attackslist()[0][6]])
-        elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
-            dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
-            dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-            time = np.sqrt(dx**2 + dy**2) * self.steptime()
-            if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]:
-                return(['move', dx, dy, time])
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), self.attackslist()[0], self.attackslist()[0][6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
             else:
-                return(['wait', 1])
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
         else:
-            self.targetcoords = None
-            dx = 0
-            dy = 0
-            while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
-                dx = np.random.choice([-1,0,1])
-                dy = np.random.choice([-1,0,1])
-            time = np.sqrt(dx**2 + dy**2) * self.steptime()
-            if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
-                return(['move', dx, dy, time])
-            else:
-                return(['wait', 1])
+            return(['wait', 1])

@@ -7,4 +7,3 @@
 * Better AI
 * More enemies
 * Items
-* Fix crashing when dying
