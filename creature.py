@@ -7,7 +7,7 @@ Created on Mon Sep 12 21:16:44 2022
 
 import numpy as np
 import bodypart
-from utils import fov, anglebetween
+from utils import fov, anglebetween, numlevels
 
 class Creature():
     def __init__(self, world):
@@ -19,7 +19,9 @@ class Creature():
         self.y = 0
         self.inventory = []
         self.log = []
-        self.seen = np.zeros((world.width, world.height))
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((world.width, world.height)))
         self.nextaction = ['wait', 1]
         self.bodyparts = []
         self.torso = None

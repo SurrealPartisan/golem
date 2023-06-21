@@ -16,6 +16,8 @@ class World():
         self.walls = np.ones((width, height))
         self.items = []
         self.creatures = []
+        self.stairsupcoords = None
+        self.stairsdowncoords = None
     
     def rooms(self):
         self.walls = np.ones((self.width, self.height))
@@ -82,3 +84,14 @@ class World():
                     coords[axis] -= 1
                 self.walls[coords[0], coords[1]] = 0
             roomsconnected[newroom] = 1
+            
+        x = y = 0
+        while self.walls[x, y] != 0:
+            x = np.random.randint(self.width)
+            y = np.random.randint(self.height)
+        self.stairsdowncoords = (x, y)
+        x = y = 0
+        while self.walls[x, y] != 0 or (x, y) == self.stairsdowncoords:
+            x = np.random.randint(self.width)
+            y = np.random.randint(self.height)
+        self.stairsupcoords = (x, y)

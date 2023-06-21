@@ -9,6 +9,7 @@ Created on Sun Oct 16 21:37:14 2022
 import numpy as np
 
 mapwidth, mapheight = 80, 40
+numlevels = 10
 
 def drugname():
     syl1 = np.random.choice(['Ab', 'Bra', 'Cil', 'Tra', 'Cog', 'I', 'Bri'])

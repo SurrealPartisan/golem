@@ -7,4 +7,4 @@
 * Better AI
 * More enemies
 * Items
-* Dungeon levels
+* Fix crashing when dying

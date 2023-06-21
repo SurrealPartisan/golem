@@ -8,7 +8,7 @@ import item
 import creature
 import world
 import bodypart
-from utils import mapwidth, mapheight, fov
+from utils import mapwidth, mapheight, numlevels, fov
 
 pygame.init()
 
@@ -17,8 +17,35 @@ statuslines = 1
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person')
 win.font = pygame.font.Font('Hack-Regular.ttf', 12)
 win.autoupdate = False
-cave = world.World(mapwidth, mapheight)
-cave.rooms()
+
+caves = []
+for i in range(numlevels):
+    cave = world.World(mapwidth, mapheight)
+    cave.rooms()
+    
+    for i in range(10):
+        x = y = 0
+        while cave.walls[x, y] != 0:
+            x = np.random.randint(mapwidth)
+            y = np.random.randint(mapheight)
+        item.create_medication(cave.items, x, y)
+    
+    x = y = 0
+    while cave.walls[x, y] != 0:
+        x = np.random.randint(mapwidth)
+        y = np.random.randint(mapheight)
+    item.HumanIronDagger(cave.items, x, y)
+    
+    for i in range(10):
+        x = y = 0
+        while cave.walls[x, y] != 0:
+            x = np.random.randint(mapwidth)
+            y = np.random.randint(mapheight)
+        cave.creatures.append(creature.Zombie(cave, x, y))
+    
+    caves.append(cave)
+cave_i = 0
+cave = caves[cave_i]
 
 player = creature.Creature(cave)
 player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
@@ -36,26 +63,6 @@ while cave.walls[player.x, player.y] != 0:
     player.x= np.random.randint(mapwidth)
     player.y = np.random.randint(mapheight)
 cave.creatures.append(player)
-
-for i in range(10):
-    x = y = 0
-    while cave.walls[x, y] != 0:
-        x = np.random.randint(mapwidth)
-        y = np.random.randint(mapheight)
-    item.create_medication(cave.items, x, y)
-
-x = y = 0
-while cave.walls[x, y] != 0:
-    x = np.random.randint(mapwidth)
-    y = np.random.randint(mapheight)
-item.HumanIronDagger(cave.items, x, y)
-
-for i in range(10):
-    x = y = 0
-    while cave.walls[x, y] != 0:
-        x = np.random.randint(mapwidth)
-        y = np.random.randint(mapheight)
-    cave.creatures.append(creature.Zombie(cave, x, y))
 
 player.log = ['Welcome to the cave!', "Press 'h' for help."]
 log = player.log
@@ -76,16 +83,27 @@ def draw():
                     win.putchars(' ', x=i, y=j, bgcolor='white')
                 else:
                     win.putchars(' ', x=i, y=j, bgcolor=(64,64,64))
-                player.seen[i,j] = 1
-            elif player.seen[i,j] == 1:
+                player.seen[cave_i][i,j] = 1
+            elif player.seen[cave_i][i,j] == 1:
                 if cave.walls[i,j] == 1:
                     win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
+    i, j = cave.stairsdowncoords
+    if fovmap[i,j]:
+        win.putchars('>', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
+    elif player.seen[cave_i][i,j] == 1:
+        win.putchars('>', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
+    i, j = cave.stairsupcoords
+    if fovmap[i,j]:
+        win.putchars('<', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
+    elif player.seen[cave_i][i,j] == 1:
+        win.putchars('<', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
+
     # Items
     for it in cave.items:
         if fovmap[it.x, it.y]:
             win.putchars(it.char, x=it.x, y=it.y, 
                  bgcolor=(64,64,64), fgcolor=it.color)
-        elif player.seen[it.x,it.y] == 1:
+        elif player.seen[cave_i][it.x,it.y] == 1:
             win.putchars('?', x=it.x, y=it.y, 
                  bgcolor='black', fgcolor=(128,128,128))
     
@@ -279,7 +297,7 @@ while True:
         try:
             if event.type == pygame.locals.KEYDOWN:
                 if gamestate == 'free':
-                    # Player movements. This code needs some drying.
+                    # Player movements
                     if event.key == pygame.locals.K_UP or event.key == pygame.locals.K_KP8:
                         gamestate, logback, target, chosen = moveorattack(0, -1)
                     if event.key == pygame.locals.K_DOWN or event.key == pygame.locals.K_KP2:
@@ -296,7 +314,45 @@ while True:
                         gamestate, logback, target, chosen = moveorattack(-1, 1)
                     if event.key == pygame.locals.K_KP3:
                         gamestate, logback, target, chosen = moveorattack(1, 1)
-                    
+
+                    if event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT):
+                        if (player.x, player.y) != cave.stairsdowncoords:
+                            log.append("You can't go down here!")
+                            logback = 0
+                        else:
+                            if cave_i == numlevels - 1:
+                                log.append("Lower levels not yet implemented!")
+                                logback = 0
+                            else:
+                                cave_i += 1
+                                cave.creatures.remove(player)
+                                cave = caves[cave_i]
+                                cave.creatures.append(player)
+                                player.world = cave
+                                player.x = cave.stairsupcoords[0]
+                                player.y = cave.stairsupcoords[1]
+                                log.append('You went down the stairs.')
+                                logback = 0
+
+                    if event.key == pygame.locals.K_LESS and not (event.mod & pygame.KMOD_SHIFT):
+                        if (player.x, player.y) != cave.stairsupcoords:
+                            log.append("You can't go up here!")
+                            logback = 0
+                        else:
+                            if cave_i == 0:
+                                log.append("Overworld not yet implemented!")
+                                logback = 0
+                            else:
+                                cave_i -= 1
+                                cave.creatures.remove(player)
+                                cave = caves[cave_i]
+                                cave.creatures.append(player)
+                                player.world = cave
+                                player.x = cave.stairsdowncoords[0]
+                                player.y = cave.stairsdowncoords[1]
+                                log.append('You went up the stairs.')
+                                logback = 0
+
                     if event.key == pygame.locals.K_m:
                         gamestate = 'mine'
                     
