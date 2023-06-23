@@ -42,6 +42,12 @@ for i in range(numlevels):
         y = np.random.randint(mapheight)
     item.LightPick(cave.items, x, y)
 
+    x = y = 0
+    while cave.walls[x, y] != 0:
+        x = np.random.randint(mapwidth)
+        y = np.random.randint(mapheight)
+    item.HeavyPick(cave.items, x, y)
+
     for i in range(10):
         x = y = 0
         while cave.walls[x, y] != 0:
@@ -199,16 +205,16 @@ def draw():
     elif gamestate == 'wieldchoosebodypart':
         wieldmessage = 'Choose where to wield the ' + selecteditem.name + ':'
         win.write(wieldmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-        logrows = min(logheight-1,len([part for part in player.bodyparts if part.capableofwielding]))
+        logrows = min(logheight-1,len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]))
         for i in range(logrows):
-            if len([part for part in player.bodyparts if part.capableofwielding]) <= logheight-1:
+            if len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) <= logheight-1:
                 j = i
             else:
                 j = len([part for part in player.bodyparts if part.capableofwielding])+i-logrows-logback
             if j != chosen:
-                win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
-                win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding][j], x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][j], x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
     
     elif gamestate == 'unwield':
         wieldmessage = 'Choose the item to unwield:'
@@ -577,14 +583,14 @@ while True:
                 elif gamestate == 'wieldchoosebodypart':
                     if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
-                        if chosen == len([part for part in player.bodyparts if part.capableofwielding]) - logback - (logheight - 1) - 1:
+                        if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) - logback - (logheight - 1) - 1:
                             logback += 1
                     if event.key == pygame.locals.K_DOWN:
-                        chosen = min(len([part for part in player.bodyparts if part.capableofwielding])-1, chosen+1)
-                        if chosen == len([part for part in player.bodyparts if part.capableofwielding]) - logback:
+                        chosen = min(len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0])-1, chosen+1)
+                        if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        selected = [part for part in player.bodyparts if part.capableofwielding][chosen]
+                        selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][chosen]
                         player.inventory.remove(selecteditem)
                         selected.wielded.append(selecteditem)
                         selecteditem.owner = selected.wielded

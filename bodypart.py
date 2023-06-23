@@ -9,6 +9,7 @@ Created on Thu Jun 15 21:26:04 2023
 import numpy as np
 import item
 from item import Attack
+from utils import listwithowner
 
 class BodyPartConnection():
     def __init__(self, parent, categories, vital, prefix, defensecoefficient=1):
@@ -103,7 +104,7 @@ class HumanArm(BodyPart):
         self.childconnections = {}
         self.maxhp = 40
         self.capableofwielding = True
-        self.wielded = [] # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
 
     def speed(self):
@@ -213,7 +214,7 @@ class ZombieArm(BodyPart):
         self.maxhp = 4
         self.material = "undead flesh"
         self.capableofwielding = True
-        self.wielded = [] # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
 
     def speed(self):

@@ -34,3 +34,8 @@ def fov(walls, x, y, sight):
 def anglebetween(point1, point2):
     newcoords = (point2[1] - point1[1], point2[0] - point1[0])
     return np.arctan2(*newcoords)%(2*np.pi)
+
+class listwithowner(list):
+    def __init__(self, iterable, owner):
+        super().__init__(iterable)
+        self.owner = owner

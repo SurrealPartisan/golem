@@ -7,7 +7,7 @@ Created on Mon Sep 12 21:16:44 2022
 
 import numpy as np
 import bodypart
-from utils import fov, anglebetween, numlevels
+from utils import fov, anglebetween, numlevels, listwithowner
 
 class Creature():
     def __init__(self, world):
@@ -17,13 +17,13 @@ class Creature():
         self.name = 'golem'
         self.x = 0
         self.y = 0
-        self.inventory = []
+        self.inventory = listwithowner([], self)
         self.log = []
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((world.width, world.height)))
         self.nextaction = ['wait', 1]
-        self.bodyparts = []
+        self.bodyparts = listwithowner([], self)
         self.torso = None
         self.dead = False
 
@@ -125,7 +125,7 @@ class Creature():
             else:
                 self.log.append("There's a " + creaturesintheway[0].name + " in your way.")
         elif self.nextaction[0] == 'fight':
-            if not self.nextaction[1].dead:  # possibly prevent a crash
+            if not self.nextaction[1].dead:  # prevent a crash
                 self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
 
     def update(self, time):

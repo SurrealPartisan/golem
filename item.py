@@ -71,3 +71,21 @@ class LightPick(Item):
 
     def minespeed(self):
         return 0.25
+
+class HeavyPick(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'heavy pick', '\\', (186, 100, 13))
+        self.wieldable = True
+        self.weapon = True
+
+    def attackslist(self):
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.6, 1.5, 1, 30)]
+        else:
+            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.4, 2, 1, 20)]
+
+    def minespeed(self):
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return 0.33
+        else:
+            return 0.2
