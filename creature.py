@@ -25,6 +25,7 @@ class Creature():
         self.nextaction = ['wait', 1]
         self.bodyparts = []
         self.torso = None
+        self.dead = False
 
     def speed(self):
         return max([part.speed() for part in self.bodyparts])
@@ -51,7 +52,7 @@ class Creature():
         return healed
 
     def dying(self):
-        return sum([part.damagetaken for part in self.bodyparts]) > sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
+        return self.dead or sum([part.damagetaken for part in self.bodyparts]) > sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
 
     def die(self):
         self.world.creatures.remove(self)
@@ -77,6 +78,7 @@ class Creature():
                     part.wielded.remove(it)
                     it.x = self.x
                     it.y = self.y
+        self.dead = True
 
     def attackslist(self):
         return [attack for part in self.bodyparts for attack in part.attackslist()]
@@ -114,7 +116,7 @@ class Creature():
         # starting with action string, followed by parameters, last of which is
         # the time needed.
         return ['wait', 1]
-    
+
     def resolveaction(self):
         if self.nextaction[0] == 'move':
             creaturesintheway = [creature for creature in self.world.creatures if creature.x == self.x+self.nextaction[1] and creature.y == self.y+self.nextaction[2]]
@@ -123,8 +125,9 @@ class Creature():
             else:
                 self.log.append("There's a " + creaturesintheway[0].name + " in your way.")
         elif self.nextaction[0] == 'fight':
-            self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
-    
+            if not self.nextaction[1].dead:  # possibly prevent a crash
+                self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
+
     def update(self, time):
         if time < self.nextaction[-1]:
             self.nextaction[-1] -= time

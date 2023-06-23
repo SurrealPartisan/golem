@@ -311,7 +311,7 @@ def mine(dx, dy):
 draw()
 while True:
     for event in pygame.event.get():
-        try:
+        #try:
             if event.type == pygame.locals.KEYDOWN:
                 if gamestate == 'free':
                     # Player movements
@@ -666,7 +666,7 @@ while True:
                 
         
         # Make sure the window is closed if the game crashes
-        except Exception as e:
-            pygame.quit()
-            sys.exit()
-            raise e
+        #except Exception as e:
+        #    pygame.quit()
+        #    sys.exit()
+        #    raise e
