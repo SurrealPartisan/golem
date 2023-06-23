@@ -59,9 +59,8 @@ player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0
 player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
 player.bodyparts[-3].connect('right eye', bodypart.HumanEye(player.bodyparts, 0, 0))
 player.faction = 'player'
-while cave.walls[player.x, player.y] != 0:
-    player.x= np.random.randint(mapwidth)
-    player.y = np.random.randint(mapheight)
+player.x = cave.stairsupcoords[0]
+player.y = cave.stairsupcoords[1]
 cave.creatures.append(player)
 
 player.log = ['Welcome to the cave!', "Press 'h' for help."]
@@ -315,7 +314,7 @@ while True:
                     if event.key == pygame.locals.K_KP3:
                         gamestate, logback, target, chosen = moveorattack(1, 1)
 
-                    if event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT):
+                    if event.key == pygame.locals.K_GREATER or (event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT)):
                         if (player.x, player.y) != cave.stairsdowncoords:
                             log.append("You can't go down here!")
                             logback = 0
