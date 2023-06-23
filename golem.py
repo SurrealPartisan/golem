@@ -22,27 +22,33 @@ caves = []
 for i in range(numlevels):
     cave = world.World(mapwidth, mapheight)
     cave.rooms()
-    
+
     for i in range(10):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
         item.create_medication(cave.items, x, y)
-    
+
     x = y = 0
     while cave.walls[x, y] != 0:
         x = np.random.randint(mapwidth)
         y = np.random.randint(mapheight)
     item.HumanIronDagger(cave.items, x, y)
-    
+
+    x = y = 0
+    while cave.walls[x, y] != 0:
+        x = np.random.randint(mapwidth)
+        y = np.random.randint(mapheight)
+    item.LightPick(cave.items, x, y)
+
     for i in range(10):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
         cave.creatures.append(creature.Zombie(cave, x, y))
-    
+
     caves.append(cave)
 cave_i = 0
 cave = caves[cave_i]
@@ -288,6 +294,18 @@ def moveorattack(dx, dy):
     chosen = 0
     return(gamestate, logback, target, chosen)
 
+def mine(dx, dy):
+    if player.x+dx == 0 or player.x+dx == mapwidth-1 or player.y+dy == 0 or player.y+dy == mapheight-1:
+        log.append('That is too hard for you to mine.')
+    elif cave.walls[player.x+dx, player.y+dy] == 1:
+        updatetime(player.minetime())
+        if not player.dying():
+            log.append('You mined a hole in the wall.')
+            cave.walls[player.x+dx, player.y+dy] = 0
+    else:
+        log.append("There's no wall there.")
+    return('free', 0)  # gamestate and logback
+
 
 
 draw()
@@ -353,7 +371,11 @@ while True:
                                 logback = 0
 
                     if event.key == pygame.locals.K_m:
-                        gamestate = 'mine'
+                        if player.minespeed() > 0:
+                            gamestate = 'mine'
+                        else:
+                            log.append('You lack the tools or appendages to mine.')
+                            logback = 0
                     
                     # Items
                     if event.key == pygame.locals.K_COMMA:
@@ -444,64 +466,21 @@ while True:
                         
                 elif gamestate == 'mine':
                     if event.key == pygame.locals.K_UP or event.key == pygame.locals.K_KP8:
-                        if player.y-1 == 0:
-                            log.append('That is too hard for you to mine.')
-                            logback = 0
-                        elif cave.walls[player.x, player.y-1] == 1:
-                            updatetime(3)
-                            if not player.dying():
-                                log.append('You mined north.')
-                                logback = 0
-                                cave.walls[player.x, player.y-1] = 0
-                        else:
-                            log.append("There's no wall there.")
-                            logback = 0
-                        gamestate = 'free'
+                        gamestate, logback = mine(0, -1)
                     if event.key == pygame.locals.K_DOWN or event.key == pygame.locals.K_KP2:
-                        if player.y+1 == mapheight-1:
-                            log.append('That is too hard for you to mine.')
-                            logback = 0
-                        elif cave.walls[player.x, player.y+1] == 1:
-                            updatetime(3)
-                            if not player.dying():
-                                log.append('You mined south.')
-                                logback = 0
-                                cave.walls[player.x, player.y+1] = 0
-                        else:
-                            log.append("There's no wall there.")
-                            logback = 0
-                        gamestate = 'free'
+                        gamestate, logback = mine(0, 1)
                     if event.key == pygame.locals.K_LEFT or event.key == pygame.locals.K_KP4:
-                        if player.x-1 == 0:
-                            log.append('That is too hard for you to mine.')
-                            logback = 0
-                        elif cave.walls[player.x-1, player.y] == 1:
-                            updatetime(3)
-                            if not player.dying():
-                                log.append('You mined west.')
-                                logback = 0
-                                cave.walls[player.x-1, player.y] = 0
-                        else:
-                            log.append("There's no wall there.")
-                            logback = 0
-                        gamestate = 'free'
+                        gamestate, logback = mine(-1, 0)
                     if event.key == pygame.locals.K_RIGHT or event.key == pygame.locals.K_KP6:
-                        if player.x+1 == mapwidth-1:
-                            log.append('That is too hard for you to mine.')
-                            logback = 0
-                        elif cave.walls[player.x+1, player.y] == 1:
-                            updatetime(3)
-                            if not player.dying():
-                                log.append('You mined east.')
-                                logback = 0
-                                cave.walls[player.x+1, player.y] = 0
-                        else:
-                            log.append("There's no wall there.")
-                            logback = 0
-                        gamestate = 'free'
-                    if event.key == pygame.locals.K_ESCAPE:
-                        logback = 0
-                        gamestate = 'free'
+                        gamestate, logback = mine(1, 0)
+                    if event.key == pygame.locals.K_KP7:
+                        gamestate, logback = mine(-1, -1)
+                    if event.key == pygame.locals.K_KP9:
+                        gamestate, logback = mine(1, -1)
+                    if event.key == pygame.locals.K_KP1:
+                        gamestate, logback = mine(-1, 1)
+                    if event.key == pygame.locals.K_KP3:
+                        gamestate, logback = mine(1, 1)
                 
                 elif gamestate == 'pick':
                     picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]

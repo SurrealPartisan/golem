@@ -29,16 +29,21 @@ class Creature():
     def speed(self):
         return max([part.speed() for part in self.bodyparts])
 
-    def sight(self):
-        return 1 + sum([part.sight() for part in self.bodyparts])
-
     def steptime(self):
         return 1/self.speed()
-    
+
     def move(self, dx, dy):
         self.y += dy
         self.x += dx
 
+    def minespeed(self):
+        return max([part.minespeed() for part in self.bodyparts])
+
+    def minetime(self):
+        return 1/self.minespeed()
+
+    def sight(self):
+        return 1 + sum([part.sight() for part in self.bodyparts])
     
     def heal(self, part, hpgiven):
         healed = max(hpgiven, part.damagetaken)

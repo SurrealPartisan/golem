@@ -14,7 +14,7 @@ Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd
 
 class Item():
     def __init__(self, owner, x, y, name, char, color):
-        self.owner = owner # A list, such as inventory or list of map items
+        self.owner = owner  # A list, such as inventory or list of map items
         self.owner.append(self)
         self.x = x
         self.y = y
@@ -28,6 +28,9 @@ class Item():
 
     def attackslist(self):
         return []
+
+    def minespeed(self):
+        return 0
 
 class Consumable(Item):
     def __init__(self, owner, x, y, name, char, color):
@@ -53,6 +56,18 @@ class HumanIronDagger(Item):
         super().__init__(owner, x, y, 'human-made iron dagger', '/', (200, 200, 200))
         self.wieldable = True
         self.weapon = True
-    
+
     def attackslist(self):
         return[Attack('human-made iron dagger', 'stabbed', 'stabbed', '', '', 0.8, 1, 1, 20)]
+
+class LightPick(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'light pick', '\\', (186, 100, 13))
+        self.wieldable = True
+        self.weapon = True
+
+    def attackslist(self):
+        return[Attack('light pick', 'hit', 'hit', ' with a light pick', ' with a light pick', 0.6, 1.5, 1, 20)]
+
+    def minespeed(self):
+        return 0.25

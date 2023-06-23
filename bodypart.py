@@ -52,16 +52,19 @@ class BodyPart(item.Item):
 
     def speed(self):
         return 0
-    
+
+    def minespeed(self):
+        return 0
+
     def sight(self):
         return 0
-    
+
     def hp(self):
         return self.maxhp - self.damagetaken
-    
+
     def destroyed(self):
         return self.damagetaken >= self.maxhp
-    
+
     def attackslist(self):
         return []
 
@@ -109,6 +112,15 @@ class HumanArm(BodyPart):
                 return 0.2
             else:
                 return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
         else:
             return 0
 
