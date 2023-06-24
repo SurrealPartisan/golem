@@ -14,6 +14,7 @@ class Creature():
         self.world = world
         self.faction = ''
         self.char = '@'
+        self.color = 'white'
         self.name = 'golem'
         self.x = 0
         self.y = 0
@@ -47,7 +48,7 @@ class Creature():
         return 1 + sum([part.sight() for part in self.bodyparts])
     
     def heal(self, part, hpgiven):
-        healed = max(hpgiven, part.damagetaken)
+        healed = min(hpgiven, part.damagetaken)
         part.damagetaken -= healed
         return healed
 
@@ -142,6 +143,7 @@ class Zombie(Creature):
         super().__init__(world)
         self.faction = 'zombie'
         self.char = 'z'
+        self.color = (191, 255, 128)
         self.name = 'zombie'
         self.x = x
         self.y = y
@@ -168,7 +170,67 @@ class Zombie(Creature):
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
             if target != None and len(self.attackslist()) > 0:
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), self.attackslist()[0], self.attackslist()[0][6]])
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+class MolePerson(Creature):
+    def __init__(self, world, x, y):
+        super().__init__(world)
+        self.faction = 'mole people'
+        self.char = 'm'
+        self.color = (186, 100, 13)
+        self.name = 'mole person'
+        self.x = x
+        self.y = y
+        self.hp = 10
+        self.torso = bodypart.MolePersonTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('left arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.MolePersonHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.MolePersonHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.MolePersonBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.MolePersonEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.MolePersonEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
                 dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))

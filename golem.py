@@ -48,12 +48,19 @@ for i in range(numlevels):
         y = np.random.randint(mapheight)
     item.HeavyPick(cave.items, x, y)
 
-    for i in range(10):
+    for i in range(5):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
         cave.creatures.append(creature.Zombie(cave, x, y))
+
+    for i in range(5):
+        x = y = 0
+        while cave.walls[x, y] != 0:
+            x = np.random.randint(mapwidth)
+            y = np.random.randint(mapheight)
+        cave.creatures.append(creature.MolePerson(cave, x, y))
 
     caves.append(cave)
 cave_i = 0
@@ -122,17 +129,31 @@ def draw():
     for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
         if fovmap[npc.x, npc.y]:
             win.putchars(npc.char, npc.x, npc.y, bgcolor=(64,64,64),
-                         fgcolor='white')
+                         fgcolor=npc.color)
     win.putchars(player.char, x=player.x, y=player.y, 
-                 bgcolor=(64,64,64), fgcolor='white')
+                 bgcolor=(64,64,64), fgcolor=player.color)
     
     # Status
     for i in range(mapwidth):
         win.putchars(' ', x=i, y=mapheight, bgcolor=((128,128,128)))
-    # win.putchars('hp: ' + repr(player.hp), x=2, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
-    win.putchars('items in inventory: ' + repr(len(player.inventory)), x=15, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
-    win.putchars('items in the cave: ' + repr(len(cave.items)), x=40, y=mapheight, bgcolor=((128,128,128)), fgcolor=(0, 255, 0))
-    
+    win.putchars('hp: ', x=0, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
+    hptext = repr(int(sum([part.maxhp for part in player.bodyparts])/2-sum([part.damagetaken for part in player.bodyparts]))) + '/' + repr(int(sum([part.maxhp for part in player.bodyparts])/2))
+    win.putchars(hptext, x=4, y=mapheight, bgcolor=((128,128,128)), fgcolor=(255, 0, 0))
+    textx = len(hptext) + 5
+    win.putchars('(', x=textx, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
+    textx += 1
+    for part in player.bodyparts:
+        if part.vital():
+            textcolor = (255, 0, 0)
+        elif part.destroyed():
+            textcolor = (0, 0, 0)
+        else:
+            textcolor = (0, 255, 0)
+        hptext = repr(part.maxhp - part.damagetaken) + '/' + repr(part.maxhp)
+        win.putchars(hptext, x=textx, y=mapheight, bgcolor=((128,128,128)), fgcolor=textcolor)
+        textx += len(hptext) + 1
+    win.putchars(')', x=textx-1, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
+
     # Log
     if gamestate == 'free' or gamestate == 'dead':
         logrows = min(logheight,len(log))
@@ -240,9 +261,9 @@ def draw():
             else:
                 j = len(player.attackslist())+i-logrows-logback
             if j != chosen:
-                win.write(player.attackslist()[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                win.write(player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ')', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
-                win.write(player.attackslist()[j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                win.write(player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ')', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
     elif gamestate == 'choosetargetbodypart':
         attackmessage = 'Choose where to attack the ' + target.name + ':'
@@ -555,7 +576,7 @@ while True:
                                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                             elif part == player.torso:
                                 partname = 'torso'
-                            log.append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(selected.hpgiven()) + ' points.')
+                            log.append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(healed) + ' points.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
