@@ -396,6 +396,9 @@ while True:
                     if event.key == pygame.locals.K_KP3:
                         gamestate, logback, target, chosen = moveorattack(1, 1)
 
+                    if event.key == pygame.locals.K_PERIOD or event.key == pygame.locals.K_KP5:
+                        updatetime(1)
+
                     if event.key == pygame.locals.K_GREATER or (event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT)):
                         if (player.x, player.y) != cave.stairsdowncoords:
                             log.append("You can't go down here!")
@@ -528,6 +531,7 @@ while True:
                         log.append('Commands:')
                         log.append('  - page up, page down, home, end: explore the log')
                         log.append('  - arrows or numpad: move')
+                        log.append('  - period or numpad 5: wait a moment')
                         log.append('  - m: mine')
                         log.append('  - comma: pick up an item')
                         log.append('  - d: drop an item')
@@ -538,7 +542,7 @@ while True:
                         log.append('  - w: wield an item')
                         log.append('  - u: unwield an item')
                         log.append('  - h: this list of commands')
-                        logback = 5 # Increase when adding commands
+                        logback = 6 # Increase when adding commands
                     
                     # Log scrolling
                     if event.key == pygame.locals.K_PAGEUP:
