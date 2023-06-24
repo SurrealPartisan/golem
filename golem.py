@@ -124,7 +124,7 @@ def draw():
         elif player.seen[cave_i][it.x,it.y] == 1:
             win.putchars('?', x=it.x, y=it.y, 
                  bgcolor='black', fgcolor=(128,128,128))
-    
+
     # Creatures
     for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
         if fovmap[npc.x, npc.y]:
@@ -132,7 +132,7 @@ def draw():
                          fgcolor=npc.color)
     win.putchars(player.char, x=player.x, y=player.y, 
                  bgcolor=(64,64,64), fgcolor=player.color)
-    
+
     # Status
     for i in range(mapwidth):
         win.putchars(' ', x=i, y=mapheight, bgcolor=((128,128,128)))
@@ -143,7 +143,9 @@ def draw():
     win.putchars('(', x=textx, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
     textx += 1
     for part in player.bodyparts:
-        if part.vital():
+        if player.dying():
+            textcolor = (0, 0, 0)
+        elif part.vital():
             textcolor = (255, 0, 0)
         elif part.destroyed():
             textcolor = (0, 0, 0)
@@ -161,7 +163,7 @@ def draw():
             j = i-logrows-logback
             c = 255 + (max(j+1, -logheight))*128//logheight
             win.write(log[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
-            
+
     elif gamestate == 'mine':
         minemessage = 'Choose the direction to mine!'
         win.write(minemessage, x=0, y=mapheight+statuslines, fgcolor=(255,255,255))
@@ -208,7 +210,7 @@ def draw():
                 win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
-    
+
     elif gamestate == 'wieldchooseitem':
         wieldmessage = 'Choose the item to wield:'
         win.write(wieldmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
@@ -222,7 +224,7 @@ def draw():
                 win.write([item for item in player.inventory if item.wieldable][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write([item for item in player.inventory if item.wieldable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
-    
+
     elif gamestate == 'wieldchoosebodypart':
         wieldmessage = 'Choose where to wield the ' + selecteditem.name + ':'
         win.write(wieldmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
@@ -236,7 +238,7 @@ def draw():
                 win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][j], x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
-    
+
     elif gamestate == 'unwield':
         wieldmessage = 'Choose the item to unwield:'
         win.write(wieldmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
@@ -250,7 +252,7 @@ def draw():
                 win.write([part.wielded[0].name + ' in the ' + part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write([part.wielded[0].name + ' in the ' + part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][j], x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
-    
+
     elif gamestate == 'chooseattack':
         attackmessage = 'Choose how to attack the ' + target.name + ':'
         win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
@@ -283,7 +285,42 @@ def draw():
                 win.write(partname, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write(partname, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
-    
+
+    elif gamestate == 'choosetorso':
+        choosemessage = 'Choose your torso:'
+        win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        torsolist = [part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]
+        logrows = min(logheight-1,len(torsolist))
+        for i in range(logrows):
+            if len(torsolist) <= logheight-1:
+                j = i
+            else:
+                j = len(torsolist)+i-logrows-logback
+            if j != chosen:
+                win.write(torsolist[j].name + ' (hp: ' + repr(torsolist[j].hp()) + '/' + repr(torsolist[j].maxhp) + ')', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write(torsolist[j].name + ' (hp: ' + repr(torsolist[j].hp()) + '/' + repr(torsolist[j].maxhp) + ')', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+    elif gamestate == 'choosebodypart':
+        choosemessage = 'Choose your ' + connectionname + ':'
+        win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len(partslist))
+        if logrows == 0:
+            win.write('No suitable options for a vital bodypart. Press ESC to cancel the body building process', x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+        for i in range(logrows):
+            if len(partslist) <= logheight-1:
+                j = i
+            else:
+                j = len(partslist)+i-logrows-logback
+            if partslist[j] == None:
+                partdescription = 'none'
+            else:
+                partdescription = partslist[j].name + ' (hp: ' + repr(partslist[j].hp()) + '/' + repr(partslist[j].maxhp) + ')'
+            if j != chosen:
+                win.write(partdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write(partdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
     win.update()
 
 def updatetime(time):
@@ -403,7 +440,7 @@ while True:
                         else:
                             log.append('You lack the tools or appendages to mine.')
                             logback = 0
-                    
+
                     # Items
                     if event.key == pygame.locals.K_COMMA:
                         picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
@@ -431,13 +468,16 @@ while True:
                         else:
                             log.append('You have nothing to drop!')
                     if event.key == pygame.locals.K_i:
-                        log.append('Items in your backpack:')
+                        log.append('Items in your inventory:')
                         if len(player.inventory) == 0:
                             log.append('  - nothing')
                             logback = 0
                         else:
                             for it in player.inventory:
-                                log.append('  - a ' + it.name)
+                                if it.bodypart:
+                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.maxhp - it.damagetaken) + '/' + repr(it.maxhp) + ')')
+                                else:
+                                    log.append('  - a ' + it.name)
                                 if len(player.inventory) > logheight - 1:
                                     logback = len(player.inventory) - logheight + 1
                                 else:
@@ -467,17 +507,38 @@ while True:
                             log.append("You have nothing to unwield.")
                     if event.key == pygame.locals.K_u and (event.mod & pygame.KMOD_SHIFT):
                         log.append('Undressing not yet implemented!')
-                    
+
+                    # Bodyparts:
+                    if event.key == pygame.locals.K_b and not (event.mod & pygame.KMOD_SHIFT):
+                        log.append('The parts of your body:')
+                        for part in player.bodyparts:
+                            log.append('  - a ' + part.name + ' (hp: ' + repr(part.maxhp - part.damagetaken) + '/' + repr(part.maxhp) + ')')
+                        if len(player.bodyparts) > logheight - 1:
+                            logback = len(player.bodyparts) - logheight + 1
+                        else:
+                            logback = 0
+
+                    if event.key == pygame.locals.K_b and (event.mod & pygame.KMOD_SHIFT):
+                        gamestate = 'choosetorso'
+                        len([part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]) - logheight + 1
+                        chosen = 0
+
                     # Help
                     if event.key == pygame.locals.K_h:
                         log.append('Commands:')
-                        log.append('  - arrows: move')
-                        log.append('  - comma: pick up an item')
-                        log.append('  - i: check your inventory')
-                        log.append('  - c: take some medication')
                         log.append('  - page up, page down, home, end: explore the log')
+                        log.append('  - arrows or numpad: move')
+                        log.append('  - m: mine')
+                        log.append('  - comma: pick up an item')
+                        log.append('  - d: drop an item')
+                        log.append('  - i: check your inventory')
+                        log.append('  - b: list your body parts')
+                        log.append('  - B: choose your body parts')
+                        log.append('  - c: take some medication')
+                        log.append('  - w: wield an item')
+                        log.append('  - u: unwield an item')
                         log.append('  - h: this list of commands')
-                        logback = 0 # Increase when adding commands
+                        logback = 5 # Increase when adding commands
                     
                     # Log scrolling
                     if event.key == pygame.locals.K_PAGEUP:
@@ -661,7 +722,7 @@ while True:
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
-                
+
                 elif gamestate == 'choosetargetbodypart':
                     if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
@@ -681,7 +742,87 @@ while True:
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
-                
+
+                elif gamestate == 'choosetorso':
+                    torsolist = [part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]
+                    if event.key == pygame.locals.K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len(torsolist) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == pygame.locals.K_DOWN:
+                        chosen = min(len(torsolist)-1, chosen+1)
+                        if chosen == len(torsolist) - logback:
+                            logback -= 1
+                    if event.key == pygame.locals.K_RETURN:
+                        selected = torsolist[chosen]
+                        bodypartcandidates = [selected]
+                        connectioncandidates = []
+                        connectionname = list(selected.childconnections.keys())[0]
+                        connection = selected.childconnections[connectionname]
+                        partslist = [part for part in player.bodyparts if np.any([category in part.categories for category in connection.categories]) and not part.destroyed() and not part in bodypartcandidates] + [it for it in player.inventory if it.bodypart and np.any([category in it.categories for category in connection.categories]) and not it.destroyed() and not it in bodypartcandidates]
+                        if not connection.vital:
+                            partslist.append(None)
+                        gamestate = 'choosebodypart'
+                        logback = len(partslist) - logheight + 1
+                        chosen = 0
+                    if event.key == pygame.locals.K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+
+                elif gamestate == 'choosebodypart':
+                    if event.key == pygame.locals.K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len(partslist) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == pygame.locals.K_DOWN:
+                        chosen = min(len(partslist)-1, chosen+1)
+                        if chosen == len(partslist) - logback:
+                            logback -= 1
+                    if event.key == pygame.locals.K_RETURN:
+                        selected = partslist[chosen]
+                        if selected != None:
+                            bodypartcandidates.append(selected)
+                        connectioncandidates.append((connection, selected))
+                        connectionlist = [connection for part in bodypartcandidates for connection in [(name, part.childconnections[name]) for name in list(part.childconnections.keys())] if not connection[1] in [cn[0] for cn in connectioncandidates]]
+                        if len(connectionlist) > 0:
+                            connectionname = connectionlist[0][0]
+                            connection = connectionlist[0][1]
+                            partslist = [part for part in player.bodyparts if np.any([category in part.categories for category in connection.categories]) and not part.destroyed() and not part in bodypartcandidates] + [it for it in player.inventory if it.bodypart and np.any([category in it.categories for category in connection.categories]) and not it.destroyed() and not it in bodypartcandidates]
+                            if not connection.vital:
+                                partslist.append(None)
+                            gamestate = 'choosebodypart'
+                            logback = len(partslist) - logheight + 1
+                            chosen = 0
+                        else:
+                            updatetime(5)
+                            if not player.dying():
+                                for part in player.bodyparts:
+                                    if not part.destroyed():
+                                        part.owner = player.inventory
+                                        player.inventory.append(part)
+                                    part.parentalconnection = None
+                                    for con in part.childconnections:
+                                        part.childconnections[con].child = None
+                                    if part.capableofwielding:
+                                        for it in part.wielded:
+                                            it.owner = player.inventory
+                                            player.inventory.append(it)
+                                            part.wielded.remove(it)
+                                player.bodyparts = bodypartcandidates
+                                player.torso = player.bodyparts[0]
+                                for part in player.bodyparts:
+                                    player.inventory.remove(part)
+                                    part.owner = player.bodyparts
+                                for connection, part in connectioncandidates:
+                                    if part != None:
+                                        connection.connect(part)
+                                log.append('You have selected your bodyparts.')
+                                logback = 0
+                                gamestate = 'free'
+                    if event.key == pygame.locals.K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+
                 if player.dying():
                     gamestate = 'dead'
                 
