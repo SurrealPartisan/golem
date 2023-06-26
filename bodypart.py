@@ -97,7 +97,7 @@ class HumanTorso(BodyPart):
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
-        self.maxhp = 100
+        self.maxhp = 50
         self.worn = {'chest armor': listwithowner([], self)}
         self._wearwieldname = 'torso'
 
@@ -106,7 +106,7 @@ class HumanArm(BodyPart):
         super().__init__(owner, x, y, 'human arm', 'i', (250, 220, 196))
         self.categories = ['arm']
         self.childconnections = {}
-        self.maxhp = 40
+        self.maxhp = 20
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -144,7 +144,7 @@ class HumanLeg(BodyPart):
         super().__init__(owner, x, y, 'human leg', 'l', (250, 220, 196))
         self.categories = ['leg']
         self.childconnections = {}
-        self.maxhp = 40
+        self.maxhp = 20
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
 
@@ -172,7 +172,7 @@ class HumanHead(BodyPart):
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
-        self.maxhp = 40
+        self.maxhp = 20
         self.worn = {'helmet': listwithowner([], self)}
         self._wearwieldname = 'head'
 
@@ -200,14 +200,14 @@ class HumanBrain(BodyPart):
         super().__init__(owner, x, y, 'human brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 10
 
 class HumanHeart(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'human heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 10
 
 
 
@@ -223,7 +223,7 @@ class ZombieTorso(BodyPart):
             'head': BodyPartConnection(self, ['head'], False, ''),
             'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True)
             }
-        self.maxhp = 100
+        self.maxhp = 50
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -233,7 +233,7 @@ class ZombieArm(BodyPart):
         super().__init__(owner, x, y, 'zombie arm', 'i', (191, 255, 128))
         self.categories = ['arm']
         self.childconnections = {}
-        self.maxhp = 40
+        self.maxhp = 20
         self.material = "undead flesh"
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
@@ -272,7 +272,7 @@ class ZombieLeg(BodyPart):
         super().__init__(owner, x, y, 'zombie leg', 'l', (191, 255, 128))
         self.categories = ['leg']
         self.childconnections = {}
-        self.maxhp = 40
+        self.maxhp = 20
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -301,7 +301,7 @@ class ZombieHead(BodyPart):
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
             'brain': BodyPartConnection(self, ['brain'], False, '', defensecoefficient=0.5, armorapplies=True)
             }
-        self.maxhp = 40
+        self.maxhp = 20
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -331,7 +331,7 @@ class ZombieBrain(BodyPart):
         super().__init__(owner, x, y, 'zombie brain', '*', (150, 178, 82))
         self.categories = ['brain']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 10
         self.material = "undead flesh"
 
 class ZombieHeart(BodyPart):
@@ -339,7 +339,7 @@ class ZombieHeart(BodyPart):
         super().__init__(owner, x, y, 'zombie heart', '*', (150, 178, 82))
         self.categories = ['heart']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 10
         self.material = "undead flesh"
 
 
@@ -356,7 +356,7 @@ class MolePersonTorso(BodyPart):
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
-        self.maxhp = 100
+        self.maxhp = 50
         self.worn = {'chest armor': listwithowner([], self)}
         self._wearwieldname = 'torso'
 
@@ -365,7 +365,7 @@ class MolePersonArm(BodyPart):
         super().__init__(owner, x, y, 'mole person arm', 'i', (186, 100, 13))
         self.categories = ['arm']
         self.childconnections = {}
-        self.maxhp = 40
+        self.maxhp = 20
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -403,7 +403,7 @@ class MolePersonLeg(BodyPart):
         super().__init__(owner, x, y, 'mole person leg', 'l', (186, 100, 13))
         self.categories = ['leg']
         self.childconnections = {}
-        self.maxhp = 40
+        self.maxhp = 20
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
 
@@ -431,7 +431,7 @@ class MolePersonHead(BodyPart):
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
-        self.maxhp = 40
+        self.maxhp = 20
         self.worn = {'helmet': listwithowner([], self)}
         self._wearwieldname = 'head'
 
@@ -459,11 +459,11 @@ class MolePersonBrain(BodyPart):
         super().__init__(owner, x, y, 'mole person brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 10
 
 class MolePersonHeart(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole person heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 10
