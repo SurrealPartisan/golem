@@ -21,10 +21,20 @@ class Item():
         self.name = name
         self.char = char
         self.color = color
+        self.maxhp = np.inf
+        self.damagetaken = 0
         self.consumable = False
         self.wieldable = False
         self.weapon = False
         self.bodypart = False
+        self.wearable = False
+        self.isarmor = False
+
+    def hp(self):
+        return self.maxhp - self.damagetaken
+
+    def destroyed(self):
+        return self.damagetaken >= self.maxhp
 
     def attackslist(self):
         return []
@@ -89,3 +99,34 @@ class HeavyPick(Item):
             return 0.33
         else:
             return 0.2
+
+class PieceOfArmor(Item):
+    def __init__(self, owner, x, y, wearcategory, material):
+        name = material + ' ' + wearcategory
+        if material == 'leather': color = (186, 100, 13)
+        if material == 'bronze': color = (150,116,68)
+        if material == 'iron': color = (200, 200, 200)
+        if material == 'steel': color = (210, 210, 210)
+        super().__init__(owner, x, y, name, '[', color)
+        self.wearcategory = wearcategory
+        self.wearable = True
+        self.isarmor = True
+        if material == 'leather':
+            self.maxhp = 100
+            self.mindamage = 0
+            self.maxdamage = 5
+        if material == 'bronze':
+            self.maxhp = 200
+            self.mindamage = 0
+            self.maxdamage = 10
+        if material == 'iron':
+            self.maxhp = 300
+            self.mindamage = 0
+            self.maxdamage = 15
+        if material == 'steel':
+            self.maxhp = 400
+            self.mindamage = 0
+            self.maxdamage = 20
+
+def randomarmor(owner, x, y):
+    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'gauntlet', 'leg armor', 'helmet']), np.random.choice(['leather', 'bronze', 'iron', 'steel']))

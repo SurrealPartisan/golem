@@ -53,6 +53,13 @@ for i in range(numlevels):
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
+        item.randomarmor(cave.items, x, y)
+
+    for i in range(5):
+        x = y = 0
+        while cave.walls[x, y] != 0:
+            x = np.random.randint(mapwidth)
+            y = np.random.randint(mapheight)
         cave.creatures.append(creature.Zombie(cave, x, y))
 
     for i in range(5):
@@ -233,7 +240,7 @@ def draw():
             if len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) <= logheight-1:
                 j = i
             else:
-                j = len([part for part in player.bodyparts if part.capableofwielding])+i-logrows-logback
+                j = len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0])+i-logrows-logback
             if j != chosen:
                 win.write([part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
@@ -252,6 +259,48 @@ def draw():
                 win.write([part.wielded[0].name + ' in the ' + part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][j], x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
                 win.write([part.wielded[0].name + ' in the ' + part.wearwieldname() for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][j], x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+    elif gamestate == 'wearchooseitem':
+        wearmessage = 'Choose the item to wear:'
+        win.write(wearmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len([item for item in player.inventory if item.wearable]))
+        for i in range(logrows):
+            if len([item for item in player.inventory if item.wearable]) <= logheight-1:
+                j = i
+            else:
+                j = len([item for item in player.inventory if item.wearable])+i-logrows-logback
+            if j != chosen:
+                win.write([item for item in player.inventory if item.wearable][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write([item for item in player.inventory if item.wearable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+    elif gamestate == 'wearchoosebodypart':
+        wearmessage = 'Choose where to wear the ' + selecteditem.name + ':'
+        win.write(wearmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len(partlist))
+        for i in range(logrows):
+            if len(partlist) <= logheight-1:
+                j = i
+            else:
+                j = len(partlist)+i-logrows-logback
+            if j != chosen:
+                win.write(partlist[j].wearwieldname(), x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write(partlist[j].wearwieldname(), x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+    elif gamestate == 'undress':
+        choosemessage = 'Choose the item to unwield:'
+        win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+        logrows = min(logheight-1,len(wornlist))
+        for i in range(logrows):
+            if len(wornlist) <= logheight-1:
+                j = i
+            else:
+                j = len(wornlist)+i-logrows-logback
+            if j != chosen:
+                win.write(wornlist[j].name + ' on the ' + wornlist[j].owner.owner.wearwieldname(), x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+            if j == chosen:
+                win.write(wornlist[j].name + ' on the ' + wornlist[j].owner.owner.wearwieldname(), x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
     elif gamestate == 'chooseattack':
         attackmessage = 'Choose how to attack the ' + target.name + ':'
@@ -398,6 +447,7 @@ while True:
 
                     if event.key == pygame.locals.K_PERIOD or event.key == pygame.locals.K_KP5:
                         updatetime(1)
+                        logback = 0
 
                     if event.key == pygame.locals.K_GREATER or (event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT)):
                         if (player.x, player.y) != cave.stairsdowncoords:
@@ -471,20 +521,39 @@ while True:
                         else:
                             log.append('You have nothing to drop!')
                     if event.key == pygame.locals.K_i:
-                        log.append('Items in your inventory:')
+                        log.append('Items carried:')
                         if len(player.inventory) == 0:
                             log.append('  - nothing')
-                            logback = 0
                         else:
                             for it in player.inventory:
-                                if it.bodypart:
-                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.maxhp - it.damagetaken) + '/' + repr(it.maxhp) + ')')
+                                if it.maxhp < np.inf:
+                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
                                     log.append('  - a ' + it.name)
-                                if len(player.inventory) > logheight - 1:
-                                    logback = len(player.inventory) - logheight + 1
+                        log.append('Items wielded:')
+                        wieldlist = [part.wielded[0] for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+                        if len(wieldlist) == 0:
+                            log.append('  - nothing')
+                        else:
+                            for it in wieldlist:
+                                if it.maxhp < np.inf:
+                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
-                                    logback = 0
+                                    log.append('  - a ' + it.name)
+                        log.append('Items worn:')
+                        wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
+                        if len(wornlist) == 0:
+                            log.append('  - nothing')
+                        else:
+                            for it in wornlist:
+                                if it.maxhp < np.inf:
+                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                else:
+                                    log.append('  - a ' + it.name)
+                        if max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 > logheight:
+                            logback = max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 - logheight
+                        else:
+                            logback = 0
                     if event.key == pygame.locals.K_c:
                         if len([item for item in player.inventory if item.consumable]) > 0:
                             gamestate = 'consume'
@@ -492,6 +561,7 @@ while True:
                             chosen = 0
                         else:
                             log.append("You don't have anything to consume.")
+                            logback = 0
                     if event.key == pygame.locals.K_w and not (event.mod & pygame.KMOD_SHIFT):
                         if len([item for item in player.inventory if item.wieldable]) > 0 and len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) > 0:
                             gamestate = 'wieldchooseitem'
@@ -499,8 +569,15 @@ while True:
                             chosen = 0
                         else:
                             log.append("You cannot wield anything.")
+                            logback = 0
                     if event.key == pygame.locals.K_w and (event.mod & pygame.KMOD_SHIFT):
-                        log.append('Wearing not yet implemented!')
+                        if len([item for item in player.inventory if item.wearable]) > 0:
+                            gamestate = 'wearchooseitem'
+                            logback = len([item for item in player.inventory if item.wearable]) - logheight + 1
+                            chosen = 0
+                        else:
+                            log.append('You have nothing to wear.')
+                            logback = 0
                     if event.key == pygame.locals.K_u and not (event.mod & pygame.KMOD_SHIFT):
                         if len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) > 0:
                             gamestate = 'unwield'
@@ -508,14 +585,22 @@ while True:
                             chosen = 0
                         else:
                             log.append("You have nothing to unwield.")
+                            logback = 0
                     if event.key == pygame.locals.K_u and (event.mod & pygame.KMOD_SHIFT):
-                        log.append('Undressing not yet implemented!')
+                        wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
+                        if len(wornlist) > 0:
+                            gamestate = 'undress'
+                            logback = len(wornlist) - logheight + 1
+                            chosen = 0
+                        else:
+                            log.append("You have nothing to undress.")
+                            logback = 0
 
                     # Bodyparts:
                     if event.key == pygame.locals.K_b and not (event.mod & pygame.KMOD_SHIFT):
                         log.append('The parts of your body:')
                         for part in player.bodyparts:
-                            log.append('  - a ' + part.name + ' (hp: ' + repr(part.maxhp - part.damagetaken) + '/' + repr(part.maxhp) + ')')
+                            log.append('  - a ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ')')
                         if len(player.bodyparts) > logheight - 1:
                             logback = len(player.bodyparts) - logheight + 1
                         else:
@@ -541,8 +626,10 @@ while True:
                         log.append('  - c: take some medication')
                         log.append('  - w: wield an item')
                         log.append('  - u: unwield an item')
+                        log.append('  - W: wear an item')
+                        log.append('  - U: undress an item')
                         log.append('  - h: this list of commands')
-                        logback = 6 # Increase when adding commands
+                        logback = 8 # Increase when adding commands
                     
                     # Log scrolling
                     if event.key == pygame.locals.K_PAGEUP:
@@ -647,7 +734,7 @@ while True:
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
-                
+
                 elif gamestate == 'wieldchooseitem':
                     if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
@@ -665,7 +752,7 @@ while True:
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
-                
+
                 elif gamestate == 'wieldchoosebodypart':
                     if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
@@ -686,7 +773,7 @@ while True:
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
-                
+
                 elif gamestate == 'unwield':
                     if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
@@ -708,7 +795,73 @@ while True:
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
                         gamestate = 'free'
-                
+
+                elif gamestate == 'wearchooseitem':
+                    if event.key == pygame.locals.K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len([item for item in player.inventory if item.wearable]) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == pygame.locals.K_DOWN:
+                        chosen = min(len([item for item in player.inventory if item.wearable])-1, chosen+1)
+                        if chosen == len([item for item in player.inventory if item.wearable]) - logback:
+                            logback -= 1
+                    if event.key == pygame.locals.K_RETURN:
+                        selecteditem = [item for item in player.inventory if item.wearable][chosen]
+                        partlist = [part for part in player.bodyparts if selecteditem.wearcategory in part.worn.keys() and len(part.worn[selecteditem.wearcategory]) == 0]
+                        if len(partlist) > 0:
+                            logback = len(partlist) - logheight + 1
+                            gamestate = 'wearchoosebodypart'
+                            chosen = 0
+                        else:
+                            log.append('You have no suitable free body part for wearing that.')
+                            logback = 0
+                            gamestate = 'free'
+                    if event.key == pygame.locals.K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+
+                elif gamestate == 'wearchoosebodypart':
+                    if event.key == pygame.locals.K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len(partlist) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == pygame.locals.K_DOWN:
+                        chosen = min(len(partlist)-1, chosen+1)
+                        if chosen == len(partlist) - logback:
+                            logback -= 1
+                    if event.key == pygame.locals.K_RETURN:
+                        selected = partlist[chosen]
+                        player.inventory.remove(selecteditem)
+                        selected.worn[selecteditem.wearcategory].append(selecteditem)
+                        selecteditem.owner = selected.worn[selecteditem.wearcategory]
+                        log.append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                        logback = 0
+                        gamestate = 'free'
+                    if event.key == pygame.locals.K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+
+                elif gamestate == 'undress':
+                    if event.key == pygame.locals.K_UP:
+                        chosen = max(0, chosen-1)
+                        if chosen == len(wornlist) - logback - (logheight - 1) - 1:
+                            logback += 1
+                    if event.key == pygame.locals.K_DOWN:
+                        chosen = min(len(wornlist)-1, chosen+1)
+                        if chosen == len(wornlist) - logback:
+                            logback -= 1
+                    if event.key == pygame.locals.K_RETURN:
+                        selected = wornlist[chosen]
+                        selected.owner.remove(selected)
+                        player.inventory.append(selected)
+                        selected.owner = player.inventory
+                        log.append('You removed the ' + selected.name + ' from your ' + selected.owner.owner.wearwieldname() + '.')
+                        logback = 0
+                        gamestate = 'free'
+                    if event.key == pygame.locals.K_ESCAPE:
+                        logback = 0
+                        gamestate = 'free'
+
                 elif gamestate == 'chooseattack':
                     if event.key == pygame.locals.K_UP:
                         chosen = max(0, chosen-1)
@@ -800,6 +953,10 @@ while True:
                         else:
                             updatetime(5)
                             if not player.dying():
+                                for it in [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]:
+                                    it.owner.remove(it)
+                                    player.inventory.append(it)
+                                    it.owner = player.inventory
                                 for part in player.bodyparts:
                                     if not part.destroyed():
                                         part.owner = player.inventory

@@ -12,13 +12,14 @@ from item import Attack
 from utils import listwithowner
 
 class BodyPartConnection():
-    def __init__(self, parent, categories, vital, prefix, defensecoefficient=1):
+    def __init__(self, parent, categories, vital, prefix, defensecoefficient=1, armorapplies=False):
         self.parent = parent
         self.categories = categories
         self.vital = vital
         self.child = None
         self.prefix = prefix
         self.defensecoefficient = defensecoefficient
+        self.armorapplies = armorapplies
     
     def connect(self, child):
         if np.any([category in child.categories for category in self.categories]):
@@ -35,9 +36,8 @@ class BodyPart(item.Item):
         self.categories = []
         self.parentalconnection = None
         self.childconnections = {}
-        self.maxhp = np.inf
-        self.damagetaken = 0
         self.capableofwielding = False
+        self.worn = {}  # Each key is a category of item, e.g. helmet or backpack. Each value is a listwithowner, with the bodypart as the owner. The lists themselves should contain at most one item per list.
         self.material = "living flesh"
         self._defensecoefficient = 0.8
         self._wearwieldname = name
@@ -60,12 +60,6 @@ class BodyPart(item.Item):
     def sight(self):
         return 0
 
-    def hp(self):
-        return self.maxhp - self.damagetaken
-
-    def destroyed(self):
-        return self.damagetaken >= self.maxhp
-
     def attackslist(self):
         return []
 
@@ -81,6 +75,14 @@ class BodyPart(item.Item):
         else:
             return self.parentalconnection.prefix + self._wearwieldname
 
+    def armor(self):
+        armorlist = [wearlist[0] for wearlist in self.worn.values() if len(wearlist) > 0 and wearlist[0].isarmor and not wearlist[0].destroyed()]
+        if len(armorlist) > 0:
+            return armorlist[0]
+        elif self.parentalconnection != None and self.parentalconnection.armorapplies:
+            return self.parentalconnection.parent.armor()
+        else:
+            return None
 
 
 class HumanTorso(BodyPart):
@@ -93,9 +95,11 @@ class HumanTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5)
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 100
+        self.worn = {'chest armor': listwithowner([], self)}
+        self._wearwieldname = 'torso'
 
 class HumanArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -106,6 +110,7 @@ class HumanArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self)}
 
     def speed(self):
         if not self.destroyed():
@@ -140,7 +145,8 @@ class HumanLeg(BodyPart):
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 40
-        self._wearwieldname = 'foot'
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
 
     def speed(self):
         if not self.destroyed():
@@ -164,9 +170,11 @@ class HumanHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5)
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 40
+        self.worn = {'helmet': listwithowner([], self)}
+        self._wearwieldname = 'head'
 
     def attackslist(self):
         if not self.destroyed():
@@ -193,7 +201,7 @@ class HumanBrain(BodyPart):
         self.categories = ['brain']
         self.childconnections = {}
         self.maxhp = 20
-        
+
 class HumanHeart(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'human heart', '*', (255, 0, 0))
@@ -213,10 +221,12 @@ class ZombieTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], False, ''),
-            'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5)
+            'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 100
         self.material = "undead flesh"
+        self.worn = {'chest armor': listwithowner([], self)}
+        self._wearwieldname = 'torso'
 
 class ZombieArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -228,6 +238,7 @@ class ZombieArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self)}
 
     def speed(self):
         if not self.destroyed():
@@ -263,7 +274,8 @@ class ZombieLeg(BodyPart):
         self.childconnections = {}
         self.maxhp = 40
         self.material = "undead flesh"
-        self._wearwieldname = 'foot'
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
 
     def attackslist(self):
         if not self.destroyed():
@@ -287,10 +299,12 @@ class ZombieHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], False, '', defensecoefficient=0.5)
+            'brain': BodyPartConnection(self, ['brain'], False, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 40
         self.material = "undead flesh"
+        self.worn = {'helmet': listwithowner([], self)}
+        self._wearwieldname = 'head'
 
     def attackslist(self):
         if not self.destroyed():
@@ -319,7 +333,7 @@ class ZombieBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.material = "undead flesh"
-        
+
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'zombie heart', '*', (150, 178, 82))
@@ -340,9 +354,11 @@ class MolePersonTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5)
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 100
+        self.worn = {'chest armor': listwithowner([], self)}
+        self._wearwieldname = 'torso'
 
 class MolePersonArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -353,6 +369,7 @@ class MolePersonArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self)}
 
     def speed(self):
         if not self.destroyed():
@@ -387,7 +404,8 @@ class MolePersonLeg(BodyPart):
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 40
-        self._wearwieldname = 'foot'
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
 
     def speed(self):
         if not self.destroyed():
@@ -411,9 +429,11 @@ class MolePersonHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5)
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 40
+        self.worn = {'helmet': listwithowner([], self)}
+        self._wearwieldname = 'head'
 
     def attackslist(self):
         if not self.destroyed():
@@ -440,7 +460,7 @@ class MolePersonBrain(BodyPart):
         self.categories = ['brain']
         self.childconnections = {}
         self.maxhp = 20
-        
+
 class MolePersonHeart(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole person heart', '*', (255, 0, 0))

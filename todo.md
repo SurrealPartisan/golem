@@ -5,5 +5,4 @@
 * More enemies
 * Items
 * Sense of smell for mole people and others
-* Armor
 * Weight and carrying capacity

@@ -63,6 +63,10 @@ class Creature():
             self.inventory.remove(it)
             it.x = self.x
             it.y = self.y
+        for it in [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]:
+            it.owner.remove(it)
+            it.owner = self.world.items
+            self.world.items.append(it)
         for part in self.bodyparts:
             if not part.destroyed():
                 part.owner = self.world.items
@@ -87,7 +91,15 @@ class Creature():
     def fight(self, target, targetbodypart, attack):
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
-                damage = min(np.random.randint(attack.mindamage, attack.maxdamage+1), targetbodypart.hp())
+                totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
+                if targetbodypart.armor() != None:
+                    armor = targetbodypart.armor()
+                    armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+                    armor.damagetaken += armordamage
+                else:
+                    armor = None
+                    armordamage = 0
+                damage = min(totaldamage - armordamage, targetbodypart.hp())
                 targetbodypart.damagetaken += damage
                 if targetbodypart.parentalconnection != None:
                     partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
@@ -97,9 +109,19 @@ class Creature():
                     if not targetbodypart.destroyed():
                         self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
                         target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                        if armordamage > 0:
+                            if not armor.destroyed():
+                                target.log.append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                            else:
+                                target.log.append('Your ' + armor.name + ' was destroyed!')
                     else:
                         self.log.append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
                         target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                        if armordamage > 0:
+                            if not armor.destroyed():
+                                target.log.append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                            else:
+                                target.log.append('Your ' + armor.name + ' was also destroyed!')
                 else:
                     self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
                     target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
