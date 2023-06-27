@@ -215,10 +215,12 @@ class Zombie(Creature):
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
-                dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
-                dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                time = np.sqrt(dx**2 + dy**2) * self.steptime()
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -272,10 +274,12 @@ class MolePerson(Creature):
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
-                dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
-                dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                time = np.sqrt(dx**2 + dy**2) * self.steptime()
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
