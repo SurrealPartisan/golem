@@ -305,7 +305,7 @@ def draw():
                 win.write(partlist[j].wearwieldname(), x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
     elif gamestate == 'undress':
-        choosemessage = 'Choose the item to unwield:'
+        choosemessage = 'Choose the item to take off:'
         win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
         logrows = min(logheight-1,len(wornlist))
         for i in range(logrows):
@@ -873,10 +873,11 @@ while True:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
                         selected = wornlist[chosen]
+                        partname = selected.owner.owner.wearwieldname()
                         selected.owner.remove(selected)
                         player.inventory.append(selected)
                         selected.owner = player.inventory
-                        log.append('You removed the ' + selected.name + ' from your ' + selected.owner.owner.wearwieldname() + '.')
+                        log.append('You removed the ' + selected.name + ' from your ' + partname + '.')
                         logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
