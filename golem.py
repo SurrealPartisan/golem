@@ -784,12 +784,14 @@ while True:
                         if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][chosen]
-                        player.inventory.remove(selecteditem)
-                        selected.wielded.append(selecteditem)
-                        selecteditem.owner = selected.wielded
-                        log.append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
-                        logback = 0
+                        updatetime(1)
+                        if not player.dying():
+                            selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0][chosen]
+                            player.inventory.remove(selecteditem)
+                            selected.wielded.append(selecteditem)
+                            selecteditem.owner = selected.wielded
+                            log.append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                            logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
@@ -805,13 +807,15 @@ while True:
                         if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
-                        selected = part.wielded[0]
-                        part.wielded.remove(selected)
-                        player.inventory.append(selected)
-                        selected.owner = player.inventory
-                        log.append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
-                        logback = 0
+                        updatetime(1)
+                        if not player.dying():
+                            part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
+                            selected = part.wielded[0]
+                            part.wielded.remove(selected)
+                            player.inventory.append(selected)
+                            selected.owner = player.inventory
+                            log.append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
+                            logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
@@ -851,12 +855,14 @@ while True:
                         if chosen == len(partlist) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        selected = partlist[chosen]
-                        player.inventory.remove(selecteditem)
-                        selected.worn[selecteditem.wearcategory].append(selecteditem)
-                        selecteditem.owner = selected.worn[selecteditem.wearcategory]
-                        log.append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
-                        logback = 0
+                        updatetime(1)
+                        if not player.dying():
+                            selected = partlist[chosen]
+                            player.inventory.remove(selecteditem)
+                            selected.worn[selecteditem.wearcategory].append(selecteditem)
+                            selecteditem.owner = selected.worn[selecteditem.wearcategory]
+                            log.append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                            logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
@@ -872,13 +878,15 @@ while True:
                         if chosen == len(wornlist) - logback:
                             logback -= 1
                     if event.key == pygame.locals.K_RETURN:
-                        selected = wornlist[chosen]
-                        partname = selected.owner.owner.wearwieldname()
-                        selected.owner.remove(selected)
-                        player.inventory.append(selected)
-                        selected.owner = player.inventory
-                        log.append('You removed the ' + selected.name + ' from your ' + partname + '.')
-                        logback = 0
+                        updatetime(1)
+                        if not player.dying():
+                            selected = wornlist[chosen]
+                            partname = selected.owner.owner.wearwieldname()
+                            selected.owner.remove(selected)
+                            player.inventory.append(selected)
+                            selected.owner = player.inventory
+                            log.append('You removed the ' + selected.name + ' from your ' + partname + '.')
+                            logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
                         logback = 0
