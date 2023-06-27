@@ -5,4 +5,5 @@
 * More enemies
 * Items
 * Sense of smell for mole people and others
-* Weight and carrying capacity
+* Deal with worn or wielded destroyed items
+* Make NPC:s use items (and consider carrying capacity)

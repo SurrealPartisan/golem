@@ -23,6 +23,8 @@ class Item():
         self.color = color
         self.maxhp = np.inf
         self.damagetaken = 0
+        self.weight = 0
+        self.carryingcapacity = 0
         self.consumable = False
         self.wieldable = False
         self.weapon = False
@@ -47,6 +49,7 @@ class Consumable(Item):
         super().__init__(owner, x, y, name, char, color)
         self.consumable = True
         self._hpgiven = 0
+        self.weight = 100
     
     def hpgiven(self):
         return self._hpgiven
@@ -66,6 +69,7 @@ class HumanIronDagger(Item):
         super().__init__(owner, x, y, 'human-made iron dagger', '/', (200, 200, 200))
         self.wieldable = True
         self.weapon = True
+        self.weight = 500
 
     def attackslist(self):
         return[Attack('human-made iron dagger', 'stabbed', 'stabbed', '', '', 0.8, 1, 1, 20)]
@@ -75,6 +79,7 @@ class LightPick(Item):
         super().__init__(owner, x, y, 'light pick', '\\', (186, 100, 13))
         self.wieldable = True
         self.weapon = True
+        self.weight = 1500
 
     def attackslist(self):
         return[Attack('light pick', 'hit', 'hit', ' with a light pick', ' with a light pick', 0.6, 1.5, 1, 20)]
@@ -87,6 +92,7 @@ class HeavyPick(Item):
         super().__init__(owner, x, y, 'heavy pick', '\\', (186, 100, 13))
         self.wieldable = True
         self.weapon = True
+        self.weight = 3000
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -115,18 +121,39 @@ class PieceOfArmor(Item):
             self.maxhp = 100
             self.mindamage = 0
             self.maxdamage = 5
+            density = 2
         if material == 'bronze':
             self.maxhp = 200
             self.mindamage = 0
             self.maxdamage = 10
+            density = 8
         if material == 'iron':
             self.maxhp = 300
             self.mindamage = 0
             self.maxdamage = 15
+            density = 8
         if material == 'steel':
             self.maxhp = 400
             self.mindamage = 0
             self.maxdamage = 20
+            density = 8
+
+        if wearcategory == 'chest armor':
+            self.weight = 2000*density
+        if wearcategory == 'gauntlet':
+            self.weight = 100*density
+        if wearcategory == 'leg armor':
+            self.weight = 500*density
+        if wearcategory == 'helmet':
+            self.weight = 200*density
 
 def randomarmor(owner, x, y):
     return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'gauntlet', 'leg armor', 'helmet']), np.random.choice(['leather', 'bronze', 'iron', 'steel']))
+
+class Backpack(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'backpack', '¤', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'backpack'
+        self.carryingcapacity = 20000
+        self.weight = 500

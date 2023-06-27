@@ -13,7 +13,7 @@ from utils import mapwidth, mapheight, numlevels, fov
 pygame.init()
 
 logheight = 8
-statuslines = 1
+statuslines = 3
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person')
 win.font = pygame.font.Font('Hack-Regular.ttf', 12)
 win.autoupdate = False
@@ -84,6 +84,7 @@ player.bodyparts[0].connect('head', bodypart.HumanHead(player.bodyparts, 0, 0))
 player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
 player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
 player.bodyparts[-3].connect('right eye', bodypart.HumanEye(player.bodyparts, 0, 0))
+item.Backpack(player.torso.worn['backpack'], 0, 0)
 player.faction = 'player'
 player.x = cave.stairsupcoords[0]
 player.y = cave.stairsupcoords[1]
@@ -142,13 +143,16 @@ def draw():
 
     # Status
     for i in range(mapwidth):
-        win.putchars(' ', x=i, y=mapheight, bgcolor=((128,128,128)))
+        for j in range(statuslines):
+            win.putchars(' ', x=i, y=mapheight+j, bgcolor=((128,128,128)))
     win.putchars('hp: ', x=0, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
     hptext = repr(int(sum([part.maxhp for part in player.bodyparts])/2-sum([part.damagetaken for part in player.bodyparts]))) + '/' + repr(int(sum([part.maxhp for part in player.bodyparts])/2))
     win.putchars(hptext, x=4, y=mapheight, bgcolor=((128,128,128)), fgcolor=(255, 0, 0))
     textx = len(hptext) + 5
     win.putchars('(', x=textx, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
     textx += 1
+    textx_original = textx
+    texty = mapheight
     for part in player.bodyparts:
         if player.dying():
             textcolor = (0, 0, 0)
@@ -159,9 +163,21 @@ def draw():
         else:
             textcolor = (0, 255, 0)
         hptext = repr(part.maxhp - part.damagetaken) + '/' + repr(part.maxhp)
-        win.putchars(hptext, x=textx, y=mapheight, bgcolor=((128,128,128)), fgcolor=textcolor)
+        if textx + len(hptext) > mapwidth:
+            texty += 1
+            textx = textx_original
+        win.putchars(hptext, x=textx, y=texty, bgcolor=((128,128,128)), fgcolor=textcolor)
         textx += len(hptext) + 1
-    win.putchars(')', x=textx-1, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
+    win.putchars(')', x=textx-1, y = texty, bgcolor=((128,128,128)), fgcolor = 'white')
+    statuseffects = []
+    if player.overloaded():
+        statuseffects.append(('Overloaded', (255, 0, 0)))
+    elif player.burdened():
+        statuseffects.append(('Burdened', (255, 255, 0)))
+    textx = 0
+    for effect in statuseffects:
+        win.putchars(effect[0], x=textx, y = mapheight+2, bgcolor=((128,128,128)), fgcolor = effect[1])
+        textx += len(effect[0]) + 1
 
     # Log
     if gamestate == 'free' or gamestate == 'dead':
@@ -387,6 +403,11 @@ def moveorattack(dx, dy):
         target = targets[0]
         gamestate = 'chooseattack'
         logback = len(player.attackslist()) - logheight + 1
+    elif player.overloaded():
+        log.append('You are too overloaded to move!')
+        logback = 0
+        gamestate = 'free'
+        target = None
     elif cave.walls[player.x+dx, player.y+dy]:
         log.append("There's a wall in your way.")
         logback = 0
@@ -527,9 +548,9 @@ while True:
                         else:
                             for it in player.inventory:
                                 if it.maxhp < np.inf:
-                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
-                                    log.append('  - a ' + it.name)
+                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
                         log.append('Items wielded:')
                         wieldlist = [part.wielded[0] for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]
                         if len(wieldlist) == 0:
@@ -537,9 +558,9 @@ while True:
                         else:
                             for it in wieldlist:
                                 if it.maxhp < np.inf:
-                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
-                                    log.append('  - a ' + it.name)
+                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
                         log.append('Items worn:')
                         wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
                         if len(wornlist) == 0:
@@ -547,9 +568,9 @@ while True:
                         else:
                             for it in wornlist:
                                 if it.maxhp < np.inf:
-                                    log.append('  - a ' + it.name + ' (hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
-                                    log.append('  - a ' + it.name)
+                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
                         if max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 > logheight:
                             logback = max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 - logheight
                         else:

@@ -28,8 +28,28 @@ class Creature():
         self.torso = None
         self.dead = False
 
+    def carryingcapacity(self):
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        return sum([part.carryingcapacity for part in self.bodyparts]) + sum([it.carryingcapacity for it in wornlist])
+
+    def weightcarried(self):
+        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        return sum([it.weight for it in self.inventory]) + sum([it.weight for it in wornlist]) + sum([it.weight for it in wieldlist])
+
+    def burdened(self):
+        return self.weightcarried() > self.carryingcapacity()/2
+
+    def overloaded(self):
+        return self.weightcarried() > self.carryingcapacity()
+
     def speed(self):
-        return max([part.speed() for part in self.bodyparts])
+        if self.overloaded():
+            return 0
+        elif self.burdened():
+            return max([part.speed() for part in self.bodyparts]) / 2
+        else:
+            return max([part.speed() for part in self.bodyparts])
 
     def steptime(self):
         return 1/self.speed()
@@ -169,7 +189,6 @@ class Zombie(Creature):
         self.name = 'zombie'
         self.x = x
         self.y = y
-        self.hp = 10
         self.torso = bodypart.ZombieTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
@@ -227,7 +246,6 @@ class MolePerson(Creature):
         self.name = 'mole person'
         self.x = x
         self.y = y
-        self.hp = 10
         self.torso = bodypart.MolePersonTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('left arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
