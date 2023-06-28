@@ -494,3 +494,108 @@ class MolePersonHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 300
+
+
+
+class OctopusHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cave octopus head', 'ö', (255, 0, 255))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.8, armorapplies=True),
+            'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
+            'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left '),
+            'center-back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back left '),
+            'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left '),
+            'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right '),
+            'center-front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front right '),
+            'center-back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back right '),
+            'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ')
+            }
+        self.maxhp = 80
+        self.worn = {'helmet': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 40000
+        self.carryingcapacity = 20000
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20)]
+        else:
+            return []
+
+class OctopusTentacle(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cave octopus tentacle', 's', (255, 0, 255))
+        self.categories = ['arm', 'leg', 'tentacle']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'tentacle'
+        self.worn = {'tentacle armor': listwithowner([], self)}
+        self.weight = 10000
+        self.carryingcapacity = 10000
+
+    def speed(self):
+        if not self.destroyed():
+            if 'leg' in self.parentalconnection.categories:
+                return 0.1*len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()])
+            elif 'arm' in self.parentalconnection.categories:
+                return 0.1*len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()])
+            else:
+                return 0.1*len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
+        else:
+            return 0
+
+    def minespeed(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class OctopusEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cave octopus eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 10
+
+    def sight(self):
+        if not self.destroyed():
+            return 3
+        else:
+            return 0
+
+class OctopusBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cave octopus brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 2000
+
+class OctopusHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cave octopus heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 500

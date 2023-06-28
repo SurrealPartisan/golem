@@ -23,7 +23,7 @@ for i in range(numlevels):
     cave = world.World(mapwidth, mapheight)
     cave.rooms()
 
-    for i in range(10):
+    for j in range(10):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
@@ -48,26 +48,34 @@ for i in range(numlevels):
         y = np.random.randint(mapheight)
     item.HeavyPick(cave.items, x, y)
 
-    for i in range(5):
+    for j in range(5):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
         item.randomarmor(cave.items, x, y)
 
-    for i in range(5):
+    for j in range(5):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
         cave.creatures.append(creature.Zombie(cave, x, y))
 
-    for i in range(5):
+    for j in range(5):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
         cave.creatures.append(creature.MolePerson(cave, x, y))
+    
+    if i > 0:
+        for j in range(5):
+            x = y = 0
+            while cave.walls[x, y] != 0:
+                x = np.random.randint(mapwidth)
+                y = np.random.randint(mapheight)
+            cave.creatures.append(creature.CaveOctopus(cave, x, y))
 
     caves.append(cave)
 cave_i = 0
