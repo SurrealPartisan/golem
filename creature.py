@@ -7,7 +7,7 @@ Created on Mon Sep 12 21:16:44 2022
 
 import numpy as np
 import bodypart
-from utils import fov, anglebetween, numlevels, listwithowner
+from utils import fov, numlevels, listwithowner
 
 class Creature():
     def __init__(self, world):
@@ -134,6 +134,7 @@ class Creature():
                                 target.log.append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
                             else:
                                 target.log.append('Your ' + armor.name + ' was destroyed!')
+                                armor.owner.remove(armor)
                     else:
                         self.log.append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
                         target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
@@ -142,6 +143,22 @@ class Creature():
                                 target.log.append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
                             else:
                                 target.log.append('Your ' + armor.name + ' was also destroyed!')
+                                armor.owner.remove(armor)
+                        if targetbodypart.capableofwielding:
+                            for it in targetbodypart.wielded:
+                                it.owner.remove(it)
+                                target.world.items.append(it)
+                                it.owner = target.world.items
+                                it.x = target.x
+                                it.y = target.y
+                                target.log.append('You dropped your ' + it.name)
+                        for it in [l[0] for l in targetbodypart.worn.values()]:
+                            it.owner.remove(it)
+                            target.world.items.append(it)
+                            it.owner = target.world.items
+                            it.x = target.x
+                            it.y = target.y
+                            target.log.append('You dropped your ' + it.name)
                 else:
                     self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
                     target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
