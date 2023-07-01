@@ -165,11 +165,11 @@ class Creature():
                     target.log.append('You are dead!')
                     target.die()
             else:
-                self.log.append('The ' + target.name + ' evaded your attack!')
-                target.log.append("You evaded the " + self.name + "'s attack!")
+                self.log.append('The ' + target.name + ' evaded your ' + attack.name +'!')
+                target.log.append("You evaded the " + self.name + "'s " + attack.name +"!")
         else:
-            self.log.append('The ' + target.name + ' evaded your attack!')
-            target.log.append("You evaded the " + self.name + "'s attack!")
+            self.log.append('The ' + target.name + ' evaded your ' + attack.name + '!')
+            target.log.append("You evaded the " + self.name + "'s " + attack.name + "!")
 
     def ai(self):
         # Return something to put in self.nextaction. It should be a list,
@@ -203,19 +203,27 @@ class Zombie(Creature):
         self.faction = 'zombie'
         self.char = 'z'
         self.color = (191, 255, 128)
-        self.name = 'zombie'
+        self.name = np.random.choice(['zombie', 'headless zombie', 'one-armed zombie', 'crawler zombie'], p=[0.7, 0.1, 0.1, 0.1])
         self.x = x
         self.y = y
         self.torso = bodypart.ZombieTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
+        if self.name != 'one-armed zombie':
+            self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect('right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+        else:
+            if np.random.choice(2):
+                self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+            else:
+                self.bodyparts[0].connect('right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+        if self.name != 'crawler zombie':
+            self.bodyparts[0].connect('left leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect('right leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.ZombieBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
+        if self.name != 'headless zombie':
+            self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
+            self.bodyparts[-1].connect('brain', bodypart.ZombieBrain(self.bodyparts, 0, 0))
+            self.bodyparts[-2].connect('left eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
+            self.bodyparts[-3].connect('right eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
         self.targetcoords = None
         
     def ai(self):
