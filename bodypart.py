@@ -544,7 +544,7 @@ class OctopusHead(BodyPart):
 
 class OctopusTentacle(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'cave octopus tentacle', 's', (255, 0, 255))
+        super().__init__(owner, x, y, 'cave octopus tentacle', '~', (255, 0, 255))
         self.categories = ['arm', 'leg', 'tentacle']
         self.childconnections = {}
         self.maxhp = 10
@@ -619,3 +619,143 @@ class OctopusHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 500
+
+
+
+class GoblinTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin torso', 'T', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
+            'head': BodyPartConnection(self, ['head'], True, ''),
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 100
+        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 35000
+        self.carryingcapacity = 20000
+
+class GoblinArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin arm', 'i', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self)}
+        self.weight = 5000
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class GoblinLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin leg', 'l', (0, 255, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 13000
+        self.carryingcapacity = 15000
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+                return 1.5
+            else:
+                return 0.75
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40)]
+        else:
+            return []
+
+class GoblinHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin head', 'ö', (0, 255, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 30
+        self.worn = {'helmet': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 6000
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40)]
+        else:
+            return []
+
+class GoblinEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 5
+
+    def sight(self):
+        if not self.destroyed():
+            return 3
+        else:
+            return 0
+
+class GoblinBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 1000
+        self.log = []
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((mapwidth, mapheight)))
+        self.creaturesseen = []
+
+class GoblinHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 250
