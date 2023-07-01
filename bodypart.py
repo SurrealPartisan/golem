@@ -9,7 +9,7 @@ Created on Thu Jun 15 21:26:04 2023
 import numpy as np
 import item
 from item import Attack
-from utils import listwithowner
+from utils import listwithowner, mapwidth, mapheight, numlevels
 
 class BodyPartConnection():
     def __init__(self, parent, categories, vital, prefix, defensecoefficient=1, armorapplies=False):
@@ -209,6 +209,11 @@ class HumanBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 1300
+        self.log = []
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((mapwidth, mapheight)))
+        self.creaturesseen = []
 
 class HumanHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -350,6 +355,11 @@ class ZombieBrain(BodyPart):
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 1000
+        self.log = []
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((mapwidth, mapheight)))
+        self.creaturesseen = []
 
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -486,6 +496,11 @@ class MolePersonBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 1300
+        self.log = []
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((mapwidth, mapheight)))
+        self.creaturesseen = []
 
 class MolePersonHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -591,6 +606,11 @@ class OctopusBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 2000
+        self.log = []
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((mapwidth, mapheight)))
+        self.creaturesseen = []
 
 class OctopusHeart(BodyPart):
     def __init__(self, owner, x, y):

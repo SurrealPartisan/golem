@@ -60,14 +60,14 @@ for i in range(numlevels):
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
-        cave.creatures.append(creature.Zombie(cave, x, y))
+        cave.creatures.append(creature.Zombie(cave, i, x, y))
 
     for j in range(5):
         x = y = 0
         while cave.walls[x, y] != 0:
             x = np.random.randint(mapwidth)
             y = np.random.randint(mapheight)
-        cave.creatures.append(creature.MolePerson(cave, x, y))
+        cave.creatures.append(creature.MolePerson(cave, i, x, y))
     
     if i > 0:
         for j in range(5):
@@ -75,13 +75,13 @@ for i in range(numlevels):
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
-            cave.creatures.append(creature.CaveOctopus(cave, x, y))
+            cave.creatures.append(creature.CaveOctopus(cave, i, x, y))
 
     caves.append(cave)
 cave_i = 0
 cave = caves[cave_i]
 
-player = creature.Creature(cave)
+player = creature.Creature(cave, cave_i)
 player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
 player.bodyparts[0].connect('left arm', bodypart.HumanArm(player.bodyparts, 0, 0))
 player.bodyparts[0].connect('right arm', bodypart.HumanArm(player.bodyparts, 0, 0))
@@ -98,8 +98,9 @@ player.x = cave.stairsupcoords[0]
 player.y = cave.stairsupcoords[1]
 cave.creatures.append(player)
 
-player.log = ['Welcome to the cave!', "Press 'h' for help."]
-log = player.log
+player.log().append('Welcome to the cave!')
+player.log().append("Press 'h' for help.")
+
 logback = 0 # How far the log has been scrolled
 chosen = 0 # Used for different item choosing gamestates
 target = None # Target of an attack
@@ -117,19 +118,19 @@ def draw():
                     win.putchars(' ', x=i, y=j, bgcolor='white')
                 else:
                     win.putchars(' ', x=i, y=j, bgcolor=(64,64,64))
-                player.seen[cave_i][i,j] = 1
-            elif player.seen[cave_i][i,j] == 1:
+                player.seen()[cave_i][i,j] = 1
+            elif player.seen()[cave_i][i,j] == 1:
                 if cave.walls[i,j] == 1:
                     win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
     i, j = cave.stairsdowncoords
     if fovmap[i,j]:
         win.putchars('>', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
-    elif player.seen[cave_i][i,j] == 1:
+    elif player.seen()[cave_i][i,j] == 1:
         win.putchars('>', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
     i, j = cave.stairsupcoords
     if fovmap[i,j]:
         win.putchars('<', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
-    elif player.seen[cave_i][i,j] == 1:
+    elif player.seen()[cave_i][i,j] == 1:
         win.putchars('<', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
 
     # Items
@@ -137,7 +138,7 @@ def draw():
         if fovmap[it.x, it.y]:
             win.putchars(it.char, x=it.x, y=it.y, 
                  bgcolor=(64,64,64), fgcolor=it.color)
-        elif player.seen[cave_i][it.x,it.y] == 1:
+        elif player.seen()[cave_i][it.x,it.y] == 1:
             win.putchars('?', x=it.x, y=it.y, 
                  bgcolor='black', fgcolor=(128,128,128))
 
@@ -146,6 +147,9 @@ def draw():
         if fovmap[npc.x, npc.y]:
             win.putchars(npc.char, npc.x, npc.y, bgcolor=(64,64,64),
                          fgcolor=npc.color)
+            if not npc in player.creaturesseen():
+                player.creaturesseen().append(npc)
+                player.log().append('You see a ' + npc.name +'.')
     win.putchars(player.char, x=player.x, y=player.y, 
                  bgcolor=(64,64,64), fgcolor=player.color)
 
@@ -187,13 +191,13 @@ def draw():
         win.putchars(effect[0], x=textx, y = mapheight+2, bgcolor=((128,128,128)), fgcolor = effect[1])
         textx += len(effect[0]) + 1
 
-    # Log
+    # log
     if gamestate == 'free' or gamestate == 'dead':
-        logrows = min(logheight,len(log))
+        logrows = min(logheight,len(player.log()))
         for i in range(logrows):
             j = i-logrows-logback
             c = 255 + (max(j+1, -logheight))*128//logheight
-            win.write(log[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
+            win.write(player.log()[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
 
     elif gamestate == 'mine':
         minemessage = 'Choose the direction to mine!'
@@ -403,7 +407,7 @@ def updatetime(time):
 def checkitems(x,y):
     for it in cave.items:
         if it.x == x and it.y == y:
-            log.append('There is a ' + it.name + ' here.')
+            player.log().append('There is a ' + it.name + ' here.')
 
 def moveorattack(dx, dy):
     targets = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
@@ -412,12 +416,12 @@ def moveorattack(dx, dy):
         gamestate = 'chooseattack'
         logback = len(player.attackslist()) - logheight + 1
     elif player.overloaded():
-        log.append('You are too overloaded to move!')
+        player.log().append('You are too overloaded to move!')
         logback = 0
         gamestate = 'free'
         target = None
     elif cave.walls[player.x+dx, player.y+dy]:
-        log.append("There's a wall in your way.")
+        player.log().append("There's a wall in your way.")
         logback = 0
         gamestate = 'free'
         target = None
@@ -429,7 +433,7 @@ def moveorattack(dx, dy):
                 player.move(dx, dy)
                 checkitems(player.x,player.y)
             else:
-                log.append("There's a " + creaturesintheway[0].name + " in your way.")
+                player.log().append("There's a " + creaturesintheway[0].name + " in your way.")
         logback = 0
         gamestate = 'free'
         target = None
@@ -438,14 +442,14 @@ def moveorattack(dx, dy):
 
 def mine(dx, dy):
     if player.x+dx == 0 or player.x+dx == mapwidth-1 or player.y+dy == 0 or player.y+dy == mapheight-1:
-        log.append('That is too hard for you to mine.')
+        player.log().append('That is too hard for you to mine.')
     elif cave.walls[player.x+dx, player.y+dy] == 1:
         updatetime(player.minetime())
         if not player.dying():
-            log.append('You mined a hole in the wall.')
+            player.log().append('You mined a hole in the wall.')
             cave.walls[player.x+dx, player.y+dy] = 0
     else:
-        log.append("There's no wall there.")
+        player.log().append("There's no wall there.")
     return('free', 0)  # gamestate and logback
 
 
@@ -480,11 +484,11 @@ while True:
 
                     if event.key == pygame.locals.K_GREATER or (event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT)):
                         if (player.x, player.y) != cave.stairsdowncoords:
-                            log.append("You can't go down here!")
+                            player.log().append("You can't go down here!")
                             logback = 0
                         else:
                             if cave_i == numlevels - 1:
-                                log.append("Lower levels not yet implemented!")
+                                player.log().append("Lower levels not yet implemented!")
                                 logback = 0
                             else:
                                 cave_i += 1
@@ -492,18 +496,19 @@ while True:
                                 cave = caves[cave_i]
                                 cave.creatures.append(player)
                                 player.world = cave
+                                player.world_i = cave_i
                                 player.x = cave.stairsupcoords[0]
                                 player.y = cave.stairsupcoords[1]
-                                log.append('You went down the stairs.')
+                                player.log().append('You went down the stairs.')
                                 logback = 0
 
                     if event.key == pygame.locals.K_LESS and not (event.mod & pygame.KMOD_SHIFT):
                         if (player.x, player.y) != cave.stairsupcoords:
-                            log.append("You can't go up here!")
+                            player.log().append("You can't go up here!")
                             logback = 0
                         else:
                             if cave_i == 0:
-                                log.append("Overworld not yet implemented!")
+                                player.log().append("Overworld not yet implemented!")
                                 logback = 0
                             else:
                                 cave_i -= 1
@@ -511,23 +516,24 @@ while True:
                                 cave = caves[cave_i]
                                 cave.creatures.append(player)
                                 player.world = cave
+                                player.world_i = cave_i
                                 player.x = cave.stairsdowncoords[0]
                                 player.y = cave.stairsdowncoords[1]
-                                log.append('You went up the stairs.')
+                                player.log().append('You went up the stairs.')
                                 logback = 0
 
                     if event.key == pygame.locals.K_m:
                         if player.minespeed() > 0:
                             gamestate = 'mine'
                         else:
-                            log.append('You lack the tools or appendages to mine.')
+                            player.log().append('You lack the tools or appendages to mine.')
                             logback = 0
 
                     # Items
                     if event.key == pygame.locals.K_COMMA:
                         picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
                         if len(picklist) == 0:
-                            log.append('Nothing to pick up here.')
+                            player.log().append('Nothing to pick up here.')
                             logback = 0
                         elif len(picklist) == 1:
                             updatetime(0.5)
@@ -536,7 +542,7 @@ while True:
                                 cave.items.remove(it)
                                 player.inventory.append(it)
                                 it.owner = player.inventory
-                                log.append('You pick up the ' + it.name + '.')
+                                player.log().append('You pick up the ' + it.name + '.')
                                 logback = 0
                         else:
                             gamestate = 'pick'
@@ -548,38 +554,38 @@ while True:
                             logback = len(player.inventory) - logheight + 1
                             chosen = 0
                         else:
-                            log.append('You have nothing to drop!')
+                            player.log().append('You have nothing to drop!')
                     if event.key == pygame.locals.K_i:
-                        log.append('Items carried:')
+                        player.log().append('Items carried:')
                         if len(player.inventory) == 0:
-                            log.append('  - nothing')
+                            player.log().append('  - nothing')
                         else:
                             for it in player.inventory:
                                 if it.maxhp < np.inf:
-                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
-                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
-                        log.append('Items wielded:')
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
+                        player.log().append('Items wielded:')
                         wieldlist = [part.wielded[0] for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]
                         if len(wieldlist) == 0:
-                            log.append('  - nothing')
+                            player.log().append('  - nothing')
                         else:
                             for it in wieldlist:
                                 if it.maxhp < np.inf:
-                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
-                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
-                        log.append('Items worn:')
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
+                        player.log().append('Items worn:')
                         wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
                         if len(wornlist) == 0:
-                            log.append('  - nothing')
+                            player.log().append('  - nothing')
                         else:
                             for it in wornlist:
                                 if it.maxhp < np.inf:
-                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
                                 else:
-                                    log.append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
-                        if max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 > logheight:
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
+                        if max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 > logheight and len(player.log()) > 1:
                             logback = max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 - logheight
                         else:
                             logback = 0
@@ -589,7 +595,7 @@ while True:
                             logback = len([item for item in player.inventory if item.consumable]) - logheight + 1
                             chosen = 0
                         else:
-                            log.append("You don't have anything to consume.")
+                            player.log().append("You don't have anything to consume.")
                             logback = 0
                     if event.key == pygame.locals.K_w and not (event.mod & pygame.KMOD_SHIFT):
                         if len([item for item in player.inventory if item.wieldable]) > 0 and len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) > 0:
@@ -597,7 +603,7 @@ while True:
                             logback = len([item for item in player.inventory if item.wieldable]) - logheight + 1
                             chosen = 0
                         else:
-                            log.append("You cannot wield anything.")
+                            player.log().append("You cannot wield anything.")
                             logback = 0
                     if event.key == pygame.locals.K_w and (event.mod & pygame.KMOD_SHIFT):
                         if len([item for item in player.inventory if item.wearable]) > 0:
@@ -605,7 +611,7 @@ while True:
                             logback = len([item for item in player.inventory if item.wearable]) - logheight + 1
                             chosen = 0
                         else:
-                            log.append('You have nothing to wear.')
+                            player.log().append('You have nothing to wear.')
                             logback = 0
                     if event.key == pygame.locals.K_u and not (event.mod & pygame.KMOD_SHIFT):
                         if len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) > 0:
@@ -613,7 +619,7 @@ while True:
                             logback = len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logheight + 1
                             chosen = 0
                         else:
-                            log.append("You have nothing to unwield.")
+                            player.log().append("You have nothing to unwield.")
                             logback = 0
                     if event.key == pygame.locals.K_u and (event.mod & pygame.KMOD_SHIFT):
                         wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
@@ -622,15 +628,15 @@ while True:
                             logback = len(wornlist) - logheight + 1
                             chosen = 0
                         else:
-                            log.append("You have nothing to undress.")
+                            player.log().append("You have nothing to undress.")
                             logback = 0
 
                     # Bodyparts:
                     if event.key == pygame.locals.K_b and not (event.mod & pygame.KMOD_SHIFT):
-                        log.append('The parts of your body:')
+                        player.log().append('The parts of your body:')
                         for part in player.bodyparts:
-                            log.append('  - a ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ')')
-                        if len(player.bodyparts) > logheight - 1:
+                            player.log().append('  - a ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ')')
+                        if len(player.bodyparts) > logheight - 1 and len(player.log()) > 1:
                             logback = len(player.bodyparts) - logheight + 1
                         else:
                             logback = 0
@@ -642,33 +648,34 @@ while True:
 
                     # Help
                     if event.key == pygame.locals.K_h:
-                        log.append('Commands:')
-                        log.append('  - page up, page down, home, end: explore the log')
-                        log.append('  - arrows or numpad: move')
-                        log.append('  - period or numpad 5: wait a moment')
-                        log.append('  - m: mine')
-                        log.append('  - comma: pick up an item')
-                        log.append('  - d: drop an item')
-                        log.append('  - i: check your inventory')
-                        log.append('  - b: list your body parts')
-                        log.append('  - B: choose your body parts')
-                        log.append('  - c: take some medication')
-                        log.append('  - w: wield an item')
-                        log.append('  - u: unwield an item')
-                        log.append('  - W: wear an item')
-                        log.append('  - U: undress an item')
-                        log.append('  - h: this list of commands')
-                        logback = 8 # Increase when adding commands
+                        player.log().append('Commands:')
+                        player.log().append('  - page up, page down, home, end: explore the player.log()')
+                        player.log().append('  - arrows or numpad: move')
+                        player.log().append('  - period or numpad 5: wait a moment')
+                        player.log().append('  - m: mine')
+                        player.log().append('  - comma: pick up an item')
+                        player.log().append('  - d: drop an item')
+                        player.log().append('  - i: check your inventory')
+                        player.log().append('  - b: list your body parts')
+                        player.log().append('  - B: choose your body parts')
+                        player.log().append('  - c: take some medication')
+                        player.log().append('  - w: wield an item')
+                        player.log().append('  - u: unwield an item')
+                        player.log().append('  - W: wear an item')
+                        player.log().append('  - U: undress an item')
+                        player.log().append('  - h: this list of commands')
+                        if len(player.log()) > 1: # Prevent crash if the player is brainless
+                            logback = 8 # Increase when adding commands
                     
-                    # Log scrolling
+                    # player.log() scrolling
                     if event.key == pygame.locals.K_PAGEUP:
-                        if len(log) >= logheight:
-                            logback = min(logback+1, len(log)-logheight)
+                        if len(player.log()) >= logheight:
+                            logback = min(logback+1, len(player.log())-logheight)
                     if event.key == pygame.locals.K_PAGEDOWN:
                         logback = max(logback-1, 0)
                     if event.key == pygame.locals.K_HOME:
-                        if len(log) >= logheight:
-                            logback = len(log)-logheight
+                        if len(player.log()) >= logheight:
+                            logback = len(player.log())-logheight
                     if event.key == pygame.locals.K_END:
                         logback = 0
                         
@@ -707,7 +714,7 @@ while True:
                             selected.owner = player.inventory
                             player.inventory.append(selected)
                             cave.items.remove(selected)
-                            log.append('You picked up the ' + selected.name + '.')
+                            player.log().append('You picked up the ' + selected.name + '.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -732,7 +739,7 @@ while True:
                             player.inventory.remove(selected)
                             selected.x = player.x
                             selected.y = player.y
-                            log.append('You dropped the ' + selected.name + '.')
+                            player.log().append('You dropped the ' + selected.name + '.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -757,7 +764,7 @@ while True:
                                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                             elif part == player.torso:
                                 partname = 'torso'
-                            log.append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(healed) + ' points.')
+                            player.log().append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(healed) + ' points.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -798,7 +805,7 @@ while True:
                             player.inventory.remove(selecteditem)
                             selected.wielded.append(selecteditem)
                             selecteditem.owner = selected.wielded
-                            log.append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                            player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -822,7 +829,7 @@ while True:
                             part.wielded.remove(selected)
                             player.inventory.append(selected)
                             selected.owner = player.inventory
-                            log.append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
+                            player.log().append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -846,7 +853,7 @@ while True:
                             gamestate = 'wearchoosebodypart'
                             chosen = 0
                         else:
-                            log.append('You have no suitable free body part for wearing that.')
+                            player.log().append('You have no suitable free body part for wearing that.')
                             logback = 0
                             gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -869,7 +876,7 @@ while True:
                             player.inventory.remove(selecteditem)
                             selected.worn[selecteditem.wearcategory].append(selecteditem)
                             selecteditem.owner = selected.worn[selecteditem.wearcategory]
-                            log.append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                            player.log().append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -893,7 +900,7 @@ while True:
                             selected.owner.remove(selected)
                             player.inventory.append(selected)
                             selected.owner = player.inventory
-                            log.append('You removed the ' + selected.name + ' from your ' + partname + '.')
+                            player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -1015,7 +1022,7 @@ while True:
                                 for connection, part in connectioncandidates:
                                     if part != None:
                                         connection.connect(part)
-                                log.append('You have selected your bodyparts.')
+                                player.log().append('You have selected your bodyparts.')
                                 logback = 0
                                 gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:

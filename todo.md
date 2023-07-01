@@ -1,7 +1,7 @@
 # To-do list for Golem
 
 Minor
-* Make log and revealed map belong to brain
+* Solve the multiple brains problem
 
 Major
 * Sense of smell for mole people and others

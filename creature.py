@@ -7,11 +7,12 @@ Created on Mon Sep 12 21:16:44 2022
 
 import numpy as np
 import bodypart
-from utils import fov, numlevels, listwithowner
+from utils import fov, listwithowner, numlevels
 
 class Creature():
-    def __init__(self, world):
+    def __init__(self, world, world_i):
         self.world = world
+        self.world_i = world_i
         self.faction = ''
         self.char = '@'
         self.color = 'white'
@@ -19,14 +20,34 @@ class Creature():
         self.x = 0
         self.y = 0
         self.inventory = listwithowner([], self)
-        self.log = []
-        self.seen = []
-        for i in range(numlevels):
-            self.seen.append(np.zeros((world.width, world.height)))
         self.nextaction = ['wait', 1]
         self.bodyparts = listwithowner([], self)
         self.torso = None
         self.dead = False
+
+    def log(self):
+        brains = [part for part in self.bodyparts if 'brain' in part.categories]
+        if len(brains) > 0:
+            return brains[0].log
+        else:
+            return ['You have no brain, so nothing is logged.']
+
+    def seen(self):
+        brains = [part for part in self.bodyparts if 'brain' in part.categories]
+        if len(brains) > 0:
+            return brains[0].seen
+        else:
+            seenlist = []
+            for i in range(numlevels):
+                seenlist.append(np.zeros((self.world.width, self.world.height)))
+            return seenlist
+    
+    def creaturesseen(self):
+        brains = [part for part in self.bodyparts if 'brain' in part.categories]
+        if len(brains) > 0:
+            return brains[0].creaturesseen
+        else:
+            return []
 
     def carryingcapacity(self):
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
@@ -127,22 +148,22 @@ class Creature():
                     partname = 'torso'
                 if not target.dying():
                     if not targetbodypart.destroyed():
-                        self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
-                        target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
+                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
                         if armordamage > 0:
                             if not armor.destroyed():
-                                target.log.append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
                             else:
-                                target.log.append('Your ' + armor.name + ' was destroyed!')
+                                target.log().append('Your ' + armor.name + ' was destroyed!')
                                 armor.owner.remove(armor)
                     else:
-                        self.log.append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                        target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                        self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
                         if armordamage > 0:
                             if not armor.destroyed():
-                                target.log.append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
                             else:
-                                target.log.append('Your ' + armor.name + ' was also destroyed!')
+                                target.log().append('Your ' + armor.name + ' was also destroyed!')
                                 armor.owner.remove(armor)
                         if targetbodypart.capableofwielding:
                             for it in targetbodypart.wielded:
@@ -151,25 +172,25 @@ class Creature():
                                 it.owner = target.world.items
                                 it.x = target.x
                                 it.y = target.y
-                                target.log.append('You dropped your ' + it.name)
+                                target.log().append('You dropped your ' + it.name)
                         for it in [l[0] for l in targetbodypart.worn.values() if len(l) > 0]:
                             it.owner.remove(it)
                             target.world.items.append(it)
                             it.owner = target.world.items
                             it.x = target.x
                             it.y = target.y
-                            target.log.append('You dropped your ' + it.name)
+                            target.log().append('You dropped your ' + it.name)
                 else:
-                    self.log.append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
-                    target.log.append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
-                    target.log.append('You are dead!')
+                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
+                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
+                    target.log().append('You are dead!')
                     target.die()
             else:
-                self.log.append('The ' + target.name + ' evaded your ' + attack.name +'!')
-                target.log.append("You evaded the " + self.name + "'s " + attack.name +"!")
+                self.log().append('The ' + target.name + ' evaded your ' + attack.name +'!')
+                target.log().append("You evaded the " + self.name + "'s " + attack.name +"!")
         else:
-            self.log.append('The ' + target.name + ' evaded your ' + attack.name + '!')
-            target.log.append("You evaded the " + self.name + "'s " + attack.name + "!")
+            self.log().append('The ' + target.name + ' evaded your ' + attack.name + '!')
+            target.log().append("You evaded the " + self.name + "'s " + attack.name + "!")
 
     def ai(self):
         # Return something to put in self.nextaction. It should be a list,
@@ -183,7 +204,7 @@ class Creature():
             if len(creaturesintheway) == 0:
                 self.move(self.nextaction[1], self.nextaction[2])
             else:
-                self.log.append("There's a " + creaturesintheway[0].name + " in your way.")
+                self.log().append("There's a " + creaturesintheway[0].name + " in your way.")
         elif self.nextaction[0] == 'fight':
             if not self.nextaction[1].dead:  # prevent a crash
                 self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
@@ -194,12 +215,23 @@ class Creature():
         else:
             timeleft = time - self.nextaction[-1]
             self.resolveaction()
+
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            for i in range(self.world.width):
+                for j in range(self.world.height):
+                    if fovmap[i,j]:
+                        self.seen()[self.world_i][i,j] = 1
+            for creat in self.world.creatures:
+                if fovmap[creat.x, creat.y] and not creat in self.creaturesseen() and creat != self:
+                    self.creaturesseen().append(creat)
+                    self.log().append('You see a ' + creat.name +'.')
+
             self.nextaction = self.ai()
             self.update(timeleft)
 
 class Zombie(Creature):
-    def __init__(self, world, x, y):
-        super().__init__(world)
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
         self.faction = 'zombie'
         self.char = 'z'
         self.color = (191, 255, 128)
@@ -265,8 +297,8 @@ class Zombie(Creature):
             return(['wait', 1])
 
 class MolePerson(Creature):
-    def __init__(self, world, x, y):
-        super().__init__(world)
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
         self.faction = 'mole people'
         self.char = 'm'
         self.color = (186, 100, 13)
@@ -324,8 +356,8 @@ class MolePerson(Creature):
             return(['wait', 1])
 
 class CaveOctopus(Creature):
-    def __init__(self, world, x, y):
-        super().__init__(world)
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
         self.faction = 'octopus'
         self.char = 'o'
         self.color = (255, 0, 255)
