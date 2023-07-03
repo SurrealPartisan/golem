@@ -64,15 +64,71 @@ def create_medication(owner, x, y):
     drugs = Consumable(owner, x, y, 'dose of ' + utils.drugname(), '!', (0, 255, 255))
     drugs._hpgiven = np.random.randint(-2, 11)
 
-class HumanIronDagger(Item):
-    def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'human-made iron dagger', '/', (200, 200, 200))
+class Dagger(Item):
+    def __init__(self, owner, x, y, material, enchantment):
+        if enchantment == 0:
+            enchaname = ''
+        elif enchantment > 0:
+            enchaname = '+' + repr(enchantment) + ' '
+        name = enchaname + material + ' dagger'
+        if material == 'bone': color = (255, 255, 204)
+        if material == 'chitin': color = (0, 102, 0)
+        if material == 'bronze': color = (150,116,68)
+        if material == 'iron': color = (200, 200, 200)
+        if material == 'steel': color = (210, 210, 210)
+        if material == 'elven steel': color = (210, 210, 210)
+        if material == 'dwarven steel': color = (210, 210, 210)
+        if material == 'nanotube': color = (51, 0, 0)
+        if material == 'adamantine': color = (51, 51, 0)
+        super().__init__(owner, x, y, name, '/', color)
         self.wieldable = True
         self.weapon = True
-        self.weight = 500
+        if material == 'bone':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 15 + enchantment
+            density = 20
+        if material == 'chitin':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 15 + enchantment
+            density = 20
+        if material == 'bronze':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 20 + enchantment
+            density = 75
+        if material == 'iron':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 25 + enchantment
+            density = 79
+        if material == 'steel':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 30 + enchantment
+            density = 79
+        if material == 'elven steel':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 30 + enchantment
+            density = 60
+        if material == 'dwarven steel':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 32 + enchantment
+            density = 80
+        if material == 'nanotube':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 40 + enchantment
+            density = 10
+        if material == 'adamantine':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 40 + enchantment
+            density = 100
+        self.weight = 6*density
 
     def attackslist(self):
-        return[Attack('human-made iron dagger', 'stabbed', 'stabbed', '', '', 0.8, 1, 1, 20)]
+        return[Attack(self.name, 'stabbed', 'stabbed', '', '', 0.8, 1, self.mindamage, self.maxdamage)]
+
+def randomdagger(owner, x, y):
+    enchantment = 0
+    while np.random.rand() > 0.5:
+        enchantment += 1
+    return Dagger(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment)
 
 class LightPick(Item):
     def __init__(self, owner, x, y):
@@ -106,51 +162,97 @@ class HeavyPick(Item):
         else:
             return 0.2
 
+def randomweapon(owner, x, y):
+    return np.random.choice([HeavyPick, LightPick, randomdagger], p=[0.25, 0.25, 0.5])(owner, x, y)
+
 class PieceOfArmor(Item):
-    def __init__(self, owner, x, y, wearcategory, material):
-        name = material + ' ' + wearcategory
+    def __init__(self, owner, x, y, wearcategory, material, enchantment):
+        if enchantment == 0:
+            enchaname = ''
+        elif enchantment > 0:
+            enchaname = '+' + repr(enchantment) + ' '
+        name = enchaname + material + ' ' + wearcategory
         if material == 'leather': color = (186, 100, 13)
+        if material == 'bone': color = (255, 255, 204)
+        if material == 'chitin': color = (0, 102, 0)
         if material == 'bronze': color = (150,116,68)
         if material == 'iron': color = (200, 200, 200)
         if material == 'steel': color = (210, 210, 210)
+        if material == 'elven steel': color = (210, 210, 210)
+        if material == 'dwarven steel': color = (210, 210, 210)
+        if material == 'nanotube': color = (51, 0, 0)
+        if material == 'adamantine': color = (51, 51, 0)
         super().__init__(owner, x, y, name, '[', color)
         self.wearcategory = wearcategory
         self.wearable = True
         self.isarmor = True
         if material == 'leather':
             self.maxhp = 100
-            self.mindamage = 0
-            self.maxdamage = 5
-            density = 2
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 5 + enchantment
+            density = 4
+        if material == 'bone':
+            self.maxhp = 100
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 10 + enchantment
+            density = 20
+        if material == 'chitin':
+            self.maxhp = 150
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 10 + enchantment
+            density = 20
         if material == 'bronze':
             self.maxhp = 200
-            self.mindamage = 0
-            self.maxdamage = 10
-            density = 8
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 10 + enchantment
+            density = 75
         if material == 'iron':
             self.maxhp = 300
-            self.mindamage = 0
-            self.maxdamage = 15
-            density = 8
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 15 + enchantment
+            density = 79
         if material == 'steel':
             self.maxhp = 400
-            self.mindamage = 0
-            self.maxdamage = 20
-            density = 8
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 20 + enchantment
+            density = 79
+        if material == 'elven steel':
+            self.maxhp = 400
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 20 + enchantment
+            density = 60
+        if material == 'dwarven steel':
+            self.maxhp = 440
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 22 + enchantment
+            density = 80
+        if material == 'nanotube':
+            self.maxhp = 400
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 20 + enchantment
+            density = 10
+        if material == 'adamantine':
+            self.maxhp = 800
+            self.mindamage = 0 + enchantment
+            self.maxdamage = 40 + enchantment
+            density = 100
 
         if wearcategory == 'chest armor':
-            self.weight = 2000*density
+            self.weight = 200*density
         if wearcategory == 'gauntlet':
-            self.weight = 100*density
+            self.weight = 10*density
         if wearcategory == 'leg armor':
-            self.weight = 500*density
+            self.weight = 50*density
         if wearcategory == 'helmet':
-            self.weight = 200*density
+            self.weight = 20*density
         if wearcategory == 'tentacle armor':
-            self.weight = 200*density
+            self.weight = 20*density
 
 def randomarmor(owner, x, y):
-    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'gauntlet', 'leg armor', 'helmet', 'tentacle armor']), np.random.choice(['leather', 'bronze', 'iron', 'steel']))
+    enchantment = 0
+    while np.random.rand() > 0.5:
+        enchantment += 1
+    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'gauntlet', 'leg armor', 'helmet', 'tentacle armor']), np.random.choice(['leather', 'bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.25, 0.1, 0.05, 0.20, 0.20, 0.05, 0.05, 0.05, 0.02, 0.03]), enchantment)
 
 class Backpack(Item):
     def __init__(self, owner, x, y):

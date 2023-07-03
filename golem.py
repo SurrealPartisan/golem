@@ -30,23 +30,12 @@ for i in range(numlevels):
             y = np.random.randint(mapheight)
         item.create_medication(cave.items, x, y)
 
-    x = y = 0
-    while cave.walls[x, y] != 0:
-        x = np.random.randint(mapwidth)
-        y = np.random.randint(mapheight)
-    item.HumanIronDagger(cave.items, x, y)
-
-    x = y = 0
-    while cave.walls[x, y] != 0:
-        x = np.random.randint(mapwidth)
-        y = np.random.randint(mapheight)
-    item.LightPick(cave.items, x, y)
-
-    x = y = 0
-    while cave.walls[x, y] != 0:
-        x = np.random.randint(mapwidth)
-        y = np.random.randint(mapheight)
-    item.HeavyPick(cave.items, x, y)
+    for j in range(5):
+        x = y = 0
+        while cave.walls[x, y] != 0:
+            x = np.random.randint(mapwidth)
+            y = np.random.randint(mapheight)
+        item.randomweapon(cave.items, x, y)
 
     for j in range(5):
         x = y = 0
