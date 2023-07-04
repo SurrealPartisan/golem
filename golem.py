@@ -107,8 +107,10 @@ gamestate = 'free'
 def draw():
     fovmap = fov(cave.walls, player.x, player.y, player.sight())
     # Background
-    win.setscreencolors(None, 'black', clear=True)
+    # win.setscreencolors(None, (0,0,0), clear=True)
     for i in range(mapwidth):
+        for j in range(mapheight + statuslines + logheight):
+            win.putchars(' ', x=i, y=j, bgcolor='black')  # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
         for j in range(mapheight):
             if fovmap[i,j]:
                 if cave.walls[i,j] == 1:
