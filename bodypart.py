@@ -136,7 +136,7 @@ class HumanArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, [], [])]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -164,7 +164,7 @@ class HumanLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, [], [])]
         else:
             return []
 
@@ -184,7 +184,7 @@ class HumanHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [])]
         else:
             return []
 
@@ -278,7 +278,7 @@ class ZombieArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, [], [])]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -298,7 +298,7 @@ class ZombieLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, [], [])]
         else:
             return []
 
@@ -328,7 +328,7 @@ class ZombieHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [])]
         else:
             return []
 
@@ -423,7 +423,7 @@ class MolePersonArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, [], [])]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -451,7 +451,7 @@ class MolePersonLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, [], [])]
         else:
             return []
 
@@ -471,7 +471,7 @@ class MolePersonHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [])]
         else:
             return []
 
@@ -538,7 +538,7 @@ class OctopusHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [])]
         else:
             return []
 
@@ -579,7 +579,7 @@ class OctopusTentacle(BodyPart):
         if not self.destroyed():
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
-                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10, [], [])]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -673,7 +673,7 @@ class GoblinArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, [], []), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, [], [])]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -701,7 +701,7 @@ class GoblinLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, [], [])]
         else:
             return []
 
@@ -721,7 +721,7 @@ class GoblinHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, [], [])]
         else:
             return []
 

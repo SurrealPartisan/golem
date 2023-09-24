@@ -648,7 +648,7 @@ while True:
                     # Help
                     if event.key == pygame.locals.K_h:
                         player.log().append('Commands:')
-                        player.log().append('  - page up, page down, home, end: explore the player.log()')
+                        player.log().append('  - page up, page down, home, end: explore the log')
                         player.log().append('  - arrows or numpad: move')
                         player.log().append('  - period or numpad 5: wait a moment')
                         player.log().append('  - m: mine')

@@ -10,7 +10,7 @@ import numpy as np
 
 import utils
 
-Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage'])
+Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'bane', 'special'])
 
 class Item():
     def __init__(self, owner, x, y, name, char, color):
@@ -65,12 +65,15 @@ def create_medication(owner, x, y):
     drugs._hpgiven = np.random.randint(-2, 11)
 
 class Dagger(Item):
-    def __init__(self, owner, x, y, material, enchantment):
+    def __init__(self, owner, x, y, material, enchantment, bane):
         if enchantment == 0:
             enchaname = ''
         elif enchantment > 0:
             enchaname = '+' + repr(enchantment) + ' '
-        name = enchaname + material + ' dagger'
+        banename = ''
+        for b in bane:
+            banename += b + '-bane '
+        name = enchaname + banename + material + ' dagger'
         if material == 'bone': color = (255, 255, 204)
         if material == 'chitin': color = (0, 102, 0)
         if material == 'bronze': color = (150,116,68)
@@ -83,6 +86,7 @@ class Dagger(Item):
         super().__init__(owner, x, y, name, '/', color)
         self.wieldable = True
         self.weapon = True
+        self.bane = bane
         if material == 'bone':
             self.mindamage = 1 + enchantment
             self.maxdamage = 15 + enchantment
@@ -122,13 +126,16 @@ class Dagger(Item):
         self.weight = 6*density
 
     def attackslist(self):
-        return[Attack(self.name, 'stabbed', 'stabbed', '', '', 0.8, 1, self.mindamage, self.maxdamage)]
+        return[Attack(self.name, 'stabbed', 'stabbed', '', '', 0.8, 1, self.mindamage, self.maxdamage, self.bane, [])]
 
 def randomdagger(owner, x, y):
     enchantment = 0
-    while np.random.rand() > 0.5:
+    while np.random.rand() < 0.5:
         enchantment += 1
-    return Dagger(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment)
+    bane = []
+    if np.random.rand() < 0.1:
+        bane = [np.random.choice(utils.enemyfactions)]
+    return Dagger(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment, bane)
 
 class LightPick(Item):
     def __init__(self, owner, x, y):
@@ -138,7 +145,7 @@ class LightPick(Item):
         self.weight = 1500
 
     def attackslist(self):
-        return[Attack('light pick', 'hit', 'hit', ' with a light pick', ' with a light pick', 0.6, 1.5, 1, 20)]
+        return[Attack('light pick', 'hit', 'hit', ' with a light pick', ' with a light pick', 0.6, 1.5, 1, 20, [], [])]
 
     def minespeed(self):
         return 0.25
@@ -152,9 +159,9 @@ class HeavyPick(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.6, 1.5, 1, 30)]
+            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.6, 1.5, 1, 30, [], [])]
         else:
-            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.4, 2, 1, 20)]
+            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.4, 2, 1, 20, [], [])]
 
     def minespeed(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.

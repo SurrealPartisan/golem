@@ -140,7 +140,11 @@ class Creature():
                 else:
                     armor = None
                     armordamage = 0
-                damage = min(totaldamage - armordamage, targetbodypart.hp())
+                if target.faction in attack.bane:
+                    banemultiplier = 2
+                else:
+                    banemultiplier = 1
+                damage = min(banemultiplier*(totaldamage - armordamage), targetbodypart.hp())
                 targetbodypart.damagetaken += damage
                 if targetbodypart.parentalconnection != None:
                     partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
@@ -232,7 +236,7 @@ class Creature():
 class Zombie(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'zombie'
+        self.faction = 'undead'
         self.char = 'z'
         self.color = (191, 255, 128)
         self.name = np.random.choice(['zombie', 'headless zombie', 'one-armed zombie', 'crawler zombie'], p=[0.7, 0.1, 0.1, 0.1])
@@ -299,7 +303,7 @@ class Zombie(Creature):
 class MolePerson(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'mole people'
+        self.faction = 'mole'
         self.char = 'm'
         self.color = (186, 100, 13)
         self.name = 'mole person'
@@ -420,7 +424,7 @@ class CaveOctopus(Creature):
 class Goblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblin'
+        self.faction = 'goblinoid'
         self.char = 'g'
         self.color = (0, 255, 0)
         self.name = 'goblin'
