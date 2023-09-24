@@ -144,6 +144,11 @@ class Creature():
                     banemultiplier = 2
                 else:
                     banemultiplier = 1
+                bleed = False
+                for special in attack.special:
+                    if special[0] == 'bleed' and np.random.rand() < special[1]:
+                        bleed = True
+                        targetbodypart.bleedclocks.append((banemultiplier*(totaldamage - armordamage), 0))
                 damage = min(banemultiplier*(totaldamage - armordamage), targetbodypart.hp())
                 targetbodypart.damagetaken += damage
                 if targetbodypart.parentalconnection != None:
@@ -152,8 +157,12 @@ class Creature():
                     partname = 'torso'
                 if not target.dying():
                     if not targetbodypart.destroyed():
-                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
-                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                        if not bleed:
+                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                        else:
+                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
                         if armordamage > 0:
                             if not armor.destroyed():
                                 target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -196,6 +205,26 @@ class Creature():
             self.log().append('The ' + target.name + ' evaded your ' + attack.name + '!')
             target.log().append("You evaded the " + self.name + "'s " + attack.name + "!")
 
+    def bleed(self, time):
+        for part in self.bodyparts:
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+            bled = part.bleed(time)
+            if bled > 0:
+                if part.destroyed():
+                    self.log().append('Your ' + partname + ' bled out.')
+                else:
+                    self.log().append('Your ' + partname + ' took ' + repr(bled) + ' damage from bleeding.')
+        if self.dying():
+            self.log().append('You are dead!')
+            for creat in self.world.creatures:
+                fovmap = fov(creat.world.walls, creat.x, creat.y, creat.sight())
+                if fovmap[self.x, self.y] and creat != self:
+                    creat.log().append('The ' + self.name + ' bled to death!')
+            self.die()
+
     def ai(self):
         # Return something to put in self.nextaction. It should be a list,
         # starting with action string, followed by parameters, last of which is
@@ -216,22 +245,25 @@ class Creature():
     def update(self, time):
         if time < self.nextaction[-1]:
             self.nextaction[-1] -= time
+            self.bleed(time)
         else:
             timeleft = time - self.nextaction[-1]
-            self.resolveaction()
-
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            for i in range(self.world.width):
-                for j in range(self.world.height):
-                    if fovmap[i,j]:
-                        self.seen()[self.world_i][i,j] = 1
-            for creat in self.world.creatures:
-                if fovmap[creat.x, creat.y] and not creat in self.creaturesseen() and creat != self:
-                    self.creaturesseen().append(creat)
-                    self.log().append('You see a ' + creat.name +'.')
-
-            self.nextaction = self.ai()
-            self.update(timeleft)
+            self.bleed(self.nextaction[-1])
+            if not self.dead:
+                self.resolveaction()
+    
+                fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+                for i in range(self.world.width):
+                    for j in range(self.world.height):
+                        if fovmap[i,j]:
+                            self.seen()[self.world_i][i,j] = 1
+                for creat in self.world.creatures:
+                    if fovmap[creat.x, creat.y] and not creat in self.creaturesseen() and creat != self:
+                        self.creaturesseen().append(creat)
+                        self.log().append('You see a ' + creat.name +'.')
+    
+                self.nextaction = self.ai()
+                self.update(timeleft)
 
 class Zombie(Creature):
     def __init__(self, world, world_i, x, y):

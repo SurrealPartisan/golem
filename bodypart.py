@@ -41,6 +41,7 @@ class BodyPart(item.Item):
         self.material = "living flesh"
         self._defensecoefficient = 0.8
         self._wearwieldname = name
+        self.bleedclocks = []
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -83,6 +84,20 @@ class BodyPart(item.Item):
             return self.parentalconnection.parent.armor()
         else:
             return None
+
+    def bleed(self, time):
+        newbleedclocklist = []
+        dmgtotal = 0
+        for bleedclock in self.bleedclocks:
+            dmgleft = bleedclock[0]
+            timepassed = bleedclock[1] + time
+            dmg = min(int(timepassed), dmgleft, self.maxhp - self.damagetaken)
+            self.damagetaken += dmg
+            dmgtotal += dmg
+            if dmgleft - dmg > 0:
+                newbleedclocklist.append((dmgleft - dmg, timepassed % 1))
+        self.bleedclocks = newbleedclocklist
+        return dmgtotal
 
 
 class HumanTorso(BodyPart):
@@ -184,7 +199,7 @@ class HumanHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [])]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [('bleed', 0.1)])]
         else:
             return []
 
@@ -328,7 +343,7 @@ class ZombieHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [])]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [('bleed', 0.1)])]
         else:
             return []
 
@@ -471,7 +486,7 @@ class MolePersonHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [])]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [('bleed', 0.1)])]
         else:
             return []
 
@@ -538,7 +553,7 @@ class OctopusHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [])]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [('bleed', 0.1)])]
         else:
             return []
 
@@ -673,7 +688,7 @@ class GoblinArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, [], []), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, [], [])]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, [], []), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, [], [('bleed', 0.2)])]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -721,7 +736,7 @@ class GoblinHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, [], [])]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, [], [('bleed', 0.1)])]
         else:
             return []
 

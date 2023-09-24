@@ -185,6 +185,12 @@ def draw():
         statuseffects.append(('Overloaded', (255, 0, 0)))
     elif player.burdened():
         statuseffects.append(('Burdened', (255, 255, 0)))
+    bleed = False
+    for part in player.bodyparts:
+        if len(part.bleedclocks) > 0:
+            bleed = True
+    if bleed:
+        statuseffects.append(('Bleeding', (255, 0, 0)))
     textx = 0
     for effect in statuseffects:
         win.putchars(effect[0], x=textx, y = mapheight+2, bgcolor=((128,128,128)), fgcolor = effect[1])
@@ -338,10 +344,15 @@ def draw():
                 j = i
             else:
                 j = len(player.attackslist())+i-logrows-logback
+            attackdescription = player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage)
+            for special in player.attackslist()[j].special:
+                if special[0] == 'bleed':
+                    attackdescription += ', bleed ' + repr(int(special[1] * 100)) + '%'
+            attackdescription += ')'
             if j != chosen:
-                win.write(player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ')', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
             if j == chosen:
-                win.write(player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ')', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
     elif gamestate == 'choosetargetbodypart':
         attackmessage = 'Choose where to attack the ' + target.name + ':'
@@ -400,6 +411,7 @@ def draw():
     win.update()
 
 def updatetime(time):
+    player.bleed(time)
     for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
         npc.update(time)
 
@@ -937,7 +949,10 @@ while True:
                         selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
                         updatetime(selectedattack[6])
                         if not player.dying():
-                            player.fight(target, selected, selectedattack)
+                            if not target.dead:
+                                player.fight(target, selected, selectedattack)
+                            else:
+                                player.log().append('The ' + target.name + ' is already dead.')
                         logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:

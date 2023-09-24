@@ -126,7 +126,7 @@ class Dagger(Item):
         self.weight = 6*density
 
     def attackslist(self):
-        return[Attack(self.name, 'stabbed', 'stabbed', '', '', 0.8, 1, self.mindamage, self.maxdamage, self.bane, [])]
+        return[Attack(self.name, 'stabbed', 'stabbed', '', '', 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('bleed', 0.2)])]
 
 def randomdagger(owner, x, y):
     enchantment = 0
