@@ -8,7 +8,7 @@ Created on Sun Oct 16 21:37:14 2022
 
 import numpy as np
 
-mapwidth, mapheight = 80, 40
+mapwidth, mapheight = 100, 40
 numlevels = 10
 
 enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid']
