@@ -19,8 +19,11 @@ class Creature():
         self.name = 'golem'
         self.x = 0
         self.y = 0
+        self.x_old = 0
+        self.y_old = 0
         self.inventory = listwithowner([], self)
         self.nextaction = ['wait', 1]
+        self.previousaction = 'wait'
         self.bodyparts = listwithowner([], self)
         self.torso = None
         self.dead = False
@@ -76,8 +79,10 @@ class Creature():
         return 1/self.speed()
 
     def move(self, dx, dy):
-        self.y += dy
+        self.x_old = self.x
+        self.y_old = self.y
         self.x += dx
+        self.y += dy
 
     def minespeed(self):
         return max([part.minespeed() for part in self.bodyparts])
@@ -133,6 +138,9 @@ class Creature():
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
                 totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
+                for special in attack.special:
+                    if special[0] == 'charge' and self.previousaction == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
+                        totaldamage *= 2
                 if targetbodypart.armor() != None:
                     armor = targetbodypart.armor()
                     armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
@@ -236,11 +244,14 @@ class Creature():
             creaturesintheway = [creature for creature in self.world.creatures if creature.x == self.x+self.nextaction[1] and creature.y == self.y+self.nextaction[2]]
             if len(creaturesintheway) == 0:
                 self.move(self.nextaction[1], self.nextaction[2])
+                self.previousaction = 'move'
             else:
                 self.log().append("There's a " + creaturesintheway[0].name + " in your way.")
+                self.previousaction = 'wait'
         elif self.nextaction[0] == 'fight':
             if not self.nextaction[1].dead:  # prevent a crash
                 self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
+                self.previousaction = 'fight'
 
     def update(self, time):
         if time < self.nextaction[-1]:

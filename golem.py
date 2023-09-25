@@ -442,9 +442,11 @@ def moveorattack(dx, dy):
             creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
             if len(creaturesintheway) == 0:
                 player.move(dx, dy)
+                player.previousaction = 'move'
                 checkitems(player.x,player.y)
             else:
                 player.log().append("There's a " + creaturesintheway[0].name + " in your way.")
+                player.previousaction = 'wait'
         logback = 0
         gamestate = 'free'
         target = None
@@ -459,6 +461,7 @@ def mine(dx, dy):
         if not player.dying():
             player.log().append('You mined a hole in the wall.')
             cave.walls[player.x+dx, player.y+dy] = 0
+            player.previousaction = 'mine'
     else:
         player.log().append("There's no wall there.")
     return('free', 0)  # gamestate and logback
@@ -492,6 +495,7 @@ while True:
                     if event.key == pygame.locals.K_PERIOD or event.key == pygame.locals.K_KP5:
                         updatetime(1)
                         logback = 0
+                        player.previousaction = 'wait'
 
                     if event.key == pygame.locals.K_GREATER or (event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT)):
                         if (player.x, player.y) != cave.stairsdowncoords:
@@ -511,6 +515,7 @@ while True:
                                 player.x = cave.stairsupcoords[0]
                                 player.y = cave.stairsupcoords[1]
                                 player.log().append('You went down the stairs.')
+                                player.previousaction = 'move'
                                 logback = 0
 
                     if event.key == pygame.locals.K_LESS and not (event.mod & pygame.KMOD_SHIFT):
@@ -531,6 +536,7 @@ while True:
                                 player.x = cave.stairsdowncoords[0]
                                 player.y = cave.stairsdowncoords[1]
                                 player.log().append('You went up the stairs.')
+                                player.previousaction = 'move'
                                 logback = 0
 
                     if event.key == pygame.locals.K_m:
@@ -554,6 +560,7 @@ while True:
                                 player.inventory.append(it)
                                 it.owner = player.inventory
                                 player.log().append('You pick up the ' + it.name + '.')
+                                player.previousaction = 'pick'
                                 logback = 0
                         else:
                             gamestate = 'pick'
@@ -726,6 +733,7 @@ while True:
                             player.inventory.append(selected)
                             cave.items.remove(selected)
                             player.log().append('You picked up the ' + selected.name + '.')
+                            player.previousaction = 'pick'
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -751,6 +759,7 @@ while True:
                             selected.x = player.x
                             selected.y = player.y
                             player.log().append('You dropped the ' + selected.name + '.')
+                            player.previousaction = 'drop'
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -776,6 +785,7 @@ while True:
                             elif part == player.torso:
                                 partname = 'torso'
                             player.log().append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(healed) + ' points.')
+                            player.previousaction = 'consume'
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -817,6 +827,7 @@ while True:
                             selected.wielded.append(selecteditem)
                             selecteditem.owner = selected.wielded
                             player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                            player.previousaction = 'wield'
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -841,6 +852,7 @@ while True:
                             player.inventory.append(selected)
                             selected.owner = player.inventory
                             player.log().append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
+                            player.previousaction = 'unwield'
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -888,6 +900,7 @@ while True:
                             selected.worn[selecteditem.wearcategory].append(selecteditem)
                             selecteditem.owner = selected.worn[selecteditem.wearcategory]
                             player.log().append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                            player.previousaction = 'wear'
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -912,6 +925,7 @@ while True:
                             player.inventory.append(selected)
                             selected.owner = player.inventory
                             player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
+                            player.previousaction = 'undress'
                             logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -951,8 +965,10 @@ while True:
                         if not player.dying():
                             if not target.dead:
                                 player.fight(target, selected, selectedattack)
+                                player.previousaction = 'fight'
                             else:
                                 player.log().append('The ' + target.name + ' is already dead.')
+                                player.previousaction = 'wait'
                         logback = 0
                         gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
@@ -1037,6 +1053,7 @@ while True:
                                     if part != None:
                                         connection.connect(part)
                                 player.log().append('You have selected your bodyparts.')
+                                player.previousaction = 'choosebody'
                                 logback = 0
                                 gamestate = 'free'
                     if event.key == pygame.locals.K_ESCAPE:
