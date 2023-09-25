@@ -138,9 +138,20 @@ class Creature():
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
                 totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
+                knocked_back = False
+                knocked_to_wall = False
                 for special in attack.special:
                     if special[0] == 'charge' and self.previousaction == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
                         totaldamage *= 2
+                    if special[0] == 'knockback' and np.random.rand() < special[1]:
+                        dx = target.x - self.x
+                        dy = target.y - self.y
+                        if self.world.walls[target.x+dx, target.y+dy]:
+                            knocked_to_wall = True
+                            totaldamage *= 2
+                        elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):
+                            knocked_back = True
+                            target.move(dx, dy)
                 if targetbodypart.armor() != None:
                     armor = targetbodypart.armor()
                     armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
@@ -165,12 +176,18 @@ class Creature():
                     partname = 'torso'
                 if not target.dying():
                     if not targetbodypart.destroyed():
-                        if not bleed:
+                        if not bleed and not knocked_back and not knocked_to_wall:
                             self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
                             target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
-                        else:
+                        elif bleed:
                             self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
-                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
+                        elif knocked_back:
+                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
+                        elif knocked_to_wall:
+                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the wall!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the wall!')
                         if armordamage > 0:
                             if not armor.destroyed():
                                 target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -178,8 +195,15 @@ class Creature():
                                 target.log().append('Your ' + armor.name + ' was destroyed!')
                                 armor.owner.remove(armor)
                     else:
-                        self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                        if not knocked_back and not knocked_to_wall:
+                            self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                        elif knocked_back:
+                            self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you back!')
+                        elif knocked_to_wall:
+                            self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the wall!')
+                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you against the wall!')
                         if armordamage > 0:
                             if not armor.destroyed():
                                 target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -202,8 +226,15 @@ class Creature():
                             it.y = target.y
                             target.log().append('You dropped your ' + it.name)
                 else:
-                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
-                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
+                    if not knocked_back and not knocked_to_wall:
+                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
+                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
+                    elif knocked_back:
+                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
+                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
+                    elif knocked_to_wall:
+                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the wall and killing it!')
+                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the wall and killing you!')
                     target.log().append('You are dead!')
                     target.die()
             else:

@@ -2,6 +2,9 @@
 
 Minor
 * Solve the multiple brains problem
+* Fix being alive with 0 total hp
+* Fix destroyed brain still working
+* Stop bleeding notification from destroyed bodyparts
 
 Major
 * Sense of smell for mole people and others

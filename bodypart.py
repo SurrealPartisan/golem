@@ -688,7 +688,7 @@ class GoblinArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, [], []), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, [], [('bleed', 0.2)])]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, [], [('knockback', 0.2)]), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, [], [('bleed', 0.2)])]
             else:
                 return self.wielded[0].attackslist()
         else:

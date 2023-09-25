@@ -200,9 +200,9 @@ class Spear(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'thrust', 'thrust', 'with a ' + self.name, ' with a ' + self.name, 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('charge')])]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('charge')])]
         else:
-            return[Attack(self.name, 'thrust', 'thrust', 'with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('charge')])]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('charge')])]
 
 def randomspear(owner, x, y):
     enchantment = 0
@@ -212,6 +212,82 @@ def randomspear(owner, x, y):
     if np.random.rand() < 0.1:
         bane = [np.random.choice(utils.enemyfactions)]
     return Spear(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment, bane)
+
+class Mace(Item):
+    def __init__(self, owner, x, y, material, enchantment, bane):
+        if enchantment == 0:
+            enchaname = ''
+        elif enchantment > 0:
+            enchaname = '+' + repr(enchantment) + ' '
+        banename = ''
+        for b in bane:
+            banename += b + '-bane '
+        name = enchaname + banename + material + ' mace'
+        if material == 'bone': color = (255, 255, 204)
+        if material == 'chitin': color = (0, 102, 0)
+        if material == 'bronze': color = (150,116,68)
+        if material == 'iron': color = (200, 200, 200)
+        if material == 'steel': color = (210, 210, 210)
+        if material == 'elven steel': color = (210, 210, 210)
+        if material == 'dwarven steel': color = (210, 210, 210)
+        if material == 'nanotube': color = (51, 0, 0)
+        if material == 'adamantine': color = (51, 51, 0)
+        super().__init__(owner, x, y, name, '/', color)
+        self.wieldable = True
+        self.weapon = True
+        self.bane = bane
+        if material == 'bone':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 18 + enchantment
+            density = 20
+        if material == 'chitin':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 18 + enchantment
+            density = 20
+        if material == 'bronze':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 24 + enchantment
+            density = 75
+        if material == 'iron':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 30 + enchantment
+            density = 79
+        if material == 'steel':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 36 + enchantment
+            density = 79
+        if material == 'elven steel':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 36 + enchantment
+            density = 60
+        if material == 'dwarven steel':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 37 + enchantment
+            density = 80
+        if material == 'nanotube':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 48 + enchantment
+            density = 10
+        if material == 'adamantine':
+            self.mindamage = 1 + enchantment
+            self.maxdamage = 48 + enchantment
+            density = 100
+        self.weight = 50*density
+
+    def attackslist(self):
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('knockback', 0.2)])]
+        else:
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('knockback', 0.1)])]
+
+def randommace(owner, x, y):
+    enchantment = 0
+    while np.random.rand() < 0.5:
+        enchantment += 1
+    bane = []
+    if np.random.rand() < 0.1:
+        bane = [np.random.choice(utils.enemyfactions)]
+    return Mace(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment, bane)
 
 class LightPick(Item):
     def __init__(self, owner, x, y):
@@ -246,7 +322,7 @@ class HeavyPick(Item):
             return 0.2
 
 def randomweapon(owner, x, y):
-    return np.random.choice([HeavyPick, LightPick, randomdagger, randomspear], p=[0.15, 0.15, 0.35, 0.35])(owner, x, y)
+    return np.random.choice([HeavyPick, LightPick, randomdagger, randomspear, randommace], p=[0.125, 0.125, 0.25, 0.25, 0.25])(owner, x, y)
 
 class PieceOfArmor(Item):
     def __init__(self, owner, x, y, wearcategory, material, enchantment):
