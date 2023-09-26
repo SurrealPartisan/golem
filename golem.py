@@ -32,42 +32,42 @@ else:
     for i in range(numlevels):
         cave = world.World(mapwidth, mapheight)
         cave.rooms()
-    
+
         for j in range(10):
             x = y = 0
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
             item.create_medication(cave.items, x, y)
-    
+
         for j in range(5):
             x = y = 0
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
             item.randomweapon(cave.items, x, y)
-    
+
         for j in range(5):
             x = y = 0
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
             item.randomarmor(cave.items, x, y)
-    
+
         for j in range(5):
             x = y = 0
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
             cave.creatures.append(creature.Zombie(cave, i, x, y))
-    
+
         for j in range(5):
             x = y = 0
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
             cave.creatures.append(creature.MolePerson(cave, i, x, y))
-    
+
         if i > 0:
             for j in range(5):
                 x = y = 0
@@ -75,7 +75,7 @@ else:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 cave.creatures.append(creature.CaveOctopus(cave, i, x, y))
-    
+
         if i > 1:
             for j in range(5):
                 x = y = 0
@@ -83,7 +83,15 @@ else:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 cave.creatures.append(creature.Goblin(cave, i, x, y))
-    
+
+        if i > 2:
+            for j in range(5):
+                x = y = 0
+                while cave.walls[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                cave.creatures.append(creature.Wolf(cave, i, x, y))
+
         caves.append(cave)
     cave_i = 0
     cave = caves[cave_i]

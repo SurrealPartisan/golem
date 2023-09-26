@@ -774,3 +774,115 @@ class GoblinHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 250
+
+
+
+class WolfTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf torso', 'T', (100, 100, 150))
+        self.categories = ['torso']
+        self.childconnections = {
+            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left '),
+            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right '),
+            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left '),
+            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
+            'head': BodyPartConnection(self, ['head'], True, ''),
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'tail': BodyPartConnection(self, ['tail'], False, '')
+            }
+        self.maxhp = 150
+        self.worn = {'barding': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 25000
+        self.carryingcapacity = 25000
+
+class WolfLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf leg', 'l', (100, 100, 150))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 4000
+        self.carryingcapacity = 7500
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 3:
+                return 2
+            elif len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+                return 1.5
+            else:
+                return 0.5
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 10, [], [])]
+        else:
+            return []
+
+class WolfHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf head', 'ö', (100, 100, 150))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 30
+        self.worn = {'helmet': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 4000
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 40, [], [('bleed', 0.2)])]
+        else:
+            return []
+
+class WolfEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin eye', '*', (255, 255, 0))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 5
+
+    def sight(self):
+        if not self.destroyed():
+            return 4
+        else:
+            return 0
+
+class WolfBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 120
+        self.log = []
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((mapwidth, mapheight)))
+        self.creaturesseen = []
+
+class WolfHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 500
+
+class WolfTail(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf tail', '~', (100, 100, 150))
+        self.categories = ['tail']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 500

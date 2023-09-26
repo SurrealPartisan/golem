@@ -553,3 +553,64 @@ class Goblin(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
+class Wolf(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'canine'
+        self.char = 'w'
+        self.color = (100, 100, 150)
+        self.name = 'wolf'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.WolfTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('front left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.WolfHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('tail', bodypart.WolfTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.WolfHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.WolfBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.WolfEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.WolfEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                maxdmglist = [atk[8] for atk in self.attackslist()]
+                i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])

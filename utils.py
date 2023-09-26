@@ -11,7 +11,7 @@ import numpy as np
 mapwidth, mapheight = 100, 40
 numlevels = 10
 
-enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid']
+enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine']
 
 def drugname():
     syl1 = np.random.choice(['Ab', 'Bra', 'Cil', 'Tra', 'Cog', 'I', 'Bri'])
