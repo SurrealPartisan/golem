@@ -1,4 +1,7 @@
 import sys
+import pickle
+from os.path import exists as file_exists
+from os import remove as remove_file
 
 import pygame
 import pygcurse
@@ -18,85 +21,92 @@ win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Go
 win.font = pygame.font.Font('Hack-Regular.ttf', 12)
 win.autoupdate = False
 
-caves = []
-for i in range(numlevels):
-    cave = world.World(mapwidth, mapheight)
-    cave.rooms()
-
-    for j in range(10):
-        x = y = 0
-        while cave.walls[x, y] != 0:
-            x = np.random.randint(mapwidth)
-            y = np.random.randint(mapheight)
-        item.create_medication(cave.items, x, y)
-
-    for j in range(5):
-        x = y = 0
-        while cave.walls[x, y] != 0:
-            x = np.random.randint(mapwidth)
-            y = np.random.randint(mapheight)
-        item.randomweapon(cave.items, x, y)
-
-    for j in range(5):
-        x = y = 0
-        while cave.walls[x, y] != 0:
-            x = np.random.randint(mapwidth)
-            y = np.random.randint(mapheight)
-        item.randomarmor(cave.items, x, y)
-
-    for j in range(5):
-        x = y = 0
-        while cave.walls[x, y] != 0:
-            x = np.random.randint(mapwidth)
-            y = np.random.randint(mapheight)
-        cave.creatures.append(creature.Zombie(cave, i, x, y))
-
-    for j in range(5):
-        x = y = 0
-        while cave.walls[x, y] != 0:
-            x = np.random.randint(mapwidth)
-            y = np.random.randint(mapheight)
-        cave.creatures.append(creature.MolePerson(cave, i, x, y))
-
-    if i > 0:
+if file_exists('savegame.pickle'):
+    with open('savegame.pickle', 'rb') as f:
+        caves, player = pickle.load(f)
+    cave_i = player.world_i
+    cave = caves[cave_i]
+    remove_file('savegame.pickle')
+else:
+    caves = []
+    for i in range(numlevels):
+        cave = world.World(mapwidth, mapheight)
+        cave.rooms()
+    
+        for j in range(10):
+            x = y = 0
+            while cave.walls[x, y] != 0:
+                x = np.random.randint(mapwidth)
+                y = np.random.randint(mapheight)
+            item.create_medication(cave.items, x, y)
+    
         for j in range(5):
             x = y = 0
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
-            cave.creatures.append(creature.CaveOctopus(cave, i, x, y))
-
-    if i > 1:
+            item.randomweapon(cave.items, x, y)
+    
         for j in range(5):
             x = y = 0
             while cave.walls[x, y] != 0:
                 x = np.random.randint(mapwidth)
                 y = np.random.randint(mapheight)
-            cave.creatures.append(creature.Goblin(cave, i, x, y))
-
-    caves.append(cave)
-cave_i = 0
-cave = caves[cave_i]
-
-player = creature.Creature(cave, cave_i)
-player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
-player.bodyparts[0].connect('left arm', bodypart.HumanArm(player.bodyparts, 0, 0))
-player.bodyparts[0].connect('right arm', bodypart.HumanArm(player.bodyparts, 0, 0))
-player.bodyparts[0].connect('left leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
-player.bodyparts[0].connect('right leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
-player.bodyparts[0].connect('heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
-player.bodyparts[0].connect('head', bodypart.HumanHead(player.bodyparts, 0, 0))
-player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
-player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
-player.bodyparts[-3].connect('right eye', bodypart.HumanEye(player.bodyparts, 0, 0))
-item.Backpack(player.torso.worn['backpack'], 0, 0)
-player.faction = 'player'
-player.x = cave.stairsupcoords[0]
-player.y = cave.stairsupcoords[1]
-cave.creatures.append(player)
-
-player.log().append('Welcome to the cave!')
-player.log().append("Press 'h' for help.")
+            item.randomarmor(cave.items, x, y)
+    
+        for j in range(5):
+            x = y = 0
+            while cave.walls[x, y] != 0:
+                x = np.random.randint(mapwidth)
+                y = np.random.randint(mapheight)
+            cave.creatures.append(creature.Zombie(cave, i, x, y))
+    
+        for j in range(5):
+            x = y = 0
+            while cave.walls[x, y] != 0:
+                x = np.random.randint(mapwidth)
+                y = np.random.randint(mapheight)
+            cave.creatures.append(creature.MolePerson(cave, i, x, y))
+    
+        if i > 0:
+            for j in range(5):
+                x = y = 0
+                while cave.walls[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                cave.creatures.append(creature.CaveOctopus(cave, i, x, y))
+    
+        if i > 1:
+            for j in range(5):
+                x = y = 0
+                while cave.walls[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                cave.creatures.append(creature.Goblin(cave, i, x, y))
+    
+        caves.append(cave)
+    cave_i = 0
+    cave = caves[cave_i]
+    
+    player = creature.Creature(cave, cave_i)
+    player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
+    player.bodyparts[0].connect('left arm', bodypart.HumanArm(player.bodyparts, 0, 0))
+    player.bodyparts[0].connect('right arm', bodypart.HumanArm(player.bodyparts, 0, 0))
+    player.bodyparts[0].connect('left leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
+    player.bodyparts[0].connect('right leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
+    player.bodyparts[0].connect('heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
+    player.bodyparts[0].connect('head', bodypart.HumanHead(player.bodyparts, 0, 0))
+    player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
+    player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
+    player.bodyparts[-3].connect('right eye', bodypart.HumanEye(player.bodyparts, 0, 0))
+    item.Backpack(player.torso.worn['backpack'], 0, 0)
+    player.faction = 'player'
+    player.x = cave.stairsupcoords[0]
+    player.y = cave.stairsupcoords[1]
+    cave.creatures.append(player)
+    
+    player.log().append('Welcome to the cave!')
+    player.log().append("Press 'h' for help.")
 
 logback = 0 # How far the log has been scrolled
 chosen = 0 # Used for different item choosing gamestates
@@ -670,6 +680,7 @@ while True:
                         player.log().append('  - page up, page down, home, end: explore the log')
                         player.log().append('  - arrows or numpad: move')
                         player.log().append('  - period or numpad 5: wait a moment')
+                        player.log().append('  - < or >: go up or down')
                         player.log().append('  - m: mine')
                         player.log().append('  - comma: pick up an item')
                         player.log().append('  - d: drop an item')
@@ -683,7 +694,7 @@ while True:
                         player.log().append('  - U: undress an item')
                         player.log().append('  - h: this list of commands')
                         if len(player.log()) > 1: # Prevent crash if the player is brainless
-                            logback = 8 # Increase when adding commands
+                            logback = 9 # Increase when adding commands
                     
                     # player.log() scrolling
                     if event.key == pygame.locals.K_PAGEUP:
@@ -1066,6 +1077,9 @@ while True:
                 # Update window after any command or keypress
                 draw()
             if event.type == pygame.QUIT:
+                if gamestate != 'dead':
+                    with open('savegame.pickle', 'wb') as f:
+                        pickle.dump((caves, player), f)
                 pygame.quit()
                 sys.exit()
                 
