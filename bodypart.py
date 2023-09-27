@@ -886,3 +886,100 @@ class WolfTail(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 500
+
+
+
+class DrillbotChassis(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'drillbot chassis', '¤', (150, 150, 150))
+        self.categories = ['torso']
+        self.childconnections = {
+            'front left wheel': BodyPartConnection(self, ['leg'], False, 'front left '),
+            'front right wheel': BodyPartConnection(self, ['leg'], False, 'front right '),
+            'back left wheel': BodyPartConnection(self, ['leg'], False, 'back left '),
+            'back right wheel': BodyPartConnection(self, ['leg'], False, 'back right '),
+            'arm': BodyPartConnection(self, ['arm'], False, ''),
+            'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left camera': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right camera': BodyPartConnection(self, ['eye'], False, 'right '),
+            'central processor': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 150
+        self.worn = {'barding': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self._wearwieldname = 'chassis'
+        self.weight = 30000
+        self.carryingcapacity = 50000
+
+class DrillbotWheel(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'drillbot wheel', '*', (150, 150, 150))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.worn = {'wheel cover': listwithowner([], self)}
+        self._wearwieldname = 'wheel'
+        self.weight = 4000
+        self.carryingcapacity = 10000
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 3:
+                return 2
+            elif len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+                return 1.5
+            else:
+                return 0.5
+        else:
+            return 0
+
+class DrillArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'drill arm', '~', (150, 150, 150))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self.maxhp = 40
+        self.weight = 7000
+
+    def minespeed(self):
+        return 0.5
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, [], [('bleed', 0.2)])]
+        else:
+            return []
+
+class DrillbotCamera(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'drillbot camera', '*', (255, 255, 0))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 20
+
+    def sight(self):
+        if not self.destroyed():
+            return 4
+        else:
+            return 0
+
+class DrillbotPump(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'coolant pump, model DB-100', '*', (0, 0, 255))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.weight = 1500
+
+class DrillbotProcessor(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'tactical processor, model DB-100', '*', (255, 255, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.weight = 2000
+        self.log = []
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(np.zeros((mapwidth, mapheight)))
+        self.creaturesseen = []

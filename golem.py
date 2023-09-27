@@ -55,21 +55,23 @@ def game():
                     y = np.random.randint(mapheight)
                 item.randomarmor(cave.items, x, y)
 
-            for j in range(5):
-                x = y = 0
-                while cave.walls[x, y] != 0:
-                    x = np.random.randint(mapwidth)
-                    y = np.random.randint(mapheight)
-                cave.creatures.append(creature.Zombie(cave, i, x, y))
+            if i == 0:
+                for j in range(5):
+                    x = y = 0
+                    while cave.walls[x, y] != 0:
+                        x = np.random.randint(mapwidth)
+                        y = np.random.randint(mapheight)
+                    cave.creatures.append(creature.Zombie(cave, i, x, y))
 
-            for j in range(5):
-                x = y = 0
-                while cave.walls[x, y] != 0:
-                    x = np.random.randint(mapwidth)
-                    y = np.random.randint(mapheight)
-                cave.creatures.append(creature.MolePerson(cave, i, x, y))
+            if i < 2:
+                for j in range(5):
+                    x = y = 0
+                    while cave.walls[x, y] != 0:
+                        x = np.random.randint(mapwidth)
+                        y = np.random.randint(mapheight)
+                    cave.creatures.append(creature.MolePerson(cave, i, x, y))
 
-            if i > 0:
+            if 0 < i < 3:
                 for j in range(5):
                     x = y = 0
                     while cave.walls[x, y] != 0:
@@ -77,7 +79,7 @@ def game():
                         y = np.random.randint(mapheight)
                     cave.creatures.append(creature.CaveOctopus(cave, i, x, y))
 
-            if i > 1:
+            if 1 < i < 4:
                 for j in range(5):
                     x = y = 0
                     while cave.walls[x, y] != 0:
@@ -85,13 +87,21 @@ def game():
                         y = np.random.randint(mapheight)
                     cave.creatures.append(creature.Goblin(cave, i, x, y))
 
-            if i > 2:
+            if 2 < i < 5:
                 for j in range(5):
                     x = y = 0
                     while cave.walls[x, y] != 0:
                         x = np.random.randint(mapwidth)
                         y = np.random.randint(mapheight)
                     cave.creatures.append(creature.Wolf(cave, i, x, y))
+
+            if 3 < i < 6:
+                for j in range(5):
+                    x = y = 0
+                    while cave.walls[x, y] != 0:
+                        x = np.random.randint(mapwidth)
+                        y = np.random.randint(mapheight)
+                    cave.creatures.append(creature.Drillbot(cave, i, x, y))
 
             caves.append(cave)
         cave_i = 0
@@ -116,6 +126,16 @@ def game():
 
         player.log().append('Welcome to the cave!')
         player.log().append("Press 'h' for help.")
+
+        for i in range(mapwidth):
+            for j in range(mapheight + statuslines + logheight):
+                win.putchars(' ', x=i, y=j, bgcolor='black')  # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
+        prompt = 'Give your character a name:'
+        win.autoupdate = True
+        win.write(prompt, x=0, y=0, fgcolor=(255,255,255))
+        while player.individualname == '':
+            player.individualname = win.input(fgcolor=(255,255,255))
+        win.autoupdate = False
 
     logback = 0 # How far the log has been scrolled
     chosen = 0 # Used for different item choosing gamestates
@@ -216,7 +236,7 @@ def game():
             textx += len(effect[0]) + 1
 
         # log
-        if gamestate == 'free' or gamestate == 'dead':
+        if gamestate == 'free' or gamestate == 'dead' or gamestate == 'win':
             logrows = min(logheight,len(player.log()))
             for i in range(logrows):
                 j = i-logrows-logback
@@ -524,6 +544,18 @@ def game():
                             else:
                                 if cave_i == numlevels - 1:
                                     player.log().append("Lower levels not yet implemented!")
+                                    player.log().append("You won the current alpha!")
+                                    player.log().append("Congratulations!")
+                                    player.log().append("Press escape to end.")
+                                    gamestate = 'win'
+                                    if file_exists('highscores.pickle'):
+                                        with open('highscores.pickle', 'rb') as f:
+                                            highscores = pickle.load(f)
+                                    else:
+                                        highscores = []
+                                    highscores.append((player.xp, player.individualname, 'win'))
+                                    with open('highscores.pickle', 'wb') as f:
+                                        pickle.dump(highscores, f)
                                     logback = 0
                                 else:
                                     cave_i += 1
@@ -532,6 +564,9 @@ def game():
                                     cave.creatures.append(player)
                                     player.world = cave
                                     player.world_i = cave_i
+                                    if player.max_world_i < cave_i:
+                                        player.max_world_i = cave_i
+                                        player.xp += 1000
                                     player.x = cave.stairsupcoords[0]
                                     player.y = cave.stairsupcoords[1]
                                     player.log().append('You went down the stairs.')
@@ -706,7 +741,7 @@ def game():
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
                                 logback = 9 # Increase when adding commands
 
-                        # player.log() scrolling
+                        # log scrolling
                         if event.key == pygame.locals.K_PAGEUP:
                             if len(player.log()) >= logheight:
                                 logback = min(logback+1, len(player.log())-logheight)
@@ -1086,12 +1121,35 @@ def game():
                             logback = 0
                             gamestate = 'free'
 
-                    elif gamestate == 'dead':
+                    elif gamestate == 'dead' or gamestate == 'win':
                         if event.key == pygame.locals.K_ESCAPE:
                             gamegoeson = False
+                            halloffame()
 
-                    if player.dying():
+                        # log scrolling
+                        if event.key == pygame.locals.K_PAGEUP:
+                            if len(player.log()) >= logheight:
+                                logback = min(logback+1, len(player.log())-logheight)
+                        if event.key == pygame.locals.K_PAGEDOWN:
+                            logback = max(logback-1, 0)
+                        if event.key == pygame.locals.K_HOME:
+                            if len(player.log()) >= logheight:
+                                logback = len(player.log())-logheight
+                        if event.key == pygame.locals.K_END:
+                            logback = 0
+
+                    if player.dying() and gamestate != 'dead':
+                        if file_exists('highscores.pickle'):
+                            with open('highscores.pickle', 'rb') as f:
+                                highscores = pickle.load(f)
+                        else:
+                            highscores = []
+                        highscores.append((player.xp, player.individualname, 'dead', player.world_i+1, player.lasthitter.name))
+                        with open('highscores.pickle', 'wb') as f:
+                            pickle.dump(highscores, f)
                         gamestate = 'dead'
+                        player.log().append('Press escape to end.')
+                        logback = 0
 
                     # Update window after any command or keypress
                     draw()
@@ -1110,7 +1168,39 @@ def game():
         #    raise e
 
 def halloffame():
-    pass
+    cont = False
+    while not cont:
+        for i in range(mapwidth):
+            for j in range(mapheight + statuslines + logheight):
+                win.putchars(' ', x=i, y=j, bgcolor='black')
+        title = 'Golem Hall of Fame'
+        win.write(title, x=(mapwidth-len(title))//2, y=0, fgcolor=(255, 255, 255))
+        if file_exists('highscores.pickle'):
+            with open('highscores.pickle', 'rb') as f:
+                highscores = pickle.load(f)
+        else:
+            highscores = []
+        highscores_sorted = sorted(highscores, reverse=True)
+        for i in range(min(len(highscores_sorted), mapheight + statuslines + logheight - 1)):
+            score = highscores_sorted[i]
+            if score[2] == 'dead':
+                scoremessage = 'killed by a ' + score[4] + ' on dungeon level ' + repr(score[3]) + '.'
+            elif score[2] == 'win':
+                scoremessage = 'won the game!'
+            if score == highscores[-1]:
+                fgcolor = (0, 255, 255)
+            else:
+                fgcolor = (255, 255, 255)
+            win.write(repr(i+1), x=0, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
+            win.write(repr(score[0]), x=5, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
+            win.write(score[1] + ', ' + scoremessage, x=15, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
+        win.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.locals.KEYDOWN:
+                cont = True
 
 def options():
     pass
@@ -1189,7 +1279,9 @@ def mainmenu():
                 fgcolor=(255,255,255)
                 bgcolor=(0,0,0)
             win.write(buttontexts[i], x=x, y=y, fgcolor=fgcolor, bgcolor=bgcolor)
+
         win.update()
+
         for event in pygame.event.get():
             if event.type == pygame.locals.KEYDOWN:
                 if event.key == pygame.locals.K_UP:

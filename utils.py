@@ -9,9 +9,9 @@ Created on Sun Oct 16 21:37:14 2022
 import numpy as np
 
 mapwidth, mapheight = 100, 40
-numlevels = 10
+numlevels = 5
 
-enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine']
+enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot']
 
 def drugname():
     syl1 = np.random.choice(['Ab', 'Bra', 'Cil', 'Tra', 'Cog', 'I', 'Bri'])

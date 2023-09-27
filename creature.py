@@ -13,18 +13,22 @@ class Creature():
     def __init__(self, world, world_i):
         self.world = world
         self.world_i = world_i
+        self.max_world_i = world_i
         self.faction = ''
         self.char = '@'
         self.color = 'white'
         self.name = 'golem'
+        self.individualname = ''
         self.x = 0
         self.y = 0
         self.x_old = 0
         self.y_old = 0
+        self.xp = 0
         self.inventory = listwithowner([], self)
         self.nextaction = ['wait', 1]
         self.previousaction = 'wait'
         self.bodyparts = listwithowner([], self)
+        self.lasthitter = None
         self.torso = None
         self.dead = False
 
@@ -33,7 +37,10 @@ class Creature():
         if len(brains) > 0:
             return brains[0].log
         else:
-            return ['You have no brain, so nothing is logged.']
+            if not self.dead:
+                return ['You have no brain, so nothing is logged.']
+            else:
+                return ['You have no brain, so nothing is logged.', 'You are dead!', 'Press escape to end.']
 
     def seen(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
@@ -102,6 +109,7 @@ class Creature():
         return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
 
     def die(self):
+        self.lasthitter.xp += sum([part.maxhp for part in self.bodyparts]) // 2
         self.world.creatures.remove(self)
         for it in self.inventory:
             it.owner = self.world.items
@@ -137,6 +145,7 @@ class Creature():
     def fight(self, target, targetbodypart, attack):
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
+                target.lasthitter = self
                 totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
                 knocked_back = False
                 knocked_to_wall = False
@@ -588,6 +597,65 @@ class Wolf(Creature):
             if target != None and len(self.attackslist()) > 0:
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+class Drillbot(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'robot'
+        self.char = 'd'
+        self.color = (150, 150, 150)
+        self.name = 'drillbot'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.DrillbotChassis(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('front left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('arm', bodypart.DrillArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('coolant pumping system', bodypart.DrillbotPump(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('central processor', bodypart.DrillbotProcessor(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:

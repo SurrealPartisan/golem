@@ -404,6 +404,8 @@ class PieceOfArmor(Item):
             self.weight = 10*density
         if wearcategory == 'leg armor':
             self.weight = 50*density
+        if wearcategory == 'wheel cover':
+            self.weight = 50*density
         if wearcategory == 'helmet':
             self.weight = 20*density
         if wearcategory == 'tentacle armor':
@@ -413,7 +415,7 @@ def randomarmor(owner, x, y):
     enchantment = 0
     while np.random.rand() > 0.5:
         enchantment += 1
-    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'helmet', 'tentacle armor']), np.random.choice(['leather', 'bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.25, 0.1, 0.05, 0.20, 0.20, 0.05, 0.05, 0.05, 0.02, 0.03]), enchantment)
+    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(['leather', 'bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.25, 0.1, 0.05, 0.20, 0.20, 0.05, 0.05, 0.05, 0.02, 0.03]), enchantment)
 
 class Backpack(Item):
     def __init__(self, owner, x, y):
