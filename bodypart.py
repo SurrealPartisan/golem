@@ -102,7 +102,7 @@ class BodyPart(item.Item):
 
 class HumanTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'human torso', 'T', (250, 220, 196))
+        super().__init__(owner, x, y, 'human torso', '¤', (250, 220, 196))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -120,7 +120,7 @@ class HumanTorso(BodyPart):
 
 class HumanArm(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'human arm', 'i', (250, 220, 196))
+        super().__init__(owner, x, y, 'human arm', '~', (250, 220, 196))
         self.categories = ['arm']
         self.childconnections = {}
         self.maxhp = 20
@@ -159,7 +159,7 @@ class HumanArm(BodyPart):
 
 class HumanLeg(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'human leg', 'l', (250, 220, 196))
+        super().__init__(owner, x, y, 'human leg', '~', (250, 220, 196))
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 20
@@ -185,7 +185,7 @@ class HumanLeg(BodyPart):
 
 class HumanHead(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'human head', 'ö', (250, 220, 196))
+        super().__init__(owner, x, y, 'human head', '*', (250, 220, 196))
         self.categories = ['head']
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
@@ -242,7 +242,7 @@ class HumanHeart(BodyPart):
 
 class ZombieTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'zombie torso', 'T', (191, 255, 128))
+        super().__init__(owner, x, y, 'zombie torso', '¤', (191, 255, 128))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -261,7 +261,7 @@ class ZombieTorso(BodyPart):
 
 class ZombieArm(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'zombie arm', 'i', (191, 255, 128))
+        super().__init__(owner, x, y, 'zombie arm', '~', (191, 255, 128))
         self.categories = ['arm']
         self.childconnections = {}
         self.maxhp = 20
@@ -301,7 +301,7 @@ class ZombieArm(BodyPart):
 
 class ZombieLeg(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'zombie leg', 'l', (191, 255, 128))
+        super().__init__(owner, x, y, 'zombie leg', '~', (191, 255, 128))
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 20
@@ -328,7 +328,7 @@ class ZombieLeg(BodyPart):
 
 class ZombieHead(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'zombie head', 'ö', (191, 255, 128))
+        super().__init__(owner, x, y, 'zombie head', '*', (191, 255, 128))
         self.categories = ['head']
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
@@ -389,7 +389,7 @@ class ZombieHeart(BodyPart):
 
 class MolePersonTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'mole person torso', 'T', (186, 100, 13))
+        super().__init__(owner, x, y, 'mole person torso', '¤', (186, 100, 13))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -407,7 +407,7 @@ class MolePersonTorso(BodyPart):
 
 class MolePersonArm(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'mole person arm', 'i', (186, 100, 13))
+        super().__init__(owner, x, y, 'mole person arm', '~', (186, 100, 13))
         self.categories = ['arm']
         self.childconnections = {}
         self.maxhp = 20
@@ -446,7 +446,7 @@ class MolePersonArm(BodyPart):
 
 class MolePersonLeg(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'mole person leg', 'l', (186, 100, 13))
+        super().__init__(owner, x, y, 'mole person leg', '~', (186, 100, 13))
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 20
@@ -472,7 +472,7 @@ class MolePersonLeg(BodyPart):
 
 class MolePersonHead(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'mole person head', 'ö', (186, 100, 13))
+        super().__init__(owner, x, y, 'mole person head', '*', (186, 100, 13))
         self.categories = ['head']
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
@@ -529,7 +529,7 @@ class MolePersonHeart(BodyPart):
 
 class OctopusHead(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'cave octopus head', 'ö', (255, 0, 255))
+        super().__init__(owner, x, y, 'cave octopus head', '*', (255, 0, 255))
         self.categories = ['torso']
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
@@ -639,7 +639,7 @@ class OctopusHeart(BodyPart):
 
 class GoblinTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'goblin torso', 'T', (0, 255, 0))
+        super().__init__(owner, x, y, 'goblin torso', '¤', (0, 255, 0))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -657,7 +657,7 @@ class GoblinTorso(BodyPart):
 
 class GoblinArm(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'goblin arm', 'i', (0, 255, 0))
+        super().__init__(owner, x, y, 'goblin arm', '~', (0, 255, 0))
         self.categories = ['arm']
         self.childconnections = {}
         self.maxhp = 30
@@ -696,7 +696,7 @@ class GoblinArm(BodyPart):
 
 class GoblinLeg(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'goblin leg', 'l', (0, 255, 0))
+        super().__init__(owner, x, y, 'goblin leg', '~', (0, 255, 0))
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 30
@@ -722,7 +722,7 @@ class GoblinLeg(BodyPart):
 
 class GoblinHead(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'goblin head', 'ö', (0, 255, 0))
+        super().__init__(owner, x, y, 'goblin head', '*', (0, 255, 0))
         self.categories = ['head']
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
@@ -779,7 +779,7 @@ class GoblinHeart(BodyPart):
 
 class WolfTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'wolf torso', 'T', (100, 100, 150))
+        super().__init__(owner, x, y, 'wolf torso', '¤', (100, 100, 150))
         self.categories = ['torso']
         self.childconnections = {
             'front left leg': BodyPartConnection(self, ['leg'], False, 'front left '),
@@ -798,7 +798,7 @@ class WolfTorso(BodyPart):
 
 class WolfLeg(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'wolf leg', 'l', (100, 100, 150))
+        super().__init__(owner, x, y, 'wolf leg', '~', (100, 100, 150))
         self.categories = ['leg']
         self.childconnections = {}
         self.maxhp = 30
@@ -826,7 +826,7 @@ class WolfLeg(BodyPart):
 
 class WolfHead(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'wolf head', 'ö', (100, 100, 150))
+        super().__init__(owner, x, y, 'wolf head', '*', (100, 100, 150))
         self.categories = ['head']
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
@@ -846,7 +846,7 @@ class WolfHead(BodyPart):
 
 class WolfEye(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'goblin eye', '*', (255, 255, 0))
+        super().__init__(owner, x, y, 'wolf eye', '*', (255, 255, 0))
         self.categories = ['eye']
         self.childconnections = {}
         self.maxhp = 20
