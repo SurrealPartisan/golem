@@ -18,7 +18,8 @@ pygame.init()
 logheight = 8
 statuslines = 3
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person!')
-win.font = pygame.font.Font('Hack-Regular.ttf', 12)
+fontsize = 12
+win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
 win.autoupdate = False
 
 def game():
@@ -1203,10 +1204,118 @@ def halloffame():
                 cont = True
 
 def options():
-    pass
+    global fontsize
+    cont = False
+    while not cont:
+        for i in range(mapwidth):
+            for j in range(mapheight + statuslines + logheight):
+                win.putchars(' ', x=i, y=j, bgcolor='black')
+        title = 'Options'
+        win.write(title, x=(mapwidth-len(title))//2, y=0, fgcolor=(255, 255, 255))
+        win.write('Font size: < ' + repr(fontsize) + ' >', x=0, y=1, fgcolor=(255, 255, 255))
+        escmessage = 'Press escape to return to main menu.'
+        win.write(escmessage, x=(mapwidth-len(escmessage))//2, y=3, fgcolor=(255, 255, 255))
+        win.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.locals.KEYDOWN:
+                if event.key == pygame.locals.K_ESCAPE:
+                    cont = True
+                if event.key == pygame.locals.K_LEFT:
+                    fontsize -= 1
+                    win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
+                if event.key == pygame.locals.K_RIGHT:
+                    fontsize += 1
+                    win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
+                    
+
 
 def credits():
-    pass
+    cont = False
+    while not cont:
+        for i in range(mapwidth):
+            for j in range(mapheight + statuslines + logheight):
+                win.putchars(' ', x=i, y=j, bgcolor='black')
+        x0 = (mapwidth-29)/2
+        y0 = 5
+
+        win.write('     ', x=x0, y=y0, bgcolor='red')
+        win.write(' ', x=x0, y=y0+1, bgcolor='red')
+        win.write(' ', x=x0, y=y0+2, bgcolor='red')
+        win.write('  ', x=x0+3, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0, y=y0+3, bgcolor='red')
+        win.write(' ', x=x0+4, y=y0+3, bgcolor='red')
+        win.write('     ', x=x0, y=y0+4, bgcolor='red')
+
+        win.write('     ', x=x0+6, y=y0, bgcolor='red')
+        win.write(' ', x=x0+6, y=y0+1, bgcolor='red')
+        win.write(' ', x=x0+6+4, y=y0+1, bgcolor='red')
+        win.write(' ', x=x0+6, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0+6+4, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0+6, y=y0+3, bgcolor='red')
+        win.write(' ', x=x0+6+4, y=y0+3, bgcolor='red')
+        win.write('     ', x=x0+6, y=y0+4, bgcolor='red')
+
+        win.write(' ', x=x0+12, y=y0, bgcolor='red')
+        win.write(' ', x=x0+12, y=y0+1, bgcolor='red')
+        win.write(' ', x=x0+12, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0+12, y=y0+3, bgcolor='red')
+        win.write('     ', x=x0+12, y=y0+4, bgcolor='red')
+
+        win.write('     ', x=x0+18, y=y0, bgcolor='red')
+        win.write(' ', x=x0+18, y=y0+1, bgcolor='red')
+        win.write('     ', x=x0+18, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0+18, y=y0+3, bgcolor='red')
+        win.write('     ', x=x0+18, y=y0+4, bgcolor='red')
+
+        win.write('     ', x=x0+24, y=y0, bgcolor='red')
+        win.write(' ', x=x0+24, y=y0+1, bgcolor='red')
+        win.write(' ', x=x0+24+2, y=y0+1, bgcolor='red')
+        win.write(' ', x=x0+24+4, y=y0+1, bgcolor='red')
+        win.write(' ', x=x0+24, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0+24+2, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0+24+4, y=y0+2, bgcolor='red')
+        win.write(' ', x=x0+24, y=y0+3, bgcolor='red')
+        win.write(' ', x=x0+24+2, y=y0+3, bgcolor='red')
+        win.write(' ', x=x0+24+4, y=y0+3, bgcolor='red')
+        win.write(' ', x=x0+24, y=y0+4, bgcolor='red')
+        win.write(' ', x=x0+24+2, y=y0+4, bgcolor='red')
+        win.write(' ', x=x0+24+4, y=y0+4, bgcolor='red')
+        
+        win.write('A Self-Made Person!', x=x0+5, y=y0+6, fgcolor='red')
+        win.write('Alpha 0', x=x0+11, y=y0+8, fgcolor='red')
+
+        credlist = ['Programmer and main innovator:',
+                    'Mieli "SurrealPartisan" Luukinen',
+                    '',
+                    'Biology consultant:',
+                    'Otto Stenberg',
+                    '',
+                    'Language consultant:',
+                    'Eero Nurmi',
+                    '',
+                    'Made with:',
+                    'Python 3',
+                    'pygame',
+                    'Pygcurse',
+                    'NumPy',
+                    'PyInstaller',
+                    '',
+                    'This game is dedicated to the transgender community.']
+        for i in range(len(credlist)):
+            cred = credlist[i]
+            win.write(cred, x=(mapwidth-len(cred))//2, y=y0+10+i, fgcolor='white')
+
+        win.update()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.locals.KEYDOWN:
+                cont = True
 
 def quitgame():
     pygame.quit()
