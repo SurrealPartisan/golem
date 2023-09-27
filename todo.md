@@ -2,13 +2,13 @@
 
 Minor
 * Solve the multiple brains problem
-* Fix being alive with 0 total hp
-* Fix destroyed brain still working
-* Stop bleeding notification from destroyed bodyparts
 
 Major
 * Sense of smell for mole people and others
+* Sense of hearing
+  * Wolf howling
 * Make NPC:s use items (and consider carrying capacity)
+  * Make question marks not disappear when unseen NPC picks an item
 * Spellcasting
 * Religion
 * Food and hunger

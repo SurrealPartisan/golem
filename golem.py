@@ -206,7 +206,7 @@ def game():
             statuseffects.append(('Burdened', (255, 255, 0)))
         bleed = False
         for part in player.bodyparts:
-            if len(part.bleedclocks) > 0:
+            if len(part.bleedclocks) > 0 and not part.destroyed():
                 bleed = True
         if bleed:
             statuseffects.append(('Bleeding', (255, 0, 0)))

@@ -29,14 +29,14 @@ class Creature():
         self.dead = False
 
     def log(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
         if len(brains) > 0:
             return brains[0].log
         else:
             return ['You have no brain, so nothing is logged.']
 
     def seen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
         if len(brains) > 0:
             return brains[0].seen
         else:
@@ -46,7 +46,7 @@ class Creature():
             return seenlist
     
     def creaturesseen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
         if len(brains) > 0:
             return brains[0].creaturesseen
         else:
@@ -99,7 +99,7 @@ class Creature():
         return healed
 
     def dying(self):
-        return self.dead or sum([part.damagetaken for part in self.bodyparts]) > sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
+        return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
 
     def die(self):
         self.world.creatures.remove(self)
