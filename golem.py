@@ -1303,6 +1303,9 @@ def credits():
                     'NumPy',
                     'PyInstaller',
                     '',
+                    'Font:',
+                    'Hack by Source Foundry Authors. MIT License.',
+                    '',
                     'This game is dedicated to the transgender community.']
         for i in range(len(credlist)):
             cred = credlist[i]
