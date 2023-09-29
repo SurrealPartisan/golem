@@ -63,6 +63,7 @@ class Consumable(Item):
 def create_medication(owner, x, y):
     drugs = Consumable(owner, x, y, 'dose of ' + utils.drugname(), '!', (0, 255, 255))
     drugs._hpgiven = np.random.randint(-2, 11)
+    return drugs
 
 class Dagger(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):

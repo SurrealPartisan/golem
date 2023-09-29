@@ -9,6 +9,11 @@ import numpy as np
 import bodypart
 from utils import fov, listwithowner, numlevels
 
+def checkitems(creat, cave, x,y):
+    for it in cave.items:
+        if it.x == x and it.y == y:
+            creat.log().append('There is a ' + it.name + ' here.')
+
 class Creature():
     def __init__(self, world, world_i):
         self.world = world
@@ -28,6 +33,7 @@ class Creature():
         self.nextaction = ['wait', 1]
         self.previousaction = 'wait'
         self.bodyparts = listwithowner([], self)
+        self.godsknown = []
         self.lasthitter = None
         self.torso = None
         self.dead = False
@@ -90,6 +96,22 @@ class Creature():
         self.y_old = self.y
         self.x += dx
         self.y += dy
+        if (self.x, self.y) == self.world.stairsupcoords:
+            self.log().append('There are stairs up here.')
+        if (self.x, self.y) == self.world.stairsdowncoords:
+            self.log().append('There are stairs down here.')
+        for x, y, gd in self.world.altars:
+            if (self.x, self.y) == (x, y):
+                self.log().append('There is an altar of ' + gd.name + ' here.')
+                if not gd in self.godsknown:
+                    self.godsknown.append(gd)
+                    self.log().append('You learn the ways of ' + gd.name + ', the ' + gd.faction + '-god of ' + gd.sin + '.')
+                    self.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
+        checkitems(self, self.world, self.x, self.y)
+
+    def pray(self, gd):
+        self.log().append('You prayed to ' + gd.name + '.')
+        gd.answer_to_prayer(self)
 
     def minespeed(self):
         return max([part.minespeed() for part in self.bodyparts])

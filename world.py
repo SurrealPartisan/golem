@@ -6,7 +6,10 @@ Created on Thu Dec  8 17:32:51 2022
 @author: surrealpartisan
 """
 
+from collections import namedtuple
 import numpy as np
+
+Altar = namedtuple('Altar', ['x', 'y', 'god'])
 
 class World():
     
@@ -16,6 +19,7 @@ class World():
         self.walls = np.ones((width, height))
         self.items = []
         self.creatures = []
+        self.altars = []
         self.stairsupcoords = None
         self.stairsdowncoords = None
     

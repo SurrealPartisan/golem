@@ -11,7 +11,8 @@ import item
 import creature
 import world
 import bodypart
-from utils import mapwidth, mapheight, numlevels, fov
+import god
+from utils import mapwidth, mapheight, numlevels, fov, sins
 
 pygame.init()
 
@@ -25,15 +26,25 @@ win.autoupdate = False
 def game():
     if file_exists('savegame.pickle'):
         with open('savegame.pickle', 'rb') as f:
-            caves, player = pickle.load(f)
+            caves, player, gods = pickle.load(f)
         cave_i = player.world_i
         cave = caves[cave_i]
         remove_file('savegame.pickle')
     else:
+        gods = []
+        for sin in sins:
+            gods.append(god.God(None, np.nan, sin))
         caves = []
         for i in range(numlevels):
             cave = world.World(mapwidth, mapheight)
             cave.rooms()
+
+            for j in range(np.random.randint(4)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or (x, y) == cave.stairsdowncoords or (x, y) == cave.stairsupcoords:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                cave.altars.append(world.Altar(x, y, np.random.choice(gods)))
 
             for j in range(10):
                 x = y = 0
@@ -135,7 +146,7 @@ def game():
         win.autoupdate = True
         win.write(prompt, x=0, y=0, fgcolor=(255,255,255))
         while player.individualname == '':
-            player.individualname = win.input(fgcolor=(255,255,255))
+            player.individualname = win.input()
         win.autoupdate = False
 
     logback = 0 # How far the log has been scrolled
@@ -171,6 +182,11 @@ def game():
             win.putchars('<', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
         elif player.seen()[cave_i][i,j] == 1:
             win.putchars('<', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
+        for i, j, _ in cave.altars:
+            if fovmap[i,j]:
+                win.putchars('%', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
+            elif player.seen()[cave_i][i,j] == 1:
+                win.putchars('%', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
 
         # Items
         for it in cave.items:
@@ -448,17 +464,29 @@ def game():
                 if j == chosen:
                     win.write(partdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
+        elif gamestate == 'pray':
+            praymessage = 'To which sinful god of the underground do you wish to pray?'
+            win.write(praymessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1,len(player.godsknown))
+            for i in range(logrows):
+                if len(player.godsknown) <= logheight-1:
+                    j = i
+                else:
+                    j = len(player.godsknown)+i-logrows-logback
+                if j != chosen:
+                    win.write(player.godsknown[j].name + ', the ' + player.godsknown[j].faction + '-god of ' + player.godsknown[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                if j == chosen:
+                    win.write(player.godsknown[j].name + ', the ' + player.godsknown[j].faction + '-god of ' + player.godsknown[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
         win.update()
 
     def updatetime(time):
         player.bleed(time)
+        for gd in gods:
+            for creat in gd.prayerclocks:
+                gd.prayerclocks[creat] += time
         for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
             npc.update(time)
-
-    def checkitems(x,y):
-        for it in cave.items:
-            if it.x == x and it.y == y:
-                player.log().append('There is a ' + it.name + ' here.')
 
     def moveorattack(dx, dy):
         targets = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
@@ -483,7 +511,6 @@ def game():
                 if len(creaturesintheway) == 0:
                     player.move(dx, dy)
                     player.previousaction = 'move'
-                    checkitems(player.x,player.y)
                 else:
                     player.log().append("There's a " + creaturesintheway[0].name + " in your way.")
                     player.previousaction = 'wait'
@@ -705,6 +732,15 @@ def game():
                                 player.log().append("You have nothing to undress.")
                                 logback = 0
 
+                        # Praying:
+                        if event.key == pygame.locals.K_p:
+                            if len(player.godsknown) > 0:
+                                gamestate = 'pray'
+                                logback = len(player.godsknown) - logheight + 1
+                                chosen = 0
+                            else:
+                                player.log().append('You don\'t know any of the sinful gods of the underground!')
+
                         # Bodyparts:
                         if event.key == pygame.locals.K_b and not (event.mod & pygame.KMOD_SHIFT):
                             player.log().append('The parts of your body:')
@@ -756,7 +792,7 @@ def game():
 
                         if event.key == pygame.locals.K_ESCAPE:
                             with open('savegame.pickle', 'wb') as f:
-                                pickle.dump((caves, player), f)
+                                pickle.dump((caves, player, gods), f)
                             gamegoeson = False
 
                     elif gamestate == 'mine':
@@ -1122,6 +1158,26 @@ def game():
                             logback = 0
                             gamestate = 'free'
 
+                    elif gamestate == 'pray':
+                        if event.key == pygame.locals.K_UP:
+                            chosen = max(0, chosen-1)
+                            if chosen == len(player.godsknown) - logback - (logheight - 1) - 1:
+                                logback += 1
+                        if event.key == pygame.locals.K_DOWN:
+                            chosen = min(len(player.godsknown)-1, chosen+1)
+                            if chosen == len(player.godsknown) - logback:
+                                logback -= 1
+                        if event.key == pygame.locals.K_RETURN:
+                            updatetime(1)
+                            if not player.dying():
+                                selected = player.godsknown[chosen]
+                                player.pray(selected)
+                                logback = 0
+                            gamestate = 'free'
+                        if event.key == pygame.locals.K_ESCAPE:
+                            logback = 0
+                            gamestate = 'free'
+
                     elif gamestate == 'dead' or gamestate == 'win':
                         if event.key == pygame.locals.K_ESCAPE:
                             gamegoeson = False
@@ -1145,7 +1201,10 @@ def game():
                                 highscores = pickle.load(f)
                         else:
                             highscores = []
-                        highscores.append((player.xp, player.individualname, 'dead', player.world_i+1, player.lasthitter.name))
+                        if player.lasthitter in gods:
+                            highscores.append((player.xp, player.individualname, 'dead', player.world_i+1, player.lasthitter.name+ ', the ' + player.lasthitter.faction + '-god of ' + player.lasthitter.sin))
+                        else:
+                            highscores.append((player.xp, player.individualname, 'dead', player.world_i+1, 'a ' + player.lasthitter.name))
                         with open('highscores.pickle', 'wb') as f:
                             pickle.dump(highscores, f)
                         gamestate = 'dead'
@@ -1157,7 +1216,7 @@ def game():
                 if event.type == pygame.QUIT:
                     if gamestate != 'dead':
                         with open('savegame.pickle', 'wb') as f:
-                            pickle.dump((caves, player), f)
+                            pickle.dump((caves, player, gods), f)
                     pygame.quit()
                     sys.exit()
 
@@ -1185,7 +1244,7 @@ def halloffame():
         for i in range(min(len(highscores_sorted), mapheight + statuslines + logheight - 1)):
             score = highscores_sorted[i]
             if score[2] == 'dead':
-                scoremessage = 'killed by a ' + score[4] + ' on dungeon level ' + repr(score[3]) + '.'
+                scoremessage = 'killed by ' + score[4] + ' on dungeon level ' + repr(score[3]) + '.'
             elif score[2] == 'win':
                 scoremessage = 'won the game!'
             if score == highscores[-1]:
