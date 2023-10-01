@@ -21,10 +21,10 @@ statuslines = 3
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person!')
 if file_exists('options.pickle'):
     with open('options.pickle', 'rb') as f:
-        fontsize, = pickle.load(f)
+        font, fontsize = pickle.load(f)
 else:
-    fontsize, = (12,)
-win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
+    font, fontsize = ('courier-prime-sans.regular.ttf', 12)
+win.font = pygame.font.Font(font, fontsize)
 win.autoupdate = False
 
 keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygame.locals.K_KP8, False, True)),  # Key, shift, editable
@@ -1434,67 +1434,87 @@ def keybingsoptions():
                         state = 0
 
 def options():
+    global font
     global fontsize
     cont = False
     selected = 0
+    fonts = ('Hack-Regular.ttf', 'software_tester_7.ttf', 'courier-prime-sans.regular.ttf')
+    fontnames = ('Hack', 'Software Tester 7', 'Courier Prime Sans')
+    font_i = fonts.index(font)
     while not cont:
         for i in range(mapwidth):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
         title = 'OPTIONS'
         win.write(title, x=(mapwidth-len(title))//2, y=20, fgcolor=(255, 255, 255))
-        fontsizetext = 'Font size: < ' + repr(fontsize) + ' >'
+        fonttext = 'Font: < ' + fontnames[font_i] + ' >'
         if selected == 0:
             bgcolor = (255, 255, 255)
             fgcolor = (0, 0, 0)
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(fontsizetext, x=(mapwidth-len(fontsizetext))//2, y=22, fgcolor=fgcolor, bgcolor=bgcolor)
-        keybindingstext = 'Keybindings'
+        win.write(fonttext, x=(mapwidth-len(fonttext))//2, y=22, fgcolor=fgcolor, bgcolor=bgcolor)
+        fontsizetext = 'Font size: < ' + repr(fontsize) + ' >'
         if selected == 1:
             bgcolor = (255, 255, 255)
             fgcolor = (0, 0, 0)
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(keybindingstext, x=(mapwidth-len(keybindingstext))//2, y=24, fgcolor=fgcolor, bgcolor=bgcolor)
-        backtomenutext = 'Save and return'
+        win.write(fontsizetext, x=(mapwidth-len(fontsizetext))//2, y=24, fgcolor=fgcolor, bgcolor=bgcolor)
+        keybindingstext = 'Keybindings'
         if selected == 2:
             bgcolor = (255, 255, 255)
             fgcolor = (0, 0, 0)
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(backtomenutext, x=(mapwidth-len(backtomenutext))//2, y=26, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.write(keybindingstext, x=(mapwidth-len(keybindingstext))//2, y=26, fgcolor=fgcolor, bgcolor=bgcolor)
+        backtomenutext = 'Save and return'
+        if selected == 3:
+            bgcolor = (255, 255, 255)
+            fgcolor = (0, 0, 0)
+        else:
+            bgcolor = (0, 0, 0)
+            fgcolor = (255, 255, 255)
+        win.write(backtomenutext, x=(mapwidth-len(backtomenutext))//2, y=28, fgcolor=fgcolor, bgcolor=bgcolor)
         win.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 with open('options.pickle', 'wb') as f:
-                    pickle.dump((fontsize,), f)
+                    pickle.dump((font, fontsize), f)
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.locals.KEYDOWN:
                 if event.key == pygame.locals.K_ESCAPE:
                     with open('options.pickle', 'wb') as f:
-                        pickle.dump((fontsize,), f)
+                        pickle.dump((font, fontsize), f)
                     cont = True
                 if event.key == pygame.locals.K_LEFT and selected == 0:
-                    fontsize -= 1
-                    win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
+                    font_i = (font_i - 1) % 3
+                    font = fonts[font_i]
+                    win.font = pygame.font.Font(font, fontsize)
                 if event.key == pygame.locals.K_RIGHT and selected == 0:
+                    font_i = (font_i + 1) % 3
+                    font = fonts[font_i]
+                    win.font = pygame.font.Font(font, fontsize)
+                if event.key == pygame.locals.K_LEFT and selected == 1:
+                    fontsize -= 1
+                    win.font = pygame.font.Font(font, fontsize)
+                if event.key == pygame.locals.K_RIGHT and selected == 1:
                     fontsize += 1
-                    win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
+                    win.font = pygame.font.Font(font, fontsize)
                 if event.key == pygame.locals.K_UP:
                     selected = max(selected-1, 0)
                 if event.key == pygame.locals.K_DOWN:
-                    selected = min(selected+1, 2)
+                    selected = min(selected+1, 3)
                 if event.key == pygame.locals.K_RETURN:
-                    if selected == 1:
-                        keybingsoptions()
                     if selected == 2:
+                        keybingsoptions()
+                    if selected == 3:
                         with open('options.pickle', 'wb') as f:
-                            pickle.dump((fontsize,), f)
+                            pickle.dump((font, fontsize), f)
                         cont = True
 
 
@@ -1551,7 +1571,7 @@ def credits():
         win.write(' ', x=x0+24+4, y=y0+4, bgcolor='red')
         
         win.write('A Self-Made Person!', x=x0+5, y=y0+6, fgcolor='red')
-        win.write('Alpha 1', x=x0+11, y=y0+8, fgcolor='red')
+        win.write('Alpha 1.1', x=x0+10, y=y0+8, fgcolor='red')
 
         credlist = ['Programmer and main innovator:',
                     'Mieli "SurrealPartisan" Luukinen',
@@ -1569,8 +1589,10 @@ def credits():
                     'NumPy',
                     'PyInstaller',
                     '',
-                    'Font:',
+                    'Fonts:',
+                    'Courier Prime Sans by Quote-Unquote Apps. OFL License.',
                     'Hack by Source Foundry Authors. MIT License.',
+                    'Software Tester 7 by Sizenko Alexander, Style-7. Freeware.',
                     '',
                     'This game is dedicated to the transgender community.']
         for i in range(len(credlist)):
@@ -1645,7 +1667,7 @@ def mainmenu():
         win.write(' ', x=x0+24+4, y=y0+4, bgcolor='red')
         
         win.write('A Self-Made Person!', x=x0+5, y=y0+6, fgcolor='red')
-        win.write('Alpha 1', x=x0+11, y=y0+8, fgcolor='red')
+        win.write('Alpha 1.1', x=x0+10, y=y0+8, fgcolor='red')
 
         for i in range(len(buttontexts)):
             y = 30+2*i
