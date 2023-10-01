@@ -452,6 +452,10 @@ def game():
                 for special in player.attackslist()[j].special:
                     if special[0] == 'bleed':
                         attackdescription += ', bleed ' + repr(int(special[1] * 100)) + '%'
+                    if special[0] == 'knockback':
+                        attackdescription += ', knockback ' + repr(int(special[1] * 100)) + '%'
+                    if special[0] == 'charge':
+                        attackdescription += ', charge'
                 attackdescription += ')'
                 if j != chosen:
                     win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))

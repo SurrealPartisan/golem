@@ -7,6 +7,7 @@ Created on Mon Sep 12 21:16:44 2022
 
 import numpy as np
 import bodypart
+import item
 from utils import fov, listwithowner, numlevels
 
 def checkitems(creat, cave, x,y):
@@ -174,6 +175,7 @@ class Creature():
                 for special in attack.special:
                     if special[0] == 'charge' and self.previousaction == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
                         totaldamage *= 2
+                        attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10])
                     if special[0] == 'knockback' and np.random.rand() < special[1]:
                         dx = target.x - self.x
                         dy = target.y - self.y

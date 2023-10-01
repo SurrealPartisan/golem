@@ -201,9 +201,9 @@ class Spear(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('charge')])]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('charge',)])]
         else:
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('charge')])]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('charge',)])]
 
 def randomspear(owner, x, y):
     enchantment = 0
