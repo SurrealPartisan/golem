@@ -12,16 +12,64 @@ import creature
 import world
 import bodypart
 import god
-from utils import mapwidth, mapheight, numlevels, fov, sins
+from utils import mapwidth, mapheight, numlevels, fov, sins, keynames
 
 pygame.init()
 
 logheight = 8
 statuslines = 3
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person!')
-fontsize = 12
+if file_exists('options.pickle'):
+    with open('options.pickle', 'rb') as f:
+        fontsize, = pickle.load(f)
+else:
+    fontsize, = (12,)
 win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
 win.autoupdate = False
+
+keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygame.locals.K_KP8, False, True)),  # Key, shift, editable
+                       'move south': ((pygame.locals.K_DOWN, False, False), (pygame.locals.K_KP2, False, True)),
+                       'move west': ((pygame.locals.K_LEFT, False, False), (pygame.locals.K_KP4, False, True)),
+                       'move east': ((pygame.locals.K_RIGHT, False, False), (pygame.locals.K_KP6, False, True)),
+                       'move northwest': ((None, False, True), (pygame.locals.K_KP7, False, True)),
+                       'move northeast': ((None, False, True), (pygame.locals.K_KP9, False, True)),
+                       'move southwest': ((None, False, True), (pygame.locals.K_KP1, False, True)),
+                       'move southeast': ((None, False, True), (pygame.locals.K_KP3, False, True)),
+                       'wait': ((pygame.locals.K_PERIOD, False, True), (pygame.locals.K_KP5, False, True)),
+                       'go down': ((pygame.locals.K_GREATER, False, True), (pygame.locals.K_LESS, True, True)),
+                       'go up': ((pygame.locals.K_LESS, False, True), (None, False, True)),
+                       'mine': ((pygame.locals.K_m, False, True), (None, False, True)),
+                       'pick up': ((pygame.locals.K_COMMA, False, True), (None, False, True)),
+                       'drop': ((pygame.locals.K_d, False, True), (None, False, True)),
+                       'inventory': ((pygame.locals.K_i, False, True), (None, False, True)),
+                       'consume': ((pygame.locals.K_c, False, True), (None, False, True)),
+                       'wield': ((pygame.locals.K_w, False, True), (None, False, True)),
+                       'wear': ((pygame.locals.K_w, True, True), (None, False, True)),
+                       'unwield': ((pygame.locals.K_u, False, True), (None, False, True)),
+                       'undress': ((pygame.locals.K_u, True, True), (None, False, True)),
+                       'pray': ((pygame.locals.K_p, False, True), (None, False, True)),
+                       'list bodyparts': ((pygame.locals.K_b, False, True), (None, False, True)),
+                       'choose bodyparts': ((pygame.locals.K_b, True, True), (None, False, True)),
+                       'help': ((pygame.locals.K_h, False, True), (None, False, True)),
+                       'log up': ((pygame.locals.K_PAGEUP, False, True), (None, False, True)),
+                       'log down': ((pygame.locals.K_PAGEDOWN, False, True), (None, False, True)),
+                       'log start': ((pygame.locals.K_HOME, False, True), (None, False, True)),
+                       'log end': ((pygame.locals.K_END, False, True), (None, False, True)),
+                       'list up': ((pygame.locals.K_UP, False, False), (None, False, True)),
+                       'list down': ((pygame.locals.K_UP, False, False), (None, False, True)),
+                       'list select': ((pygame.locals.K_RETURN, False, False), (None, False, True)),
+                       'escape': ((pygame.locals.K_ESCAPE, False, False), (None, False, True)),
+                       }
+reservedkeys = [pygame.locals.K_UP, pygame.locals.K_DOWN, pygame.locals.K_LEFT, pygame.locals.K_RIGHT, pygame.locals.K_RETURN, pygame.locals.K_ESCAPE, pygame.locals.K_LSHIFT]
+
+if file_exists('keybindings.pickle'):
+    with open('keybindings.pickle', 'rb') as f:
+        keybindings = pickle.load(f)
+else:
+    keybindings = {}
+for command in keybindings_default:
+    if not command in keybindings:
+        keybindings[command] = keybindings_default[command]
 
 def game():
     if file_exists('savegame.pickle'):
@@ -543,29 +591,29 @@ def game():
                 if event.type == pygame.locals.KEYDOWN:
                     if gamestate == 'free':
                         # Player movements
-                        if event.key == pygame.locals.K_UP or event.key == pygame.locals.K_KP8:
+                        if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(0, -1)
-                        if event.key == pygame.locals.K_DOWN or event.key == pygame.locals.K_KP2:
+                        if (event.key == keybindings['move south'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][0][1])) or (event.key == keybindings['move south'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(0, 1)
-                        if event.key == pygame.locals.K_LEFT or event.key == pygame.locals.K_KP4:
+                        if (event.key == keybindings['move west'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][0][1])) or (event.key == keybindings['move west'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(-1, 0)
-                        if event.key == pygame.locals.K_RIGHT or event.key == pygame.locals.K_KP6:
+                        if (event.key == keybindings['move east'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][0][1])) or (event.key == keybindings['move east'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(1, 0)
-                        if event.key == pygame.locals.K_KP7:
+                        if (event.key == keybindings['move northwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][0][1])) or (event.key == keybindings['move northwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(-1, -1)
-                        if event.key == pygame.locals.K_KP9:
+                        if (event.key == keybindings['move northeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][0][1])) or (event.key == keybindings['move northeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(1, -1)
-                        if event.key == pygame.locals.K_KP1:
+                        if (event.key == keybindings['move southwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][0][1])) or (event.key == keybindings['move southwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(-1, 1)
-                        if event.key == pygame.locals.K_KP3:
+                        if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
                             gamestate, logback, target, chosen = moveorattack(1, 1)
 
-                        if event.key == pygame.locals.K_PERIOD or event.key == pygame.locals.K_KP5:
+                        if (event.key == keybindings['wait'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][0][1])) or (event.key == keybindings['wait'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][1][1])):
                             updatetime(1)
                             logback = 0
                             player.previousaction = 'wait'
 
-                        if event.key == pygame.locals.K_GREATER or (event.key == pygame.locals.K_LESS and (event.mod & pygame.KMOD_SHIFT)):
+                        if (event.key == keybindings['go down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go down'][0][1])) or (event.key == keybindings['go down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go down'][1][1])):
                             if (player.x, player.y) != cave.stairsdowncoords:
                                 player.log().append("You can't go down here!")
                                 logback = 0
@@ -601,7 +649,7 @@ def game():
                                     player.previousaction = 'move'
                                     logback = 0
 
-                        if event.key == pygame.locals.K_LESS and not (event.mod & pygame.KMOD_SHIFT):
+                        if (event.key == keybindings['go up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go up'][0][1])) or (event.key == keybindings['go up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go up'][1][1])):
                             if (player.x, player.y) != cave.stairsupcoords:
                                 player.log().append("You can't go up here!")
                                 logback = 0
@@ -622,7 +670,7 @@ def game():
                                     player.previousaction = 'move'
                                     logback = 0
 
-                        if event.key == pygame.locals.K_m:
+                        if (event.key == keybindings['mine'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['mine'][0][1])) or (event.key == keybindings['mine'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['mine'][1][1])):
                             if player.minespeed() > 0:
                                 gamestate = 'mine'
                             else:
@@ -630,7 +678,7 @@ def game():
                                 logback = 0
 
                         # Items
-                        if event.key == pygame.locals.K_COMMA:
+                        if (event.key == keybindings['pick up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][0][1])) or (event.key == keybindings['pick up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][1][1])):
                             picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
                             if len(picklist) == 0:
                                 player.log().append('Nothing to pick up here.')
@@ -649,14 +697,16 @@ def game():
                                 gamestate = 'pick'
                                 logback = len(picklist) - logheight + 1
                                 chosen = 0
-                        if event.key == pygame.locals.K_d:
+
+                        if (event.key == keybindings['drop'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['drop'][0][1])) or (event.key == keybindings['drop'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['drop'][1][1])):
                             if len(player.inventory) > 0:
                                 gamestate = 'drop'
                                 logback = len(player.inventory) - logheight + 1
                                 chosen = 0
                             else:
                                 player.log().append('You have nothing to drop!')
-                        if event.key == pygame.locals.K_i:
+
+                        if (event.key == keybindings['inventory'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['inventory'][0][1])) or (event.key == keybindings['inventory'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['inventory'][1][1])):
                             player.log().append('Items carried:')
                             if len(player.inventory) == 0:
                                 player.log().append('  - nothing')
@@ -690,7 +740,8 @@ def game():
                                 logback = max(1, len(player.inventory)) + max(1, len(wieldlist)) + max(1, len(wornlist)) + 3 - logheight
                             else:
                                 logback = 0
-                        if event.key == pygame.locals.K_c:
+
+                        if (event.key == keybindings['consume'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['consume'][0][1])) or (event.key == keybindings['consume'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['consume'][1][1])):
                             if len([item for item in player.inventory if item.consumable]) > 0:
                                 gamestate = 'consume'
                                 logback = len([item for item in player.inventory if item.consumable]) - logheight + 1
@@ -698,7 +749,8 @@ def game():
                             else:
                                 player.log().append("You don't have anything to consume.")
                                 logback = 0
-                        if event.key == pygame.locals.K_w and not (event.mod & pygame.KMOD_SHIFT):
+
+                        if (event.key == keybindings['wield'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wield'][0][1])) or (event.key == keybindings['wield'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wield'][1][1])):
                             if len([item for item in player.inventory if item.wieldable]) > 0 and len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) > 0:
                                 gamestate = 'wieldchooseitem'
                                 logback = len([item for item in player.inventory if item.wieldable]) - logheight + 1
@@ -706,7 +758,8 @@ def game():
                             else:
                                 player.log().append("You cannot wield anything.")
                                 logback = 0
-                        if event.key == pygame.locals.K_w and (event.mod & pygame.KMOD_SHIFT):
+
+                        if (event.key == keybindings['wear'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wear'][0][1])) or (event.key == keybindings['wear'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wear'][1][1])):
                             if len([item for item in player.inventory if item.wearable]) > 0:
                                 gamestate = 'wearchooseitem'
                                 logback = len([item for item in player.inventory if item.wearable]) - logheight + 1
@@ -714,7 +767,8 @@ def game():
                             else:
                                 player.log().append('You have nothing to wear.')
                                 logback = 0
-                        if event.key == pygame.locals.K_u and not (event.mod & pygame.KMOD_SHIFT):
+
+                        if (event.key == keybindings['unwield'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['unwield'][0][1])) or (event.key == keybindings['unwield'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['unwield'][1][1])):
                             if len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) > 0:
                                 gamestate = 'unwield'
                                 logback = len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logheight + 1
@@ -722,7 +776,8 @@ def game():
                             else:
                                 player.log().append("You have nothing to unwield.")
                                 logback = 0
-                        if event.key == pygame.locals.K_u and (event.mod & pygame.KMOD_SHIFT):
+
+                        if (event.key == keybindings['undress'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['undress'][0][1])) or (event.key == keybindings['undress'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['undress'][1][1])):
                             wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
                             if len(wornlist) > 0:
                                 gamestate = 'undress'
@@ -733,7 +788,7 @@ def game():
                                 logback = 0
 
                         # Praying:
-                        if event.key == pygame.locals.K_p:
+                        if (event.key == keybindings['pray'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][0][1])) or (event.key == keybindings['pray'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][1][1])):
                             if len(player.godsknown) > 0:
                                 gamestate = 'pray'
                                 logback = len(player.godsknown) - logheight + 1
@@ -742,7 +797,7 @@ def game():
                                 player.log().append('You don\'t know any of the sinful gods of the underground!')
 
                         # Bodyparts:
-                        if event.key == pygame.locals.K_b and not (event.mod & pygame.KMOD_SHIFT):
+                        if (event.key == keybindings['list bodyparts'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][0][1])) or (event.key == keybindings['list bodyparts'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][1][1])):
                             player.log().append('The parts of your body:')
                             for part in player.bodyparts:
                                 player.log().append('  - a ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ')')
@@ -751,14 +806,14 @@ def game():
                             else:
                                 logback = 0
 
-                        if event.key == pygame.locals.K_b and (event.mod & pygame.KMOD_SHIFT):
+                        if (event.key == keybindings['choose bodyparts'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose bodyparts'][0][1])) or (event.key == keybindings['choose bodyparts'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose bodyparts'][1][1])):
                             gamestate = 'choosetorso'
                             len([part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]) - logheight + 1
                             chosen = 0
 
                         # Help
-                        if event.key == pygame.locals.K_h:
-                            player.log().append('Commands:')
+                        if (event.key == keybindings['help'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][0][1])) or (event.key == keybindings['help'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][1][1])):
+                            player.log().append('Default keybindings (change in options):')
                             player.log().append('  - page up, page down, home, end: explore the log')
                             player.log().append('  - arrows or numpad: move')
                             player.log().append('  - period or numpad 5: wait a moment')
@@ -779,15 +834,15 @@ def game():
                                 logback = 9 # Increase when adding commands
 
                         # log scrolling
-                        if event.key == pygame.locals.K_PAGEUP:
+                        if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
                             if len(player.log()) >= logheight:
                                 logback = min(logback+1, len(player.log())-logheight)
-                        if event.key == pygame.locals.K_PAGEDOWN:
+                        if (event.key == keybindings['log down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log down'][0][1])) or (event.key == keybindings['log down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log down'][1][1])):
                             logback = max(logback-1, 0)
-                        if event.key == pygame.locals.K_HOME:
+                        if (event.key == keybindings['log start'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log start'][0][1])) or (event.key == keybindings['log start'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log start'][1][1])):
                             if len(player.log()) >= logheight:
                                 logback = len(player.log())-logheight
-                        if event.key == pygame.locals.K_END:
+                        if (event.key == keybindings['log end'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log end'][0][1])) or (event.key == keybindings['log end'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log end'][1][1])):
                             logback = 0
 
                         if event.key == pygame.locals.K_ESCAPE:
@@ -796,34 +851,34 @@ def game():
                             gamegoeson = False
 
                     elif gamestate == 'mine':
-                        if event.key == pygame.locals.K_UP or event.key == pygame.locals.K_KP8:
+                        if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
                             gamestate, logback = mine(0, -1)
-                        if event.key == pygame.locals.K_DOWN or event.key == pygame.locals.K_KP2:
+                        if (event.key == keybindings['move south'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][0][1])) or (event.key == keybindings['move south'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][1][1])):
                             gamestate, logback = mine(0, 1)
-                        if event.key == pygame.locals.K_LEFT or event.key == pygame.locals.K_KP4:
+                        if (event.key == keybindings['move west'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][0][1])) or (event.key == keybindings['move west'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][1][1])):
                             gamestate, logback = mine(-1, 0)
-                        if event.key == pygame.locals.K_RIGHT or event.key == pygame.locals.K_KP6:
+                        if (event.key == keybindings['move east'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][0][1])) or (event.key == keybindings['move east'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][1][1])):
                             gamestate, logback = mine(1, 0)
-                        if event.key == pygame.locals.K_KP7:
+                        if (event.key == keybindings['move northwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][0][1])) or (event.key == keybindings['move northwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][1][1])):
                             gamestate, logback = mine(-1, -1)
-                        if event.key == pygame.locals.K_KP9:
+                        if (event.key == keybindings['move northeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][0][1])) or (event.key == keybindings['move northeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][1][1])):
                             gamestate, logback = mine(1, -1)
-                        if event.key == pygame.locals.K_KP1:
+                        if (event.key == keybindings['move southwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][0][1])) or (event.key == keybindings['move southwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][1][1])):
                             gamestate, logback = mine(-1, 1)
-                        if event.key == pygame.locals.K_KP3:
+                        if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
                             gamestate, logback = mine(1, 1)
 
                     elif gamestate == 'pick':
                         picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(picklist) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(picklist)-1, chosen+1)
                             if chosen == len(picklist) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(0.5)
                             if not player.dying():
                                 selected = picklist[chosen]
@@ -834,20 +889,20 @@ def game():
                                 player.previousaction = 'pick'
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'drop':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(player.inventory) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(player.inventory)-1, chosen+1)
                             if chosen == len(player.inventory) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(0.5)
                             if not player.dying():
                                 selected = player.inventory[chosen]
@@ -860,20 +915,20 @@ def game():
                                 player.previousaction = 'drop'
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'consume':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len([item for item in player.inventory if item.consumable]) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len([item for item in player.inventory if item.consumable])-1, chosen+1)
                             if chosen == len([item for item in player.inventory if item.consumable]) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
                                 selected = [item for item in player.inventory if item.consumable][chosen]
@@ -886,38 +941,38 @@ def game():
                                 player.previousaction = 'consume'
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'wieldchooseitem':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len([item for item in player.inventory if item.wieldable]) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len([item for item in player.inventory if item.wieldable])-1, chosen+1)
                             if chosen == len([item for item in player.inventory if item.wieldable]) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selecteditem = [item for item in player.inventory if item.wieldable][chosen]
                             logback = len([part for part in player.bodyparts if part.capableofwielding]) - logheight + 1
                             gamestate = 'wieldchoosebodypart'
                             chosen = 0
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'wieldchoosebodypart':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()])-1, chosen+1)
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
                                 selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()][chosen]
@@ -928,20 +983,20 @@ def game():
                                 player.previousaction = 'wield'
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'unwield':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0])-1, chosen+1)
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
                                 part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
@@ -953,20 +1008,20 @@ def game():
                                 player.previousaction = 'unwield'
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'wearchooseitem':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len([item for item in player.inventory if item.wearable]) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len([item for item in player.inventory if item.wearable])-1, chosen+1)
                             if chosen == len([item for item in player.inventory if item.wearable]) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selecteditem = [item for item in player.inventory if item.wearable][chosen]
                             partlist = [part for part in player.bodyparts if selecteditem.wearcategory in part.worn.keys() and len(part.worn[selecteditem.wearcategory]) == 0 and not part.destroyed()]
                             if len(partlist) > 0:
@@ -977,20 +1032,20 @@ def game():
                                 player.log().append('You have no suitable free body part for wearing that.')
                                 logback = 0
                                 gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'wearchoosebodypart':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(partlist) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(partlist)-1, chosen+1)
                             if chosen == len(partlist) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
                                 selected = partlist[chosen]
@@ -1001,20 +1056,20 @@ def game():
                                 player.previousaction = 'wear'
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'undress':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(wornlist) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(wornlist)-1, chosen+1)
                             if chosen == len(wornlist) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
                                 selected = wornlist[chosen]
@@ -1026,38 +1081,38 @@ def game():
                                 player.previousaction = 'undress'
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'chooseattack':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(player.attackslist()) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(player.attackslist())-1, chosen+1)
                             if chosen == len(player.attackslist()) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selectedattack = player.attackslist()[chosen]
                             gamestate = 'choosetargetbodypart'
                             logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
                             chosen = 0
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'choosetargetbodypart':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len([part for part in target.bodyparts if not part.destroyed()])-1, chosen+1)
                             if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
                             updatetime(selectedattack[6])
                             if not player.dying():
@@ -1069,21 +1124,21 @@ def game():
                                     player.previousaction = 'wait'
                             logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'choosetorso':
                         torsolist = [part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(torsolist) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(torsolist)-1, chosen+1)
                             if chosen == len(torsolist) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selected = torsolist[chosen]
                             bodypartcandidates = [selected]
                             connectioncandidates = []
@@ -1095,20 +1150,20 @@ def game():
                             gamestate = 'choosebodypart'
                             logback = len(partslist) - logheight + 1
                             chosen = 0
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'choosebodypart':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(partslist) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(partslist)-1, chosen+1)
                             if chosen == len(partslist) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selected = partslist[chosen]
                             if selected != None:
                                 bodypartcandidates.append(selected)
@@ -1154,32 +1209,32 @@ def game():
                                     player.previousaction = 'choosebody'
                                     logback = 0
                                     gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'pray':
-                        if event.key == pygame.locals.K_UP:
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(player.godsknown) - logback - (logheight - 1) - 1:
                                 logback += 1
-                        if event.key == pygame.locals.K_DOWN:
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
                             chosen = min(len(player.godsknown)-1, chosen+1)
                             if chosen == len(player.godsknown) - logback:
                                 logback -= 1
-                        if event.key == pygame.locals.K_RETURN:
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
                                 selected = player.godsknown[chosen]
                                 player.pray(selected)
                                 logback = 0
                             gamestate = 'free'
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
 
                     elif gamestate == 'dead' or gamestate == 'win':
-                        if event.key == pygame.locals.K_ESCAPE:
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             gamegoeson = False
                             halloffame()
 
@@ -1233,7 +1288,7 @@ def halloffame():
         for i in range(mapwidth):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
-        title = 'Golem Hall of Fame'
+        title = 'GOLEM HALL OF FAME'
         win.write(title, x=(mapwidth-len(title))//2, y=0, fgcolor=(255, 255, 255))
         if file_exists('highscores.pickle'):
             with open('highscores.pickle', 'rb') as f:
@@ -1262,33 +1317,181 @@ def halloffame():
             if event.type == pygame.locals.KEYDOWN:
                 cont = True
 
-def options():
-    global fontsize
+def keybingsoptions():
+    global keybindings
     cont = False
+    selected = (0, 0)
+    state = 0
     while not cont:
         for i in range(mapwidth):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
-        title = 'Options'
-        win.write(title, x=(mapwidth-len(title))//2, y=0, fgcolor=(255, 255, 255))
-        win.write('Font size: < ' + repr(fontsize) + ' >', x=0, y=1, fgcolor=(255, 255, 255))
-        escmessage = 'Press escape to return to main menu.'
-        win.write(escmessage, x=(mapwidth-len(escmessage))//2, y=3, fgcolor=(255, 255, 255))
+        text = 'KEYBINDINGS'
+        win.write(text, x=(mapwidth-len(text))//2, y=0, fgcolor=(255, 255, 255))
+        text = 'Arrow keys, return, and escape are reserved keys. Left shift can be used as a modifier.'
+        win.write(text, x=(mapwidth-len(text))//2, y=1, fgcolor=(255, 255, 255))
+        text = 'Select with arrows, edit with return.'
+        win.write(text, x=(mapwidth-len(text))//2, y=2, fgcolor=(255, 255, 255))
+        longest = max([len(command) for command in keybindings])
+        for i in range(len(keybindings)):
+            if selected[0] == i:
+                fgcolor = (0, 0, 0)
+                bgcolor = (255, 255, 255)
+            else:
+                fgcolor = (255, 255, 255)
+                bgcolor = (0, 0, 0)
+            win.write(list(keybindings.keys())[i], x=15+longest-len(list(keybindings.keys())[i]), y=i+4, fgcolor=fgcolor, bgcolor=bgcolor)
+            for j in (0, 1):
+                if selected == (i, j):
+                    fgcolor = (0, 0, 0)
+                    bgcolor = (255, 255, 255)
+                else:
+                    fgcolor = (255, 255, 255)
+                    bgcolor = (0, 0, 0)
+                if not keybindings[list(keybindings.keys())[i]][j][2]:
+                    fgcolor = (127, 127, 127)
+                if keybindings[list(keybindings.keys())[i]][j][1]:
+                    shifttext = 'shift + '
+                else:
+                    shifttext = ''
+                if keybindings[list(keybindings.keys())[i]][j][0] in keynames:
+                    keytext = shifttext + keynames[keybindings[list(keybindings.keys())[i]][j][0]]
+                elif keybindings[list(keybindings.keys())[i]][j][0] == None:
+                    keytext = 'None'
+                else:
+                    keytext = shifttext + 'unnamed key'
+                if state == 1 and selected == (i, j):
+                    keytext = '?????'
+                win.write(keytext, x=15+longest+5+j*30, y=i+4, fgcolor=fgcolor, bgcolor=bgcolor)
+            if selected == (len(keybindings), 0):
+                fgcolor = (0, 0, 0)
+                bgcolor = (255, 255, 255)
+            else:
+                fgcolor = (255, 255, 255)
+                bgcolor = (0, 0, 0)
+            win.write('Save and return', x=15+longest+5, y=len(keybindings)+5, fgcolor=fgcolor, bgcolor=bgcolor)
+        if selected == (len(keybindings), 1):
+            fgcolor = (0, 0, 0)
+            bgcolor = (255, 255, 255)
+        else:
+            fgcolor = (255, 255, 255)
+            bgcolor = (0, 0, 0)
+        win.write('Reset to defaults', x=15+longest+5+30, y=len(keybindings)+5, fgcolor=fgcolor, bgcolor=bgcolor)
         win.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                with open('keybindings.pickle', 'wb') as f:
+                    pickle.dump(keybindings, f)
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.locals.KEYDOWN:
+                if state == 0:
+                    if event.key == pygame.locals.K_ESCAPE:
+                        with open('keybindings.pickle', 'wb') as f:
+                            pickle.dump(keybindings, f)
+                        cont = True
+                    if event.key == pygame.locals.K_UP:
+                        selected = (max(selected[0]-1, 0), selected[1])
+                    if event.key == pygame.locals.K_DOWN:
+                        selected = (min(selected[0]+1, len(keybindings)), selected[1])
+                    if event.key == pygame.locals.K_LEFT:
+                        selected = (selected[0], max(0, selected[1]-1))
+                    if event.key == pygame.locals.K_RIGHT:
+                        selected = (selected[0], min(1, selected[1]+1))
+                    if event.key == pygame.locals.K_RETURN:
+                        if selected[0] < len(keybindings):
+                            if keybindings[list(keybindings.keys())[selected[0]]][selected[1]][2]:
+                                state = 1
+                        elif selected[1] == 0:
+                            with open('keybindings.pickle', 'wb') as f:
+                                pickle.dump(keybindings, f)
+                            cont = True
+                        else:
+                            for command in keybindings_default:
+                                keybindings[command] = keybindings_default[command]
+                else:
+                    if not event.key in reservedkeys:
+                        keys = [keybindings[list(keybindings.keys())[selected[0]]][0], keybindings[list(keybindings.keys())[selected[0]]][1]]
+                        keys[selected[1]] = (event.key, (event.mod & pygame.KMOD_SHIFT), True)
+                        keybindings[list(keybindings.keys())[selected[0]]] = (keys[0], keys[1])
+                        for i in range(len(keybindings)):
+                            for j in (0, 1):
+                                if (i, j) != selected and keybindings[list(keybindings.keys())[i]][j][2] and keybindings[list(keybindings.keys())[i]][j][0] == event.key and keybindings[list(keybindings.keys())[i]][j][1] == (event.mod & pygame.KMOD_SHIFT):
+                                    keys = [keybindings[list(keybindings.keys())[i]][0], keybindings[list(keybindings.keys())[i]][1]]
+                                    keys[j] = (None, False, True)
+                                    keybindings[list(keybindings.keys())[i]] = (keys[0], keys[1])
+                        state = 0
+                    elif event.key == pygame.locals.K_ESCAPE:
+                        state = 0
+                    elif event.key == pygame.locals.K_RETURN:
+                        keys = [keybindings[list(keybindings.keys())[selected[0]]][0], keybindings[list(keybindings.keys())[selected[0]]][1]]
+                        keys[selected[1]] = (None, False, True)
+                        keybindings[list(keybindings.keys())[selected[0]]] = (keys[0], keys[1])
+                        state = 0
+
+def options():
+    global fontsize
+    cont = False
+    selected = 0
+    while not cont:
+        for i in range(mapwidth):
+            for j in range(mapheight + statuslines + logheight):
+                win.putchars(' ', x=i, y=j, bgcolor='black')
+        title = 'OPTIONS'
+        win.write(title, x=(mapwidth-len(title))//2, y=20, fgcolor=(255, 255, 255))
+        fontsizetext = 'Font size: < ' + repr(fontsize) + ' >'
+        if selected == 0:
+            bgcolor = (255, 255, 255)
+            fgcolor = (0, 0, 0)
+        else:
+            bgcolor = (0, 0, 0)
+            fgcolor = (255, 255, 255)
+        win.write(fontsizetext, x=(mapwidth-len(fontsizetext))//2, y=22, fgcolor=fgcolor, bgcolor=bgcolor)
+        keybindingstext = 'Keybindings'
+        if selected == 1:
+            bgcolor = (255, 255, 255)
+            fgcolor = (0, 0, 0)
+        else:
+            bgcolor = (0, 0, 0)
+            fgcolor = (255, 255, 255)
+        win.write(keybindingstext, x=(mapwidth-len(keybindingstext))//2, y=24, fgcolor=fgcolor, bgcolor=bgcolor)
+        backtomenutext = 'Save and return'
+        if selected == 2:
+            bgcolor = (255, 255, 255)
+            fgcolor = (0, 0, 0)
+        else:
+            bgcolor = (0, 0, 0)
+            fgcolor = (255, 255, 255)
+        win.write(backtomenutext, x=(mapwidth-len(backtomenutext))//2, y=26, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.update()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                with open('options.pickle', 'wb') as f:
+                    pickle.dump((fontsize,), f)
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.locals.KEYDOWN:
                 if event.key == pygame.locals.K_ESCAPE:
+                    with open('options.pickle', 'wb') as f:
+                        pickle.dump((fontsize,), f)
                     cont = True
-                if event.key == pygame.locals.K_LEFT:
+                if event.key == pygame.locals.K_LEFT and selected == 0:
                     fontsize -= 1
                     win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
-                if event.key == pygame.locals.K_RIGHT:
+                if event.key == pygame.locals.K_RIGHT and selected == 0:
                     fontsize += 1
                     win.font = pygame.font.Font('Hack-Regular.ttf', fontsize)
-                    
+                if event.key == pygame.locals.K_UP:
+                    selected = max(selected-1, 0)
+                if event.key == pygame.locals.K_DOWN:
+                    selected = min(selected+1, 2)
+                if event.key == pygame.locals.K_RETURN:
+                    if selected == 1:
+                        keybingsoptions()
+                    if selected == 2:
+                        with open('options.pickle', 'wb') as f:
+                            pickle.dump((fontsize,), f)
+                        cont = True
 
 
 def credits():

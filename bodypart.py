@@ -909,6 +909,7 @@ class DrillbotChassis(BodyPart):
         self._wearwieldname = 'chassis'
         self.weight = 30000
         self.carryingcapacity = 50000
+        self.material = 'electronics'
 
 class DrillbotWheel(BodyPart):
     def __init__(self, owner, x, y):
@@ -920,6 +921,7 @@ class DrillbotWheel(BodyPart):
         self._wearwieldname = 'wheel'
         self.weight = 4000
         self.carryingcapacity = 10000
+        self.material = 'electronics'
 
     def speed(self):
         if not self.destroyed():
@@ -939,6 +941,7 @@ class DrillArm(BodyPart):
         self.childconnections = {}
         self.maxhp = 40
         self.weight = 7000
+        self.material = 'electronics'
 
     def minespeed(self):
         return 0.5
@@ -956,6 +959,7 @@ class DrillbotCamera(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 20
+        self.material = 'electronics'
 
     def sight(self):
         if not self.destroyed():
@@ -970,6 +974,7 @@ class DrillbotPump(BodyPart):
         self.childconnections = {}
         self.maxhp = 30
         self.weight = 1500
+        self.material = 'electronics'
 
 class DrillbotProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -983,3 +988,4 @@ class DrillbotProcessor(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.material = 'electronics'
