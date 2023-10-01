@@ -56,7 +56,7 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'log start': ((pygame.locals.K_HOME, False, True), (None, False, True)),
                        'log end': ((pygame.locals.K_END, False, True), (None, False, True)),
                        'list up': ((pygame.locals.K_UP, False, False), (None, False, True)),
-                       'list down': ((pygame.locals.K_UP, False, False), (None, False, True)),
+                       'list down': ((pygame.locals.K_DOWN, False, False), (None, False, True)),
                        'list select': ((pygame.locals.K_RETURN, False, False), (None, False, True)),
                        'escape': ((pygame.locals.K_ESCAPE, False, False), (None, False, True)),
                        }
