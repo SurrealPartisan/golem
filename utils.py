@@ -15,12 +15,17 @@ numlevels = 5
 enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot']
 sins = ['pride', 'greed', 'wrath', 'envy', 'lust', 'gluttony', 'sloth']
 letters = 'abcdefghijklmnopqrstuvwxyz'
+consonants = 'bcdfghjklmnpqrstvwxyz'
+vowels = 'aeiou'
 
 def drugname():
     syl1 = np.random.choice(['Ab', 'Bra', 'Cil', 'Tra', 'Cog', 'I', 'Bri'])
     syl2 = np.random.choice(['la', 'mo', 'de', 'ca', 'fe', 'ma', 'te'])
     syl3 = np.random.choice(['cil', 'xyl', 'max', 'xium', 'dal', 'dium', 'span', 'lix'])
     return syl1+syl2+syl3
+
+def infusionname():
+    return np.random.choice(list(vowels)).join(np.random.choice(list(consonants), 4)).capitalize()
 
 def unpronounceablename(length):
     return ''.join(np.random.choice(list(letters), length)).capitalize()

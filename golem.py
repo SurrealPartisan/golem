@@ -12,7 +12,7 @@ import creature
 import world
 import bodypart
 import god
-from utils import mapwidth, mapheight, numlevels, fov, sins, keynames
+from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, drugname, infusionname
 
 pygame.init()
 
@@ -82,11 +82,32 @@ def game():
         gods = []
         for sin in sins:
             gods.append(god.God(None, np.nan, sin))
+        curetypes = []
+        medicinenames = []
+        while len(np.unique(medicinenames)) != 13:
+            medicinenames = []
+            for i in range(13):
+                medicinenames.append(drugname())
+        drugtypes = []
+        for i in range(13):
+            ct = item.CureType('living flesh', medicinenames[i], i-2, np.random.choice([1, 5, 10, 25, 50]))
+            curetypes.append(ct)
+            drugtypes.append(ct)
+        infusionnames = []
+        while len(np.unique(infusionnames)) != 13:
+            infusionnames = []
+            for i in range(13):
+                infusionnames.append(infusionname())
+        infusiontypes = []
+        for i in range(13):
+            ct = item.CureType('undead flesh', infusionnames[i], i-2, np.random.randint(500))
+            curetypes.append(ct)
+            infusiontypes.append(ct)
         caves = []
         for i in range(numlevels):
             cave = world.World(mapwidth, mapheight)
             cave.rooms()
-
+            cave.curetypes = curetypes
             for j in range(np.random.randint(4)):
                 x = y = 0
                 while cave.walls[x, y] != 0 or (x, y) == cave.stairsdowncoords or (x, y) == cave.stairsupcoords:
@@ -99,7 +120,14 @@ def game():
                 while cave.walls[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
-                item.create_medication(cave.items, x, y)
+                item.Cure(cave.items, x, y, drugtypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
+
+            for j in range(5):
+                x = y = 0
+                while cave.walls[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                item.Cure(cave.items, x, y, infusiontypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
 
             for j in range(5):
                 x = y = 0
@@ -355,10 +383,17 @@ def game():
                     j = i
                 else:
                     j = len([item for item in player.inventory if item.consumable])+i-logrows-logback
+                it = [item for item in player.inventory if item.consumable][j]
+                itemdescription = it.name
+                if it.cure and it.curetype in player.curesknown():
+                    itemdescription += '('
+                    if it.hpgiven() >= 0:
+                        itemdescription += '+'
+                    itemdescription += repr(it.hpgiven()) + ' hp to ' + it.curedmaterial + ')'
                 if j != chosen:
-                    win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                    win.write(itemdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
-                    win.write([item for item in player.inventory if item.consumable][j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                    win.write(itemdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         elif gamestate == 'wieldchooseitem':
             wieldmessage = 'Choose the item to wield:'
@@ -941,12 +976,10 @@ def game():
                             updatetime(1)
                             if not player.dying():
                                 selected = [item for item in player.inventory if item.consumable][chosen]
-                                part, healed = selected.consume(player)
-                                if part.parentalconnection != None:
-                                    partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
-                                elif part == player.torso:
-                                    partname = 'torso'
-                                player.log().append('You consumed a ' + selected.name + ', healing your ' + partname + ' ' + repr(healed) + ' points.')
+                                if selected.cure and not selected.curetype in player.curesknown():
+                                    player.curesknown().append(selected.curetype)                                    
+                                player.log().append('You consumed a ' + selected.name + '.')
+                                selected.consume(player)
                                 player.previousaction = 'consume'
                                 logback = 0
                             gamestate = 'free'

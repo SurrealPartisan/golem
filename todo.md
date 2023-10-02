@@ -12,7 +12,6 @@ Major
   * Make question marks not disappear when unseen NPC picks an item
 * Spellcasting
 * Food and hunger
-* Healing items overhaul
 
 Never ready
 * More enemies

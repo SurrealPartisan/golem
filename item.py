@@ -26,6 +26,7 @@ class Item():
         self.weight = 0
         self.carryingcapacity = 0
         self.consumable = False
+        self.cure = False
         self.wieldable = False
         self.weapon = False
         self.bodypart = False
@@ -44,26 +45,35 @@ class Item():
     def minespeed(self):
         return 0
 
-class Consumable(Item):
-    def __init__(self, owner, x, y, name, char, color):
-        super().__init__(owner, x, y, name, char, color)
+CureType = namedtuple('CureType', ['curedmaterial', 'name', 'hpgiven_base', 'dosage'])
+
+class Cure(Item):
+    def __init__(self, owner, x, y, curetype, level):
+        if curetype.curedmaterial == 'living flesh':
+            color = (255, 0, 0)
+            name = 'dose of medication labeled "' + curetype.name + ', ' + repr(curetype.dosage*level) + ' mg"'
+        elif curetype.curedmaterial == 'undead flesh':
+            color = (0, 255, 0)
+            name = 'vial of ectoplasmic infusion labeled "' + curetype.name + ', ' + repr(curetype.dosage*level) + ' mmol/l"'
+        super().__init__(owner, x, y, name, '!', color)
         self.consumable = True
-        self._hpgiven = 0
+        self.cure = True
+        self.curetype = curetype
+        self.curedmaterial = curetype.curedmaterial
+        self._hpgiven = curetype.hpgiven_base * level
         self.weight = 100
     
     def hpgiven(self):
         return self._hpgiven
     
     def consume(self, user):
-        part = max([part for part in user.bodyparts if not part.destroyed()], key=lambda part : part.damagetaken)
-        healed = user.heal(part, self.hpgiven())
+        partlist = [part for part in user.bodyparts if part.material == self.curedmaterial and not part.destroyed()]
+        if len(partlist) > 0:
+            part = max(partlist, key=lambda part : part.damagetaken)
+            user.heal(part, self.hpgiven())
+        else:
+            user.log().append('You were unaffected.')
         self.owner.remove(self)
-        return part, healed
-
-def create_medication(owner, x, y):
-    drugs = Consumable(owner, x, y, 'dose of ' + utils.drugname(), '!', (0, 255, 255))
-    drugs._hpgiven = np.random.randint(-2, 11)
-    return drugs
 
 class Dagger(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):

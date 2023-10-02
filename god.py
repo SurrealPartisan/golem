@@ -30,7 +30,7 @@ class God(creature.Creature):
     def bless(self, creat):
         blessing = np.random.randint(3)
         if blessing == 0:
-            gift = item.create_medication(creat.inventory, 0, 0)
+            gift = item.Cure(creat.inventory, 0, 0, creat.world.curetypes[np.random.randint(len(creat.world.curetypes))], np.random.randint(max(0, creat.world_i-1), creat.world_i+2))
         if blessing == 1:
             gift = item.randomweapon(creat.inventory, 0, 0)
         if blessing == 2:

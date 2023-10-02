@@ -65,6 +65,13 @@ class Creature():
         else:
             return []
 
+    def curesknown(self):
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        if len(brains) > 0:
+            return brains[0].curesknown
+        else:
+            return []
+
     def creaturesseen(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
         if len(brains) > 0:
@@ -132,7 +139,21 @@ class Creature():
     def heal(self, part, hpgiven):
         healed = min(hpgiven, part.damagetaken)
         part.damagetaken -= healed
-        return healed
+        if part.damagetaken > part.maxhp:
+            part.damagetaken = part.maxhp
+        if part.parentalconnection != None:
+            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+        elif part == self.torso:
+            partname = 'torso'
+        if healed > 0:
+            self.log().append('Your ' + partname + ' was healed by ' + repr(healed) + ' points.')
+        elif healed < 0:
+            if not part.destroyed():
+                self.log().append('Your ' + partname + ' was harmed by ' + repr(-healed) + ' points.')
+            else:
+                self.log().append('Your ' + partname + ' was destroyed.')
+        else:
+            self.log().append('You were unaffected.')
 
     def dying(self):
         return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])

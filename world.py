@@ -22,6 +22,7 @@ class World():
         self.altars = []
         self.stairsupcoords = None
         self.stairsdowncoords = None
+        self.curetypes = []
     
     def rooms(self):
         self.walls = np.ones((self.width, self.height))
