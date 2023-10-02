@@ -2,6 +2,7 @@
 
 Minor
 * Solve the multiple brains problem
+* different blessings and smites to different gods
 
 Major
 * Sense of smell for mole people and others
@@ -10,7 +11,6 @@ Major
 * Make NPC:s use items (and consider carrying capacity)
   * Make question marks not disappear when unseen NPC picks an item
 * Spellcasting
-* Religion
 * Food and hunger
 * Healing items overhaul
 

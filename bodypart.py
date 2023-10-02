@@ -229,6 +229,7 @@ class HumanBrain(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.godsknown = []
 
 class HumanHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -375,6 +376,7 @@ class ZombieBrain(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.godsknown = []
 
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -516,6 +518,7 @@ class MolePersonBrain(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.godsknown = []
 
 class MolePersonHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -626,6 +629,7 @@ class OctopusBrain(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.godsknown = []
 
 class OctopusHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -766,6 +770,7 @@ class GoblinBrain(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.godsknown = []
 
 class GoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -870,6 +875,7 @@ class WolfBrain(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.godsknown = []
 
 class WolfHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -988,4 +994,5 @@ class DrillbotProcessor(BodyPart):
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
         self.creaturesseen = []
+        self.godsknown = []
         self.material = 'electronics'

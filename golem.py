@@ -163,6 +163,11 @@ def game():
                         y = np.random.randint(mapheight)
                     cave.creatures.append(creature.Drillbot(cave, i, x, y))
 
+            for creat in cave.creatures:
+                for gd in gods:
+                    if creat.faction == gd.faction:
+                        creat.godsknown().append(gd)
+
             caves.append(cave)
         cave_i = 0
         cave = caves[cave_i]
@@ -519,16 +524,16 @@ def game():
         elif gamestate == 'pray':
             praymessage = 'To which sinful god of the underground do you wish to pray?'
             win.write(praymessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            logrows = min(logheight-1,len(player.godsknown))
+            logrows = min(logheight-1,len(player.godsknown()))
             for i in range(logrows):
-                if len(player.godsknown) <= logheight-1:
+                if len(player.godsknown()) <= logheight-1:
                     j = i
                 else:
-                    j = len(player.godsknown)+i-logrows-logback
+                    j = len(player.godsknown())+i-logrows-logback
                 if j != chosen:
-                    win.write(player.godsknown[j].name + ', the ' + player.godsknown[j].faction + '-god of ' + player.godsknown[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                    win.write(player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
-                    win.write(player.godsknown[j].name + ', the ' + player.godsknown[j].faction + '-god of ' + player.godsknown[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                    win.write(player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         win.update()
 
@@ -793,9 +798,9 @@ def game():
 
                         # Praying:
                         if (event.key == keybindings['pray'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][0][1])) or (event.key == keybindings['pray'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][1][1])):
-                            if len(player.godsknown) > 0:
+                            if len(player.godsknown()) > 0:
                                 gamestate = 'pray'
-                                logback = len(player.godsknown) - logheight + 1
+                                logback = len(player.godsknown()) - logheight + 1
                                 chosen = 0
                             else:
                                 player.log().append('You don\'t know any of the sinful gods of the underground!')
@@ -1220,16 +1225,16 @@ def game():
                     elif gamestate == 'pray':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
-                            if chosen == len(player.godsknown) - logback - (logheight - 1) - 1:
+                            if chosen == len(player.godsknown()) - logback - (logheight - 1) - 1:
                                 logback += 1
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(player.godsknown)-1, chosen+1)
-                            if chosen == len(player.godsknown) - logback:
+                            chosen = min(len(player.godsknown())-1, chosen+1)
+                            if chosen == len(player.godsknown()) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
-                                selected = player.godsknown[chosen]
+                                selected = player.godsknown()[chosen]
                                 player.pray(selected)
                                 logback = 0
                             gamestate = 'free'

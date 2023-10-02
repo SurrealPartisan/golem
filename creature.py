@@ -34,7 +34,6 @@ class Creature():
         self.nextaction = ['wait', 1]
         self.previousaction = 'wait'
         self.bodyparts = listwithowner([], self)
-        self.godsknown = []
         self.lasthitter = None
         self.torso = None
         self.dead = False
@@ -58,7 +57,14 @@ class Creature():
             for i in range(numlevels):
                 seenlist.append(np.zeros((self.world.width, self.world.height)))
             return seenlist
-    
+
+    def godsknown(self):
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        if len(brains) > 0:
+            return brains[0].godsknown
+        else:
+            return []
+
     def creaturesseen(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
         if len(brains) > 0:
@@ -104,8 +110,8 @@ class Creature():
         for x, y, gd in self.world.altars:
             if (self.x, self.y) == (x, y):
                 self.log().append('There is an altar of ' + gd.name + ' here.')
-                if not gd in self.godsknown:
-                    self.godsknown.append(gd)
+                if not gd in self.godsknown():
+                    self.godsknown().append(gd)
                     self.log().append('You learn the ways of ' + gd.name + ', the ' + gd.faction + '-god of ' + gd.sin + '.')
                     self.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
         checkitems(self, self.world, self.x, self.y)
