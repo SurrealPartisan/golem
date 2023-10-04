@@ -2,7 +2,9 @@
 
 Minor
 * Solve the multiple brains problem
-* different blessings and smites to different gods
+* Different blessings and smites to different gods
+* Implement food poisoning
+* Make a setting for showing enemy movements sequentially
 
 Major
 * Sense of smell for mole people and others
@@ -11,7 +13,7 @@ Major
 * Make NPC:s use items (and consider carrying capacity)
   * Make question marks not disappear when unseen NPC picks an item
 * Spellcasting
-* Food and hunger
+* New body building system
 
 Never ready
 * More enemies

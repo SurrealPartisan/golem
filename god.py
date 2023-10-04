@@ -28,13 +28,15 @@ class God(creature.Creature):
         self.prayerclocks = {}
 
     def bless(self, creat):
-        blessing = np.random.randint(3)
+        blessing = np.random.randint(4)
         if blessing == 0:
             gift = item.Cure(creat.inventory, 0, 0, creat.world.curetypes[np.random.randint(len(creat.world.curetypes))], np.random.randint(max(0, creat.world_i-1), creat.world_i+2))
         if blessing == 1:
             gift = item.randomweapon(creat.inventory, 0, 0)
         if blessing == 2:
             gift = item.randomarmor(creat.inventory, 0, 0)
+        if blessing == 3:
+            gift = item.randomfood(creat.inventory, 0, 0)
         creat.log().append(self.name + ' has blessed you with a ' + gift.name + '!')
 
     def smite(self, target):
@@ -62,6 +64,7 @@ class God(creature.Creature):
             target.log().append(self.name + ' smote you in the ' + partname + ', killing you!')
             target.log().append('You are dead!')
             target.die()
+            target.causeofdeath = ('smite', self)
 
     def answer_to_prayer(self, creat):
         if self.attitude == 'irritable':

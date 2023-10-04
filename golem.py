@@ -129,6 +129,13 @@ def game():
                     y = np.random.randint(mapheight)
                 item.Cure(cave.items, x, y, infusiontypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
 
+            for j in range(10):
+                x = y = 0
+                while cave.walls[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                item.randomfood(cave.items, x, y)
+
             for j in range(5):
                 x = y = 0
                 while cave.walls[x, y] != 0:
@@ -207,6 +214,7 @@ def game():
         player.bodyparts[0].connect('left leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('right leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
+        player.bodyparts[0].connect('stomach', bodypart.HumanStomach(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('head', bodypart.HumanHead(player.bodyparts, 0, 0))
         player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
         player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
@@ -328,6 +336,10 @@ def game():
                 bleed = True
         if bleed:
             statuseffects.append(('Bleeding', (255, 0, 0)))
+        if player.starving():
+            statuseffects.append(('Starving', (255, 0, 0)))
+        elif player.hungry():
+            statuseffects.append(('Hungry', (255, 255, 0)))
         textx = 0
         for effect in statuseffects:
             win.putchars(effect[0], x=textx, y = mapheight+2, bgcolor=((128,128,128)), fgcolor = effect[1])
@@ -574,6 +586,12 @@ def game():
 
     def updatetime(time):
         player.bleed(time)
+        player.gainhunger(time)
+        if player.starving():
+            player.starvationclock += time
+            for i in range(int(player.starvationclock // 1)):
+                player.starve()
+            player.starvationclock = player.starvationclock % 1
         for gd in gods:
             for creat in gd.prayerclocks:
                 gd.prayerclocks[creat] += time
@@ -673,7 +691,7 @@ def game():
                                             highscores = pickle.load(f)
                                     else:
                                         highscores = []
-                                    highscores.append((player.xp, player.individualname, 'win'))
+                                    highscores.append((player.xp, player.individualname, 'won the game!'))
                                     with open('highscores.pickle', 'wb') as f:
                                         pickle.dump(highscores, f)
                                     logback = 0
@@ -976,12 +994,37 @@ def game():
                             updatetime(1)
                             if not player.dying():
                                 selected = [item for item in player.inventory if item.consumable][chosen]
-                                if selected.cure and not selected.curetype in player.curesknown():
-                                    player.curesknown().append(selected.curetype)                                    
-                                player.log().append('You consumed a ' + selected.name + '.')
-                                selected.consume(player)
-                                player.previousaction = 'consume'
-                                logback = 0
+                                if selected.cure:
+                                    if not selected.curetype in player.curesknown():
+                                        player.curesknown().append(selected.curetype)                                    
+                                    player.log().append('You consumed a ' + selected.name + '.')
+                                    selected.consume(player)
+                                    player.previousaction = 'consume'
+                                    logback = 0
+                                    if player.dying():
+                                        player.causeofdeath = ('consumption', selected)
+                                elif selected.edible:
+                                    stomachs = [part for part in player.bodyparts if 'stomach' in part.categories and not part.destroyed()]
+                                    if len(stomachs) > 0:
+                                        stomach = stomachs[0]
+                                        if int(player.hunger) == 0:
+                                            player.log().append('You are already satiated.')
+                                        elif stomach.foodprocessing[selected.material][0] == 1:
+                                            selected.consume(player, stomach.foodprocessing[selected.material][1])
+                                            if stomach.foodprocessing[selected.material][2] != None:
+                                                player.log().append(stomach.foodprocessing[selected.material][2])
+                                        elif stomach.foodprocessing[selected.material][0] == 0 and player.starving():
+                                            selected.consume(player, stomach.foodprocessing[selected.material][1])
+                                            if stomach.foodprocessing[selected.material][2] != None:
+                                                player.log().append(stomach.foodprocessing[selected.material][2])
+                                            # Add the possibility of getting sick
+                                        elif stomach.foodprocessing[selected.material][0] == 0:
+                                            player.log().append('Your stomach doesn\'t tolerate ' + selected.material + ' very well, and you are not desperate enough to try.')
+                                        elif stomach.foodprocessing[selected.material][0] == -1:
+                                            player.log().append('Your stomach doesn\'t tolerate ' + selected.material + ' under any circumstances.')
+                                    else:
+                                        player.log.append('You have no stomach, so you cannot eat!')
+                                    logback = 0
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
@@ -1298,10 +1341,20 @@ def game():
                                 highscores = pickle.load(f)
                         else:
                             highscores = []
-                        if player.lasthitter in gods:
-                            highscores.append((player.xp, player.individualname, 'dead', player.world_i+1, player.lasthitter.name+ ', the ' + player.lasthitter.faction + '-god of ' + player.lasthitter.sin))
+                        if player.causeofdeath[0] == 'attack':
+                            deathmessage = 'killed by a ' + player.causeofdeath[1].name
+                        elif player.causeofdeath[0] == 'smite':
+                            deathmessage = 'smitten to death by ' + player.causeofdeath[1].name+ ', the ' + player.causeofdeath[1].faction + '-god of ' + player.causeofdeath[1].sin
+                        elif player.causeofdeath[0] == 'bloodloss':
+                            deathmessage = 'bled to death after being attacked by a ' + ' and a '.join([creat.name for creat in player.causeofdeath[1]])
+                        elif player.causeofdeath[0] == 'starvation':
+                            deathmessage = 'starved to death'
+                        elif player.causeofdeath[0] == 'consumption':
+                            deathmessage = 'died from adverse effects of ' + player.causeofdeath[1].name
                         else:
-                            highscores.append((player.xp, player.individualname, 'dead', player.world_i+1, 'a ' + player.lasthitter.name))
+                            deathmessage = 'died from unknown causes'
+                        deathmessage += (' on dungeon level ' + repr(player.world_i+1) + '.')
+                        highscores.append((player.xp, player.individualname, deathmessage))
                         with open('highscores.pickle', 'wb') as f:
                             pickle.dump(highscores, f)
                         gamestate = 'dead'
@@ -1340,17 +1393,13 @@ def halloffame():
         highscores_sorted = sorted(highscores, reverse=True)
         for i in range(min(len(highscores_sorted), mapheight + statuslines + logheight - 1)):
             score = highscores_sorted[i]
-            if score[2] == 'dead':
-                scoremessage = 'killed by ' + score[4] + ' on dungeon level ' + repr(score[3]) + '.'
-            elif score[2] == 'win':
-                scoremessage = 'won the game!'
             if score == highscores[-1]:
                 fgcolor = (0, 255, 255)
             else:
                 fgcolor = (255, 255, 255)
             win.write(repr(i+1), x=0, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
             win.write(repr(score[0]), x=5, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
-            win.write(score[1] + ', ' + scoremessage, x=15, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
+            win.write(score[1] + ', ' + score[2], x=15, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
         win.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

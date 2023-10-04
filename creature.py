@@ -37,6 +37,9 @@ class Creature():
         self.lasthitter = None
         self.torso = None
         self.dead = False
+        self.causeofdeath = None
+        self.hunger = 0
+        self.starvationclock = 0
 
     def log(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
@@ -87,6 +90,34 @@ class Creature():
         wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return sum([it.weight for it in self.inventory]) + sum([it.weight for it in wornlist]) + sum([it.weight for it in wieldlist])
+
+    def hungry(self):
+        return self.hunger > 20 and len([part for part in self.bodyparts if part.material == 'living flesh']) > 0
+
+    def starving(self):
+        return self.hunger > 40 and len([part for part in self.bodyparts if part.material == 'living flesh']) > 0
+
+    def gainhunger(self, time):
+        livingmass = sum([part.weight for part in self.bodyparts if part.material == 'living flesh'])
+        self.hunger += livingmass*time*2e-06
+
+    def starve(self):
+        part = np.random.choice([part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()])
+        part.damagetaken += 1
+        if part.damagetaken > part.maxhp:
+            part.damagetaken = part.maxhp
+        if part.parentalconnection != None:
+            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+        elif part == self.torso:
+            partname = 'torso'
+        if not part.destroyed():
+            self.log().append('Your ' + partname + ' took 1 damage from starvation.')
+        else:
+            self.log().append('Your ' + partname + ' was destroyed by starvation.')
+        if self.dying():
+            self.log().append("You are dead!")
+            self.die()
+            self.causeofdeath = ('starvation',)
 
     def burdened(self):
         return self.weightcarried() > self.carryingcapacity()/2
@@ -152,6 +183,9 @@ class Creature():
                 self.log().append('Your ' + partname + ' was harmed by ' + repr(-healed) + ' points.')
             else:
                 self.log().append('Your ' + partname + ' was destroyed.')
+            if self.dying():
+                self.log().append("You are dead!")
+                self.die()
         else:
             self.log().append('You were unaffected.')
 
@@ -159,7 +193,8 @@ class Creature():
         return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
 
     def die(self):
-        self.lasthitter.xp += sum([part.maxhp for part in self.bodyparts]) // 2
+        if self.lasthitter != None:
+            self.lasthitter.xp += sum([part.maxhp for part in self.bodyparts]) // 2
         self.world.creatures.remove(self)
         for it in self.inventory:
             it.owner = self.world.items
@@ -171,6 +206,8 @@ class Creature():
             it.owner.remove(it)
             it.owner = self.world.items
             self.world.items.append(it)
+            it.x = self.x
+            it.y = self.y
         for part in self.bodyparts:
             if not part.destroyed():
                 part.owner = self.world.items
@@ -227,7 +264,7 @@ class Creature():
                 for special in attack.special:
                     if special[0] == 'bleed' and np.random.rand() < special[1]:
                         bleed = True
-                        targetbodypart.bleedclocks.append((banemultiplier*(totaldamage - armordamage), 0))
+                        targetbodypart.bleedclocks.append((banemultiplier*(totaldamage - armordamage), 0, self))
                 damage = min(banemultiplier*(totaldamage - armordamage), targetbodypart.hp())
                 targetbodypart.damagetaken += damage
                 if targetbodypart.parentalconnection != None:
@@ -297,6 +334,7 @@ class Creature():
                         target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the wall and killing you!')
                     target.log().append('You are dead!')
                     target.die()
+                    target.causeofdeath = ('attack', self)
             else:
                 self.log().append('The ' + target.name + ' evaded your ' + attack.name +'!')
                 target.log().append("You evaded the " + self.name + "'s " + attack.name +"!")
@@ -305,12 +343,14 @@ class Creature():
             target.log().append("You evaded the " + self.name + "'s " + attack.name + "!")
 
     def bleed(self, time):
+        totalcausers = []
         for part in self.bodyparts:
             if part.parentalconnection != None:
                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
-            bled = part.bleed(time)
+            bled, causers = part.bleed(time)
+            totalcausers += causers
             if bled > 0:
                 if part.destroyed():
                     self.log().append('Your ' + partname + ' bled out.')
@@ -323,6 +363,7 @@ class Creature():
                 if fovmap[self.x, self.y] and creat != self:
                     creat.log().append('The ' + self.name + ' bled to death!')
             self.die()
+            self.causeofdeath = ('bloodloss', np.unique(totalcausers))
 
     def ai(self):
         # Return something to put in self.nextaction. It should be a list,
@@ -389,6 +430,7 @@ class Zombie(Creature):
             self.bodyparts[0].connect('left leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
             self.bodyparts[0].connect('right leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.ZombieStomach(self.bodyparts, 0, 0))
         if self.name != 'headless zombie':
             self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
             self.bodyparts[-1].connect('brain', bodypart.ZombieBrain(self.bodyparts, 0, 0))
@@ -449,6 +491,7 @@ class MolePerson(Creature):
         self.bodyparts[0].connect('left leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.MolePersonHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.MolePersonStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.MolePersonHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.MolePersonBrain(self.bodyparts, 0, 0))
         self.bodyparts[-2].connect('left eye', bodypart.MolePersonEye(self.bodyparts, 0, 0))
@@ -512,6 +555,7 @@ class CaveOctopus(Creature):
         self.bodyparts[0].connect('center-back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.OctopusStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('brain', bodypart.OctopusBrain(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
@@ -570,6 +614,7 @@ class Goblin(Creature):
         self.bodyparts[0].connect('left leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.GoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.GoblinStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.GoblinHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.GoblinBrain(self.bodyparts, 0, 0))
         self.bodyparts[-2].connect('left eye', bodypart.GoblinEye(self.bodyparts, 0, 0))
@@ -629,6 +674,7 @@ class Wolf(Creature):
         self.bodyparts[0].connect('back left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.WolfHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.WolfStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('tail', bodypart.WolfTail(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.WolfHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.WolfBrain(self.bodyparts, 0, 0))
@@ -691,6 +737,7 @@ class Drillbot(Creature):
         self.bodyparts[0].connect('back right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('arm', bodypart.DrillArm(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('coolant pumping system', bodypart.DrillbotPump(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('biomass processor', bodypart.DrillBotBiomassProcessor(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('central processor', bodypart.DrillbotProcessor(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))

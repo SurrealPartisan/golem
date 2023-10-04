@@ -26,6 +26,7 @@ class Item():
         self.weight = 0
         self.carryingcapacity = 0
         self.consumable = False
+        self.edible = False
         self.cure = False
         self.wieldable = False
         self.weapon = False
@@ -44,6 +45,43 @@ class Item():
 
     def minespeed(self):
         return 0
+
+class Food(Item):
+    def __init__(self, owner, x, y, name, char, color, maxhp, material, weight):
+        super().__init__(owner, x, y, name, char, color)
+        self.maxhp = maxhp
+        self.material = material
+        self.weight = weight
+        self.basename = name
+        self.consumable = True
+        self.edible = True
+
+    def consume(self, user, efficiency):
+        if int(self.hp()*efficiency) > user.hunger:
+            self.damagetaken += int(user.hunger/efficiency)
+            user.hunger = 0
+            user.log().append('You ate some of the ' + self.name + '.')
+            user.log().append('You are satiated.')
+            if self.damagetaken < 0.4*self.maxhp:
+                self.name = 'partially eaten ' + self.basename
+            elif self.damagetaken < 0.6*self.maxhp:
+                self.name = 'half-eaten ' + self.basename
+            else:
+                self.name = 'mostly eaten ' + self.basename
+        else:
+            user.hunger -= int(self.hp()*efficiency)
+            self.damagetaken = self.maxhp
+            self.owner.remove(self)
+            user.log().append('You ate the ' + self.name + '.')
+            if user.hunger == 0:
+                user.log().append('You are satiated.')
+
+def randomfood(owner, x, y):
+    i = np.random.randint(2)
+    if i == 0:
+        return Food(owner, x, y, 'hamburger', '*', (250, 220, 196), 20, 'cooked meat', 250)
+    elif i == 1:
+        return Food(owner, x, y, 'veggie burger', '*', (250, 220, 196), 20, 'vegetables', 250)
 
 CureType = namedtuple('CureType', ['curedmaterial', 'name', 'hpgiven_base', 'dosage'])
 

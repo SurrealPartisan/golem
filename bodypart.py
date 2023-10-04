@@ -39,6 +39,8 @@ class BodyPart(item.Item):
         self.capableofwielding = False
         self.worn = {}  # Each key is a category of item, e.g. helmet or backpack. Each value is a listwithowner, with the bodypart as the owner. The lists themselves should contain at most one item per list.
         self.material = "living flesh"
+        self.consumable = True
+        self.edible = True
         self._defensecoefficient = 0.8
         self._wearwieldname = name
         self.bleedclocks = []
@@ -88,21 +90,41 @@ class BodyPart(item.Item):
     def bleed(self, time):
         newbleedclocklist = []
         dmgtotal = 0
+        causers = []
         for bleedclock in self.bleedclocks:
             dmgleft = bleedclock[0]
             timepassed = bleedclock[1] + time
+            causer = bleedclock[2]
+            if not causer in causers:
+                causers.append(causer)
             dmg = min(int(timepassed), dmgleft, self.maxhp - self.damagetaken)
             self.damagetaken += dmg
             dmgtotal += dmg
             if dmgleft - dmg > 0:
-                newbleedclocklist.append((dmgleft - dmg, timepassed % 1))
+                newbleedclocklist.append((dmgleft - dmg, timepassed % 1, causer))
         self.bleedclocks = newbleedclocklist
-        return dmgtotal
+        return dmgtotal, causers
+
+    def consume(self, user, efficiency):
+        if int(self.hp()*efficiency) > user.hunger:
+            self.damagetaken += int(user.hunger/efficiency)
+            user.hunger = 0
+            user.log().append('You ate some of the ' + self.name + '.')
+            user.log().append('You are satiated.')
+        else:
+            user.hunger -= int(self.hp()*efficiency)
+            self.damagetaken = self.maxhp
+            self.owner.remove(self)
+            user.log().append('You ate the ' + self.name + '.')
+            if user.hunger == 0:
+                user.log().append('You are satiated.')
+            
+
 
 
 class HumanTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'human torso', '¤', (250, 220, 196))
+        super().__init__(owner, x, y, 'human torso', '*', (250, 220, 196))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -110,7 +132,8 @@ class HumanTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
         self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
@@ -240,11 +263,25 @@ class HumanHeart(BodyPart):
         self.maxhp = 10
         self.weight = 300
 
+class HumanStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'human stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+
 
 
 class ZombieTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'zombie torso', '¤', (191, 255, 128))
+        super().__init__(owner, x, y, 'zombie torso', '*', (191, 255, 128))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -252,7 +289,8 @@ class ZombieTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], False, ''),
-            'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
         self.material = "undead flesh"
@@ -389,11 +427,25 @@ class ZombieHeart(BodyPart):
         self.material = "undead flesh"
         self.weight = 250
 
+class ZombieStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie stomach', '*', (150, 178, 82))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
+            }
+
 
 
 class MolePersonTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'mole person torso', '¤', (186, 100, 13))
+        super().__init__(owner, x, y, 'mole person torso', '*', (186, 100, 13))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -401,7 +453,8 @@ class MolePersonTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
         self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
@@ -531,6 +584,20 @@ class MolePersonHeart(BodyPart):
         self.maxhp = 10
         self.weight = 300
 
+class MolePersonStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole person stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+
 
 
 class OctopusHead(BodyPart):
@@ -542,6 +609,7 @@ class OctopusHead(BodyPart):
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.8, armorapplies=True),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
             'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left '),
             'center-back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back left '),
@@ -643,11 +711,25 @@ class OctopusHeart(BodyPart):
         self.maxhp = 20
         self.weight = 500
 
+class OctopusStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cave octopus stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (-1,),
+            'living flesh': (1, 1, None),
+            'undead flesh': (-1,)
+            }
+
 
 
 class GoblinTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'goblin torso', '¤', (0, 255, 0))
+        super().__init__(owner, x, y, 'goblin torso', '*', (0, 255, 0))
         self.categories = ['torso']
         self.childconnections = {
             'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
@@ -655,7 +737,8 @@ class GoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 100
         self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
@@ -785,11 +868,25 @@ class GoblinHeart(BodyPart):
         self.maxhp = 20
         self.weight = 250
 
+class GoblinStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+
 
 
 class WolfTorso(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'wolf torso', '¤', (100, 100, 150))
+        super().__init__(owner, x, y, 'wolf torso', '*', (100, 100, 150))
         self.categories = ['torso']
         self.childconnections = {
             'front left leg': BodyPartConnection(self, ['leg'], False, 'front left '),
@@ -798,6 +895,7 @@ class WolfTorso(BodyPart):
             'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
         self.maxhp = 150
@@ -891,6 +989,20 @@ class WolfHeart(BodyPart):
         self.maxhp = 20
         self.weight = 500
 
+class WolfStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
+            'living flesh': (1, 1, None),
+            'undead flesh': (-1,)
+            }
+
 class WolfTail(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'wolf tail', '~', (100, 100, 150))
@@ -903,7 +1015,7 @@ class WolfTail(BodyPart):
 
 class DrillbotChassis(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'drillbot chassis', '¤', (150, 150, 150))
+        super().__init__(owner, x, y, 'drillbot chassis', '*', (150, 150, 150))
         self.categories = ['torso']
         self.childconnections = {
             'front left wheel': BodyPartConnection(self, ['leg'], False, 'front left '),
@@ -912,6 +1024,7 @@ class DrillbotChassis(BodyPart):
             'back right wheel': BodyPartConnection(self, ['leg'], False, 'back right '),
             'arm': BodyPartConnection(self, ['arm'], False, ''),
             'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'biomass processor': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'left camera': BodyPartConnection(self, ['eye'], False, 'left '),
             'right camera': BodyPartConnection(self, ['eye'], False, 'right '),
             'central processor': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
@@ -922,6 +1035,8 @@ class DrillbotChassis(BodyPart):
         self.weight = 30000
         self.carryingcapacity = 50000
         self.material = 'electronics'
+        self.consumable = False
+        self.edible = False
 
 class DrillbotWheel(BodyPart):
     def __init__(self, owner, x, y):
@@ -934,6 +1049,8 @@ class DrillbotWheel(BodyPart):
         self.weight = 4000
         self.carryingcapacity = 10000
         self.material = 'electronics'
+        self.consumable = False
+        self.edible = False
 
     def speed(self):
         if not self.destroyed():
@@ -954,6 +1071,8 @@ class DrillArm(BodyPart):
         self.maxhp = 40
         self.weight = 7000
         self.material = 'electronics'
+        self.consumable = False
+        self.edible = False
 
     def minespeed(self):
         return 0.5
@@ -972,6 +1091,8 @@ class DrillbotCamera(BodyPart):
         self.maxhp = 20
         self.weight = 20
         self.material = 'electronics'
+        self.consumable = False
+        self.edible = False
 
     def sight(self):
         if not self.destroyed():
@@ -987,6 +1108,8 @@ class DrillbotPump(BodyPart):
         self.maxhp = 30
         self.weight = 1500
         self.material = 'electronics'
+        self.consumable = False
+        self.edible = False
 
 class DrillbotProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -1003,3 +1126,22 @@ class DrillbotProcessor(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.material = 'electronics'
+        self.consumable = False
+        self.edible = False
+
+class DrillBotBiomassProcessor(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'drillbot biomass processor', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 2000
+        self.material = 'electronics'
+        self.consumable = False
+        self.edible = False
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (1, 1, None),
+            'undead flesh': (1, 1, None)
+            }
