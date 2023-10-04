@@ -1525,8 +1525,8 @@ def options():
     global fontsize
     cont = False
     selected = 0
-    fonts = ('Hack-Regular.ttf', 'software_tester_7.ttf', 'courier-prime-sans.regular.ttf')
-    fontnames = ('Hack', 'Software Tester 7', 'Courier Prime Sans')
+    fonts = ('Hack-Regular.ttf', 'software_tester_7.ttf', 'courier-prime-sans.regular.ttf', 'square.ttf', 'PressStart2P-Regular.ttf')
+    fontnames = ('Hack', 'Software Tester 7', 'Courier Prime Sans', 'Square', 'Press Start 2P')
     font_i = fonts.index(font)
     while not cont:
         for i in range(mapwidth):
@@ -1579,11 +1579,11 @@ def options():
                         pickle.dump((font, fontsize), f)
                     cont = True
                 if event.key == pygame.locals.K_LEFT and selected == 0:
-                    font_i = (font_i - 1) % 3
+                    font_i = (font_i - 1) % 5
                     font = fonts[font_i]
                     win.font = pygame.font.Font(font, fontsize)
                 if event.key == pygame.locals.K_RIGHT and selected == 0:
-                    font_i = (font_i + 1) % 3
+                    font_i = (font_i + 1) % 5
                     font = fonts[font_i]
                     win.font = pygame.font.Font(font, fontsize)
                 if event.key == pygame.locals.K_LEFT and selected == 1:
@@ -1679,7 +1679,9 @@ def credits():
                     'Fonts:',
                     'Courier Prime Sans by Quote-Unquote Apps. OFL License.',
                     'Hack by Source Foundry Authors. MIT License.',
+                    'Press Start 2P by CodeMan38. OFL License.',
                     'Software Tester 7 by Sizenko Alexander, Style-7. Freeware.',
+                    'Square by Wouter van Oortmerssen. CC BY 3.0 Deed license.',
                     '',
                     'This game is dedicated to the transgender community.']
         for i in range(len(credlist)):
