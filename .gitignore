@@ -1,0 +1,10 @@
+# Python venv 
+bin
+pyvenv.cfg
+
+# Pickle files
+*.pickle
+
+# ??
+__pycache__
+lib64
