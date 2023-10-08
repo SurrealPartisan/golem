@@ -232,6 +232,17 @@ class Creature():
     def fight(self, target, targetbodypart, attack):
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
+                hit = True
+            else:
+                adjacentparts = [connection.child for connection in targetbodypart.childconnections.values()]
+                if targetbodypart.parentalconnection != None:
+                    adjacentparts.append(targetbodypart.parentalconnection.parent)
+                targetbodypart = np.random.choice(adjacentparts)
+                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
+                    hit = True
+                else:
+                    hit = False
+            if hit:
                 target.lasthitter = self
                 totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
                 knocked_back = False

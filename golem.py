@@ -367,10 +367,14 @@ def game():
                     j = i
                 else:
                     j = len(picklist)+i-logrows-logback
+                if picklist[j].maxhp < np.inf:
+                    itname = picklist[j].name + ' (wt: ' + repr(picklist[j].weight) + ' g,' + ' hp: ' + repr(picklist[j].hp()) + '/' + repr(picklist[j].maxhp) + ')'
+                else:
+                    itname = picklist[j].name + ' (wt: ' + repr(picklist[j].weight) + ' g)'
                 if j != chosen:
-                    win.write(picklist[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                    win.write(itname, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
-                    win.write(picklist[j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                    win.write(itname, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         elif gamestate == 'drop':
             dropmessage = 'Choose the item to drop:'
@@ -381,10 +385,14 @@ def game():
                     j = i
                 else:
                     j = len(player.inventory)+i-logrows-logback
+                if player.inventory[j].maxhp < np.inf:
+                    itname = player.inventory[j].name + ' (wt: ' + repr(player.inventory[j].weight) + ' g,' + ' hp: ' + repr(player.inventory[j].hp()) + '/' + repr(player.inventory[j].maxhp) + ')'
+                else:
+                    itname = player.inventory[j].name + ' (wt: ' + repr(player.inventory[j].weight) + ' g)'
                 if j != chosen:
-                    win.write(player.inventory[j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                    win.write(itname, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
-                    win.write(player.inventory[j].name, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                    win.write(itname, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         elif gamestate == 'consume':
             consumemessage = 'Choose the item to consume:'
@@ -891,9 +899,10 @@ def game():
                             player.log().append('  - u: unwield an item')
                             player.log().append('  - W: wear an item')
                             player.log().append('  - U: undress an item')
+                            player.log().append('  - p: pray')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 9 # Increase when adding commands
+                                logback = 10 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
