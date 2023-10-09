@@ -18,6 +18,8 @@ pygame.init()
 
 logheight = 8
 statuslines = 3
+icon = pygame.image.load('icon.png')
+pygame.display.set_icon(icon)
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person!')
 if file_exists('options.pickle'):
     with open('options.pickle', 'rb') as f:
