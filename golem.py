@@ -1332,7 +1332,6 @@ def game():
                     elif gamestate == 'dead' or gamestate == 'win':
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             gamegoeson = False
-                            halloffame()
 
                         # log scrolling
                         if event.key == pygame.locals.K_PAGEUP:
@@ -1387,6 +1386,9 @@ def game():
         #    pygame.quit()
         #    sys.exit()
         #    raise e
+
+    if gamestate == 'dead' or gamestate == 'win':
+        halloffame()
 
 def halloffame():
     cont = False
