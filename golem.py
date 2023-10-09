@@ -23,9 +23,9 @@ pygame.display.set_icon(icon)
 win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person!')
 if file_exists('options.pickle'):
     with open('options.pickle', 'rb') as f:
-        font, fontsize = pickle.load(f)
+        font, fontsize, showsequentially = pickle.load(f)
 else:
-    font, fontsize = ('courier-prime-sans.regular.ttf', 12)
+    font, fontsize, showsequentially = ('courier-prime-sans.regular.ttf', 12, False)
 win.font = pygame.font.Font(font, fontsize)
 win.autoupdate = False
 
@@ -594,7 +594,7 @@ def game():
 
         win.update()
 
-    def updatetime(time):
+    def _updatetime(time):
         player.bleed(time)
         player.gainhunger(time)
         if player.starving():
@@ -606,7 +606,18 @@ def game():
             for creat in gd.prayerclocks:
                 gd.prayerclocks[creat] += time
         for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
+            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+            seenbefore = fovmap[npc.x, npc.y]
             npc.update(time)
+            seenafter = fovmap[npc.x, npc.y]
+            if (seenbefore or seenafter) and showsequentially:
+                draw()
+
+    def updatetime(time):
+        #for i in range(int(time // 0.1)):
+        #    _updatetime(0.1)
+        #_updatetime(time % 0.1)
+        _updatetime(time)
 
     def moveorattack(dx, dy):
         targets = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
@@ -1536,6 +1547,7 @@ def keybingsoptions():
 def options():
     global font
     global fontsize
+    global showsequentially
     cont = False
     selected = 0
     fonts = ('Hack-Regular.ttf', 'software_tester_7.ttf', 'courier-prime-sans.regular.ttf', 'square.ttf', 'PressStart2P-Regular.ttf')
@@ -1563,33 +1575,41 @@ def options():
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
         win.write(fontsizetext, x=(mapwidth-len(fontsizetext))//2, y=24, fgcolor=fgcolor, bgcolor=bgcolor)
-        keybindingstext = 'Keybindings'
+        showsequentiallytext = 'Show enemy movements sequentially: < ' + repr(showsequentially) + ' >'
         if selected == 2:
             bgcolor = (255, 255, 255)
             fgcolor = (0, 0, 0)
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(keybindingstext, x=(mapwidth-len(keybindingstext))//2, y=26, fgcolor=fgcolor, bgcolor=bgcolor)
-        backtomenutext = 'Save and return'
+        win.write(showsequentiallytext, x=(mapwidth-len(showsequentiallytext))//2, y=26, fgcolor=fgcolor, bgcolor=bgcolor)
+        keybindingstext = 'Keybindings'
         if selected == 3:
             bgcolor = (255, 255, 255)
             fgcolor = (0, 0, 0)
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(backtomenutext, x=(mapwidth-len(backtomenutext))//2, y=28, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.write(keybindingstext, x=(mapwidth-len(keybindingstext))//2, y=28, fgcolor=fgcolor, bgcolor=bgcolor)
+        backtomenutext = 'Save and return'
+        if selected == 4:
+            bgcolor = (255, 255, 255)
+            fgcolor = (0, 0, 0)
+        else:
+            bgcolor = (0, 0, 0)
+            fgcolor = (255, 255, 255)
+        win.write(backtomenutext, x=(mapwidth-len(backtomenutext))//2, y=30, fgcolor=fgcolor, bgcolor=bgcolor)
         win.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 with open('options.pickle', 'wb') as f:
-                    pickle.dump((font, fontsize), f)
+                    pickle.dump((font, fontsize, showsequentially), f)
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.locals.KEYDOWN:
                 if event.key == pygame.locals.K_ESCAPE:
                     with open('options.pickle', 'wb') as f:
-                        pickle.dump((font, fontsize), f)
+                        pickle.dump((font, fontsize, showsequentially), f)
                     cont = True
                 if event.key == pygame.locals.K_LEFT and selected == 0:
                     font_i = (font_i - 1) % 5
@@ -1605,16 +1625,20 @@ def options():
                 if event.key == pygame.locals.K_RIGHT and selected == 1:
                     fontsize += 1
                     win.font = pygame.font.Font(font, fontsize)
+                if event.key == pygame.locals.K_LEFT and selected == 2:
+                    showsequentially = not showsequentially
+                if event.key == pygame.locals.K_RIGHT and selected == 2:
+                    showsequentially = not showsequentially
                 if event.key == pygame.locals.K_UP:
                     selected = max(selected-1, 0)
                 if event.key == pygame.locals.K_DOWN:
-                    selected = min(selected+1, 3)
+                    selected = min(selected+1, 4)
                 if event.key == pygame.locals.K_RETURN:
-                    if selected == 2:
-                        keybingsoptions()
                     if selected == 3:
+                        keybingsoptions()
+                    if selected == 4:
                         with open('options.pickle', 'wb') as f:
-                            pickle.dump((font, fontsize), f)
+                            pickle.dump((font, fontsize, showsequentially), f)
                         cont = True
 
 
