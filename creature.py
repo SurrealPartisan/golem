@@ -124,7 +124,10 @@ class Creature():
 
     def overloaded(self):
         return self.weightcarried() > self.carryingcapacity()
-
+    
+    def slowed(self):
+        return self.world.spiderwebs[self.x, self.y]
+    
     def speed(self):
         if self.overloaded():
             return 0
@@ -141,6 +144,8 @@ class Creature():
         self.y_old = self.y
         self.x += dx
         self.y += dy
+        if self.world.spiderwebs[self.x, self.y]:
+            self.log().append('There is spiderweb here.')
         if (self.x, self.y) == self.world.stairsupcoords:
             self.log().append('There are stairs up here.')
         if (self.x, self.y) == self.world.stairsdowncoords:
@@ -234,12 +239,15 @@ class Creature():
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
                 hit = True
             else:
-                adjacentparts = [connection.child for connection in targetbodypart.childconnections.values()]
-                if targetbodypart.parentalconnection != None:
+                adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child.destroyed()]
+                if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
                     adjacentparts.append(targetbodypart.parentalconnection.parent)
-                targetbodypart = np.random.choice(adjacentparts)
-                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
-                    hit = True
+                if len(adjacentparts) > 0:
+                    targetbodypart = np.random.choice(adjacentparts)
+                    if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
+                        hit = True
+                    else:
+                        hit = False
                 else:
                     hit = False
             if hit:
@@ -397,12 +405,12 @@ class Creature():
                 self.previousaction = 'fight'
 
     def update(self, time):
-        if time < self.nextaction[-1]:
-            self.nextaction[-1] -= time
+        if time < self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait')):
+            self.nextaction[-1] -= time/(1 + self.slowed()*(self.nextaction[0] != 'wait'))
             self.bleed(time)
         else:
-            timeleft = time - self.nextaction[-1]
-            self.bleed(self.nextaction[-1])
+            timeleft = time - self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait'))
+            self.bleed(self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait')))
             if not self.dead:
                 self.resolveaction()
     

@@ -257,12 +257,16 @@ def game():
                 if fovmap[i,j]:
                     if cave.walls[i,j] == 1:
                         win.putchars(' ', x=i, y=j, bgcolor='white')
+                    elif cave.spiderwebs[i,j]:
+                        win.putchars('#', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
                     else:
                         win.putchars(' ', x=i, y=j, bgcolor=(64,64,64))
                     player.seen()[cave_i][i,j] = 1
                 elif player.seen()[cave_i][i,j] == 1:
                     if cave.walls[i,j] == 1:
                         win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
+                    elif cave.spiderwebs[i,j]:
+                        win.putchars('#', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
         i, j = cave.stairsdowncoords
         if fovmap[i,j]:
             win.putchars('>', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
@@ -342,6 +346,8 @@ def game():
             statuseffects.append(('Starving', (255, 0, 0)))
         elif player.hungry():
             statuseffects.append(('Hungry', (255, 255, 0)))
+        if player.slowed():
+            statuseffects.append(('Slowed', (255, 255, 0)))
         textx = 0
         for effect in statuseffects:
             win.putchars(effect[0], x=textx, y = mapheight+2, bgcolor=((128,128,128)), fgcolor = effect[1])
@@ -636,7 +642,7 @@ def game():
             gamestate = 'free'
             target = None
         else:
-            updatetime(np.sqrt(dx**2 + dy**2) * player.steptime())
+            updatetime(np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()))
             if not player.dying():
                 creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
                 if len(creaturesintheway) == 0:
@@ -655,7 +661,7 @@ def game():
         if player.x+dx == 0 or player.x+dx == mapwidth-1 or player.y+dy == 0 or player.y+dy == mapheight-1:
             player.log().append('That is too hard for you to mine.')
         elif cave.walls[player.x+dx, player.y+dy] == 1:
-            updatetime(player.minetime())
+            updatetime(player.minetime() * (1 + player.slowed()))
             if not player.dying():
                 player.log().append('You mined a hole in the wall.')
                 cave.walls[player.x+dx, player.y+dy] = 0
@@ -767,7 +773,7 @@ def game():
                                 player.log().append('Nothing to pick up here.')
                                 logback = 0
                             elif len(picklist) == 1:
-                                updatetime(0.5)
+                                updatetime(0.5 * (1 + player.slowed()))
                                 if not player.dying():
                                     it = picklist[0]
                                     cave.items.remove(it)
@@ -963,7 +969,7 @@ def game():
                             if chosen == len(picklist) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            updatetime(0.5)
+                            updatetime(0.5 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = picklist[chosen]
                                 selected.owner = player.inventory
@@ -987,7 +993,7 @@ def game():
                             if chosen == len(player.inventory) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            updatetime(0.5)
+                            updatetime(0.5 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = player.inventory[chosen]
                                 selected.owner = cave.items
@@ -1013,7 +1019,7 @@ def game():
                             if chosen == len([item for item in player.inventory if item.consumable]) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            updatetime(1)
+                            updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = [item for item in player.inventory if item.consumable][chosen]
                                 if selected.cure:
@@ -1080,7 +1086,7 @@ def game():
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            updatetime(1)
+                            updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()][chosen]
                                 player.inventory.remove(selecteditem)
@@ -1104,7 +1110,7 @@ def game():
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            updatetime(1)
+                            updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
                                 selected = part.wielded[0]
@@ -1153,7 +1159,7 @@ def game():
                             if chosen == len(partlist) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            updatetime(1)
+                            updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = partlist[chosen]
                                 player.inventory.remove(selecteditem)
@@ -1177,7 +1183,7 @@ def game():
                             if chosen == len(wornlist) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            updatetime(1)
+                            updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = wornlist[chosen]
                                 partname = selected.owner.owner.wearwieldname()
@@ -1221,7 +1227,7 @@ def game():
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
-                            updatetime(selectedattack[6])
+                            updatetime(selectedattack[6] * (1 + player.slowed()))
                             if not player.dying():
                                 if not target.dead:
                                     player.fight(target, selected, selectedattack)
@@ -1286,7 +1292,7 @@ def game():
                                 logback = len(partslist) - logheight + 1
                                 chosen = 0
                             else:
-                                updatetime(5)
+                                updatetime(5 * (1 + player.slowed()))
                                 if not player.dying():
                                     for it in [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]:
                                         it.owner.remove(it)
