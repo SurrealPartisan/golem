@@ -239,7 +239,7 @@ class Creature():
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
                 hit = True
             else:
-                adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child.destroyed()]
+                adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
                 if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
                     adjacentparts.append(targetbodypart.parentalconnection.parent)
                 if len(adjacentparts) > 0:

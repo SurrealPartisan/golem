@@ -18,6 +18,10 @@ letters = 'abcdefghijklmnopqrstuvwxyz'
 consonants = 'bcdfghjklmnpqrstvwxyz'
 vowels = 'aeiou'
 
+def normalish(length, mu, sigma, base):
+    a = [np.e**(-((i-mu)/sigma)**2)+base for i in range(length)]
+    return np.array(a)/sum(a)
+
 def drugname():
     syl1 = np.random.choice(['Ab', 'Bra', 'Cil', 'Tra', 'Cog', 'I', 'Bri'])
     syl2 = np.random.choice(['la', 'mo', 'de', 'ca', 'fe', 'ma', 'te'])

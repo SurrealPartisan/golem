@@ -12,6 +12,31 @@ import utils
 
 Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'bane', 'special'])
 
+Material = namedtuple('Material', ['damage', 'armor', 'hp', 'density', 'color'])
+materials = {'leather': Material(None, 5, 100, 4, (186, 100, 13)),
+             'wood': Material(10, None, 100, 5, (164,116,73)),
+             'bone': Material(15, 10, 100, 20, (255, 255, 204)),
+             'chitin': Material(15, 10, 150, 20, (0, 102, 0)),
+             'silver': Material(20, 10, 150, 105, (192, 192, 192)),
+             'bronze': Material(20, 10, 200, 75, (150,116,68)),
+             'iron': Material(25, 15, 300, 79, (200, 200, 200)),
+             'steel': Material(30, 20, 400, 79, (210, 210, 210)),
+             'elven steel': Material(30, 20, 400, 60, (210, 210, 210)),
+             'dwarven steel': Material(32, 22, 440, 80, (210, 210, 210)),
+             'titanium': Material(35, 25, 500, 45, (135, 134, 129)),
+             'orichalcum': Material(40, 30, 500, 75, (255, 102, 102)),
+             'nanotube': Material(40, 30, 500, 10, (51, 0, 0)),
+             'neutronium': Material(45, 35, 600, 1000, (0, 255, 255)),
+             'angelbone': Material(45, 35, 600, 20, (204, 255, 255))
+             }
+armormaterials = [material for material in materials if not materials[material].armor == None]
+weaponmaterials = [material for material in materials if not materials[material].damage == None]
+likeliestmaterialbylevel = ['bone',
+                            'bronze',
+                            'elven steel',
+                            'orichalcum',
+                            'angelbone']
+
 class Item():
     def __init__(self, owner, x, y, name, char, color):
         self.owner = owner  # A list, such as inventory or list of map items
@@ -123,68 +148,27 @@ class Dagger(Item):
         for b in bane:
             banename += b + '-bane '
         name = enchaname + banename + material + ' dagger'
-        if material == 'bone': color = (255, 255, 204)
-        if material == 'chitin': color = (0, 102, 0)
-        if material == 'bronze': color = (150,116,68)
-        if material == 'iron': color = (200, 200, 200)
-        if material == 'steel': color = (210, 210, 210)
-        if material == 'elven steel': color = (210, 210, 210)
-        if material == 'dwarven steel': color = (210, 210, 210)
-        if material == 'nanotube': color = (51, 0, 0)
-        if material == 'adamantine': color = (51, 51, 0)
+        color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
         self.wieldable = True
         self.weapon = True
         self.bane = bane
-        if material == 'bone':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 15 + enchantment
-            density = 20
-        if material == 'chitin':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 15 + enchantment
-            density = 20
-        if material == 'bronze':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 20 + enchantment
-            density = 75
-        if material == 'iron':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 25 + enchantment
-            density = 79
-        if material == 'steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 30 + enchantment
-            density = 79
-        if material == 'elven steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 30 + enchantment
-            density = 60
-        if material == 'dwarven steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 32 + enchantment
-            density = 80
-        if material == 'nanotube':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 40 + enchantment
-            density = 10
-        if material == 'adamantine':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 40 + enchantment
-            density = 100
+        self.mindamage = 1 + enchantment
+        self.maxdamage = materials[material].damage + enchantment
+        density = materials[material].density
         self.weight = 6*density
 
     def attackslist(self):
         return[Attack(self.name, 'stabbed', 'stabbed', '', '', 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('bleed', 0.2)])]
 
-def randomdagger(owner, x, y):
+def randomdagger(owner, x, y, level):
     enchantment = 0
-    while np.random.rand() < 0.5:
+    while np.random.rand() < 0.5 + level/100:
         enchantment += 1
     bane = []
-    if np.random.rand() < 0.1:
+    if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Dagger(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment, bane)
+    return Dagger(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment, bane)
 
 class Spear(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -196,55 +180,14 @@ class Spear(Item):
         for b in bane:
             banename += b + '-bane '
         name = enchaname + banename + material + ' spear'
-        if material == 'bone': color = (255, 255, 204)
-        if material == 'chitin': color = (0, 102, 0)
-        if material == 'bronze': color = (150,116,68)
-        if material == 'iron': color = (200, 200, 200)
-        if material == 'steel': color = (210, 210, 210)
-        if material == 'elven steel': color = (210, 210, 210)
-        if material == 'dwarven steel': color = (210, 210, 210)
-        if material == 'nanotube': color = (51, 0, 0)
-        if material == 'adamantine': color = (51, 51, 0)
+        color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
         self.wieldable = True
         self.weapon = True
         self.bane = bane
-        if material == 'bone':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 15 + enchantment
-            density = 20
-        if material == 'chitin':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 15 + enchantment
-            density = 20
-        if material == 'bronze':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 20 + enchantment
-            density = 75
-        if material == 'iron':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 25 + enchantment
-            density = 79
-        if material == 'steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 30 + enchantment
-            density = 79
-        if material == 'elven steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 30 + enchantment
-            density = 60
-        if material == 'dwarven steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 32 + enchantment
-            density = 80
-        if material == 'nanotube':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 40 + enchantment
-            density = 10
-        if material == 'adamantine':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 40 + enchantment
-            density = 100
+        self.mindamage = 1 + enchantment
+        self.maxdamage = materials[material].damage + enchantment
+        density = materials[material].density
         self.weight = 6*density + 2000
 
     def attackslist(self):
@@ -253,14 +196,14 @@ class Spear(Item):
         else:
             return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('charge',)])]
 
-def randomspear(owner, x, y):
+def randomspear(owner, x, y, level):
     enchantment = 0
-    while np.random.rand() < 0.5:
+    while np.random.rand() < 0.5 + level/100:
         enchantment += 1
     bane = []
-    if np.random.rand() < 0.1:
+    if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Spear(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment, bane)
+    return Spear(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment, bane)
 
 class Mace(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -272,55 +215,14 @@ class Mace(Item):
         for b in bane:
             banename += b + '-bane '
         name = enchaname + banename + material + ' mace'
-        if material == 'bone': color = (255, 255, 204)
-        if material == 'chitin': color = (0, 102, 0)
-        if material == 'bronze': color = (150,116,68)
-        if material == 'iron': color = (200, 200, 200)
-        if material == 'steel': color = (210, 210, 210)
-        if material == 'elven steel': color = (210, 210, 210)
-        if material == 'dwarven steel': color = (210, 210, 210)
-        if material == 'nanotube': color = (51, 0, 0)
-        if material == 'adamantine': color = (51, 51, 0)
+        color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
         self.wieldable = True
         self.weapon = True
         self.bane = bane
-        if material == 'bone':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 18 + enchantment
-            density = 20
-        if material == 'chitin':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 18 + enchantment
-            density = 20
-        if material == 'bronze':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 24 + enchantment
-            density = 75
-        if material == 'iron':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 30 + enchantment
-            density = 79
-        if material == 'steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 36 + enchantment
-            density = 79
-        if material == 'elven steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 36 + enchantment
-            density = 60
-        if material == 'dwarven steel':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 37 + enchantment
-            density = 80
-        if material == 'nanotube':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 48 + enchantment
-            density = 10
-        if material == 'adamantine':
-            self.mindamage = 1 + enchantment
-            self.maxdamage = 48 + enchantment
-            density = 100
+        self.mindamage = 1 + enchantment
+        self.maxdamage = int(materials[material].damage*1.2) + enchantment
+        density = materials[material].density
         self.weight = 50*density
 
     def attackslist(self):
@@ -329,14 +231,17 @@ class Mace(Item):
         else:
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('knockback', 0.1)])]
 
-def randommace(owner, x, y):
+def randommace(owner, x, y, level):
     enchantment = 0
-    while np.random.rand() < 0.5:
+    while np.random.rand() < 0.5 + level/100:
         enchantment += 1
     bane = []
-    if np.random.rand() < 0.1:
+    if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Mace(owner, x, y, np.random.choice(['bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.15, 0.1, 0.25, 0.25, 0.1, 0.05, 0.05, 0.02, 0.03]), enchantment, bane)
+    return Mace(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment, bane)
+
+def randomweapon(owner, x, y, level):
+    return np.random.choice([randomdagger, randomspear, randommace])(owner, x, y, level)
 
 class LightPick(Item):
     def __init__(self, owner, x, y):
@@ -370,8 +275,8 @@ class HeavyPick(Item):
         else:
             return 0.2
 
-def randomweapon(owner, x, y):
-    return np.random.choice([HeavyPick, LightPick, randomdagger, randomspear, randommace], p=[0.125, 0.125, 0.25, 0.25, 0.25])(owner, x, y)
+def randomtool(owner, x, y):
+    return np.random.choice([HeavyPick, LightPick])(owner, x, y)
 
 class PieceOfArmor(Item):
     def __init__(self, owner, x, y, wearcategory, material, enchantment):
@@ -380,70 +285,14 @@ class PieceOfArmor(Item):
         elif enchantment > 0:
             enchaname = '+' + repr(enchantment) + ' '
         name = enchaname + material + ' ' + wearcategory
-        if material == 'leather': color = (186, 100, 13)
-        if material == 'bone': color = (255, 255, 204)
-        if material == 'chitin': color = (0, 102, 0)
-        if material == 'bronze': color = (150,116,68)
-        if material == 'iron': color = (200, 200, 200)
-        if material == 'steel': color = (210, 210, 210)
-        if material == 'elven steel': color = (210, 210, 210)
-        if material == 'dwarven steel': color = (210, 210, 210)
-        if material == 'nanotube': color = (51, 0, 0)
-        if material == 'adamantine': color = (51, 51, 0)
+        color = materials[material].color
         super().__init__(owner, x, y, name, '[', color)
         self.wearcategory = wearcategory
         self.wearable = True
         self.isarmor = True
-        if material == 'leather':
-            self.maxhp = 100
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 5 + enchantment
-            density = 4
-        if material == 'bone':
-            self.maxhp = 100
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 10 + enchantment
-            density = 20
-        if material == 'chitin':
-            self.maxhp = 150
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 10 + enchantment
-            density = 20
-        if material == 'bronze':
-            self.maxhp = 200
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 10 + enchantment
-            density = 75
-        if material == 'iron':
-            self.maxhp = 300
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 15 + enchantment
-            density = 79
-        if material == 'steel':
-            self.maxhp = 400
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 20 + enchantment
-            density = 79
-        if material == 'elven steel':
-            self.maxhp = 400
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 20 + enchantment
-            density = 60
-        if material == 'dwarven steel':
-            self.maxhp = 440
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 22 + enchantment
-            density = 80
-        if material == 'nanotube':
-            self.maxhp = 400
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 20 + enchantment
-            density = 10
-        if material == 'adamantine':
-            self.maxhp = 800
-            self.mindamage = 0 + enchantment
-            self.maxdamage = 40 + enchantment
-            density = 100
+        self.mindamage = 0 + enchantment
+        self.maxdamage = materials[material].armor + enchantment
+        density = materials[material].density
 
         if wearcategory == 'chest armor':
             self.weight = 200*density
@@ -460,11 +309,11 @@ class PieceOfArmor(Item):
         if wearcategory == 'tentacle armor':
             self.weight = 20*density
 
-def randomarmor(owner, x, y):
+def randomarmor(owner, x, y, level):
     enchantment = 0
-    while np.random.rand() > 0.5:
+    while np.random.rand() < 0.5 + level/100:
         enchantment += 1
-    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(['leather', 'bone', 'chitin', 'bronze', 'iron', 'steel', 'elven steel', 'dwarven steel', 'nanotube', 'adamantine'], p=[0.25, 0.1, 0.05, 0.20, 0.20, 0.05, 0.05, 0.05, 0.02, 0.03]), enchantment)
+    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment)
 
 class Backpack(Item):
     def __init__(self, owner, x, y):

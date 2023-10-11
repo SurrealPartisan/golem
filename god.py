@@ -32,9 +32,9 @@ class God(creature.Creature):
         if blessing == 0:
             gift = item.Cure(creat.inventory, 0, 0, creat.world.curetypes[np.random.randint(len(creat.world.curetypes))], np.random.randint(max(0, creat.world_i-1), creat.world_i+2))
         if blessing == 1:
-            gift = item.randomweapon(creat.inventory, 0, 0)
+            gift = item.randomweapon(creat.inventory, 0, 0, creat.world_i)
         if blessing == 2:
-            gift = item.randomarmor(creat.inventory, 0, 0)
+            gift = item.randomarmor(creat.inventory, 0, 0, creat.world_i)
         if blessing == 3:
             gift = item.randomfood(creat.inventory, 0, 0)
         creat.log().append(self.name + ' has blessed you with a ' + gift.name + '!')
