@@ -257,7 +257,7 @@ class Creature():
                 knocked_to_wall = False
                 for special in attack.special:
                     if special[0] == 'charge' and self.previousaction == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
-                        totaldamage *= 2
+                        totaldamage = int(1.5*totaldamage)
                         attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10])
                     if special[0] == 'knockback' and np.random.rand() < special[1]:
                         dx = target.x - self.x

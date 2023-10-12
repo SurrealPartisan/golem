@@ -152,13 +152,6 @@ def game():
                     y = np.random.randint(mapheight)
                 item.randomarmor(cave.items, x, y, i)
 
-            for j in range(2):
-                x = y = 0
-                while cave.walls[x, y] != 0:
-                    x = np.random.randint(mapwidth)
-                    y = np.random.randint(mapheight)
-                item.randomtool(cave.items, x, y)
-
             if i == 0:
                 for j in range(5):
                     x = y = 0
@@ -786,7 +779,7 @@ def game():
                                     cave.items.remove(it)
                                     player.inventory.append(it)
                                     it.owner = player.inventory
-                                    player.log().append('You pick up the ' + it.name + '.')
+                                    player.log().append('You picked up the ' + it.name + '.')
                                     player.previousaction = 'pick'
                                     logback = 0
                             else:

@@ -12,42 +12,42 @@ import utils
 
 Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'bane', 'special'])
 
-Material = namedtuple('Material', ['damage', 'armor', 'hp', 'density', 'color'])
-materials = {'leather': Material(None, 5, 100, 4, (186, 100, 13)),
-             'wood': Material(10, None, 100, 5, (164,116,73)),
-             'bone': Material(15, 10, 100, 20, (255, 255, 204)),
-             'chitin': Material(15, 10, 150, 20, (0, 102, 0)),
-             'silver': Material(20, 10, 150, 105, (192, 192, 192)),
-             'bronze': Material(20, 10, 200, 75, (150,116,68)),
-             'iron': Material(25, 15, 300, 79, (200, 200, 200)),
-             'steel': Material(30, 20, 400, 79, (210, 210, 210)),
-             'elven steel': Material(30, 20, 400, 60, (210, 210, 210)),
-             'dwarven steel': Material(32, 22, 440, 80, (210, 210, 210)),
-             'titanium': Material(35, 25, 500, 45, (135, 134, 129)),
-             'orichalcum': Material(40, 30, 500, 75, (255, 102, 102)),
-             'nanotube': Material(40, 30, 500, 10, (51, 0, 0)),
-             'neutronium': Material(45, 35, 600, 1000, (0, 255, 255)),
-             'angelbone': Material(45, 35, 600, 20, (204, 255, 255)),
-             'duranium': Material(50, 40, 700, 30, (200, 200, 200)),
-             'tritanium': Material(55, 45, 800, 50, (135, 134, 129)),
-             'octiron': Material(60, 50, 900, 85, (0, 0, 0)),
-             'diamond': Material(65, 55, 1000, 35, (200, 200, 255)),
-             'alicorn': Material(70, 60, 1100, 30, (150, 150, 255)),
-             'impervium': Material(75, 65, 1200, 80, (150, 150, 150)),
-             'dragonbone': Material(80, 70, 1300, 20, (255, 255, 204)),
-             'devilbone': Material(85, 75, 1400, 20, (255, 204, 204)),
-             'mithril': Material(90, 80, 1500, 10, (192, 192, 192)),
-             'infernal steel': Material(95, 85, 1600, 79, (255, 0, 0)),
-             'kryptonite': Material(100, 90, 1700, 32, (0, 255, 0)),
-             'corbomite': Material(105, 95, 1800, 50, (0, 150, 0)),
-             'tachyonite': Material(110, 100, 1900, -10, (0, 0, 255)),
-             'vibranium': Material(115, 105, 2000, 100, (200, 200, 255)),
-             'forbidium': Material(120, 110, 2100, 200, (200, 200, 200)),
-             'starmetal': Material(125, 115, 2200, 150, (255, 255, 255)),
-             'phlebotinum': Material(130, 120, 2300, 40, (255, 255, 0)),
-             'beskar': Material(135, 125, 2400, 80, (210, 210, 210)),
-             'unobtainium': Material(140, 130, 2500, 10, (255, 0, 255)),
-             'adamantine': Material(145, 135, 2600, 100, (0, 0, 0))}
+Material = namedtuple('Material', ['damage', 'hitbonus', 'minespeed', 'armor', 'hp', 'density', 'color'])
+materials = {'leather': Material(None, None, None, 5, 100, 4, (186, 100, 13)),
+             'wooden': Material(10, 0, 0.25, None, 100, 5, (164,116,73)),
+             'bone': Material(15, 0, 0.25, 10, 100, 20, (255, 255, 204)),
+             'chitin': Material(15, 0, 0.25, 10, 150, 20, (0, 102, 0)),
+             'silver': Material(20, 0.02, 0.26, 10, 150, 105, (192, 192, 192)),
+             'bronze': Material(20, 0.02, 0.26, 10, 200, 75, (150,116,68)),
+             'iron': Material(25, 0.03, 0.27, 15, 300, 79, (200, 200, 200)),
+             'steel': Material(30, 0.04, 0.27, 20, 400, 79, (210, 210, 210)),
+             'elven steel': Material(30, 0.05, 0.27, 20, 400, 60, (210, 210, 210)),
+             'dwarven steel': Material(32, 0.04, 0.30, 22, 440, 80, (210, 210, 210)),
+             'titanium': Material(35, 0.06, 0.28, 25, 500, 45, (135, 134, 129)),
+             'orichalcum': Material(40, 0.08, 0.29, 30, 500, 75, (255, 102, 102)),
+             'nanotube': Material(40, 0.08, 0.29, 30, 500, 10, (51, 0, 0)),
+             'neutronium': Material(45, 0.1, 0.29, 35, 600, 1000, (0, 255, 255)),
+             'angelbone': Material(45, 0.1, 0.3, 35, 600, 20, (204, 255, 255)),
+             'duranium': Material(50, 0.12, 0.31, 40, 700, 30, (200, 200, 200)),
+             'tritanium': Material(55, 0.14, 0.32, 45, 800, 50, (135, 134, 129)),
+             'octiron': Material(60, 0.16, 0.33, 50, 900, 85, (0, 0, 0)),
+             'diamond': Material(65, 0.18, 0.34, 55, 1000, 35, (200, 200, 255)),
+             'alicorn': Material(70, 0.2, 0.35, 60, 1100, 30, (150, 150, 255)),
+             'impervium': Material(75, 0.22, 0.36, 65, 1200, 80, (150, 150, 150)),
+             'dragonbone': Material(80, 0.24, 0.37, 70, 1300, 20, (255, 255, 204)),
+             'devilbone': Material(85, 0.26, 0.38, 75, 1400, 20, (255, 204, 204)),
+             'mithril': Material(90, 0.28, 0.39, 80, 1500, 10, (192, 192, 192)),
+             'infernal steel': Material(95, 0.3, 0.4, 85, 1600, 79, (255, 0, 0)),
+             'kryptonite': Material(100, 0.32, 0.41, 90, 1700, 32, (0, 255, 0)),
+             'corbomite': Material(105, 0.34, 0.42, 95, 1800, 50, (0, 150, 0)),
+             'tachyonite': Material(110, 0.36, 0.43, 100, 1900, -10, (0, 0, 255)),
+             'vibranium': Material(115, 0.38, 0.44, 105, 2000, 100, (200, 200, 255)),
+             'forbidium': Material(120, 0.4, 0.45, 110, 2100, 200, (200, 200, 200)),
+             'starmetal': Material(125, 0.42, 0.46, 115, 2200, 150, (255, 255, 255)),
+             'phlebotinum': Material(130, 0.44, 0.47, 120, 2300, 40, (255, 255, 0)),
+             'beskar': Material(135, 125, 0.46, 0.48, 2400, 80, (210, 210, 210)),
+             'unobtainium': Material(140, 0.48, 0.49, 130, 2500, 10, (255, 0, 255)),
+             'adamantine': Material(145, 0.5, 0.5, 135, 2600, 100, (0, 0, 0))}
 armormaterials = [material for material in materials if not materials[material].armor == None]
 weaponmaterials = [material for material in materials if not materials[material].damage == None]
 likeliestmaterialbylevel = ['bone',
@@ -192,13 +192,14 @@ class Dagger(Item):
         self.wieldable = True
         self.weapon = True
         self.bane = bane
+        self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
         self.weight = 6*density
 
     def attackslist(self):
-        return[Attack(self.name, 'stabbed', 'stabbed', '', '', 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('bleed', 0.2)])]
+        return[Attack(self.name, 'stabbed', 'stabbed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, self.bane, [('bleed', 0.2)])]
 
 def randomdagger(owner, x, y, level):
     enchantment = 0
@@ -224,6 +225,7 @@ class Spear(Item):
         self.wieldable = True
         self.weapon = True
         self.bane = bane
+        self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
@@ -231,9 +233,9 @@ class Spear(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('charge',)])]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, self.bane, [('charge',)])]
         else:
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('charge',)])]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('charge',)])]
 
 def randomspear(owner, x, y, level):
     enchantment = 0
@@ -259,6 +261,7 @@ class Mace(Item):
         self.wieldable = True
         self.weapon = True
         self.bane = bane
+        self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = int(materials[material].damage*1.2) + enchantment
         density = materials[material].density
@@ -266,9 +269,9 @@ class Mace(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.8, 1, self.mindamage, self.maxdamage, self.bane, [('knockback', 0.2)])]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, self.bane, [('knockback', 0.2)])]
         else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.6, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('knockback', 0.1)])]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [('knockback', 0.1)])]
 
 def randommace(owner, x, y, level):
     enchantment = 0
@@ -279,43 +282,87 @@ def randommace(owner, x, y, level):
         bane = [np.random.choice(utils.enemyfactions)]
     return Mace(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
 
+class Sword(Item):
+    def __init__(self, owner, x, y, material, enchantment, bane):
+        if enchantment == 0:
+            enchaname = ''
+        elif enchantment > 0:
+            enchaname = '+' + repr(enchantment) + ' '
+        banename = ''
+        for b in bane:
+            banename += b + '-bane '
+        name = enchaname + banename + material + ' sword'
+        color = materials[material].color
+        super().__init__(owner, x, y, name, '/', color)
+        self.wieldable = True
+        self.weapon = True
+        self.bane = bane
+        self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
+        self.mindamage = 1 + enchantment
+        self.maxdamage = int(materials[material].damage*1.25) + enchantment
+        density = materials[material].density
+        self.weight = 50*density
+
+    def attackslist(self):
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, self.bane, [])]
+        else:
+            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), self.bane, [])]
+
+def randomsword(owner, x, y, level):
+    enchantment = 0
+    while np.random.rand() < 0.5 + level/100:
+        enchantment += 1
+    bane = []
+    if np.random.rand() < 0.2:
+        bane = [np.random.choice(utils.enemyfactions)]
+    return Sword(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
+
+class PickAxe(Item):
+    def __init__(self, owner, x, y, material, enchantment, bane):
+        if enchantment == 0:
+            enchaname = ''
+        elif enchantment > 0:
+            enchaname = '+' + repr(enchantment) + ' '
+        banename = ''
+        for b in bane:
+            banename += b + '-bane '
+        name = enchaname + banename + material + ' pickaxe'
+        color = materials[material].color
+        super().__init__(owner, x, y, name, '/', color)
+        self.wieldable = True
+        self.weapon = True
+        self.bane = bane
+        self.hitpropability = 0.6 + materials[material].hitbonus + 0.01*enchantment
+        self.mindamage = 1 + enchantment
+        self.maxdamage = int(materials[material].damage*1.5) + enchantment
+        self._minespeed = materials[material].minespeed
+        density = materials[material].density
+        self.weight = 12*density + 1500
+
+    def attackslist(self):
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return[Attack('pickaxe', 'hit', 'hit', ' with a pickaxe', ' with a pickaxe', self.hitpropability, 1.5, self.mindamage, self.maxdamage, self.bane, [])]
+        else:
+            return[Attack('pickaxe', 'hit', 'hit', ' with a pickaxe', ' with a pickaxe', 0.67*self.hitpropability, 2, self.mindamage, int(0.67*self.maxdamage), self.bane, [])]
+
+    def minespeed(self):
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return self._minespeed
+        else:
+            return 0.75*self._minespeed
+
+def randompickaxe(owner, x, y, level):
+    enchantment = 0
+    while np.random.rand() < 0.5 + level/100:
+        enchantment += 1
+    bane = []
+    if np.random.rand() < 0.2:
+        bane = [np.random.choice(utils.enemyfactions)]
+    return PickAxe(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
+
 def randomweapon(owner, x, y, level):
-    return np.random.choice([randomdagger, randomspear, randommace])(owner, x, y, level)
-
-class LightPick(Item):
-    def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'light pick', '\\', (186, 100, 13))
-        self.wieldable = True
-        self.weapon = True
-        self.weight = 1500
-
-    def attackslist(self):
-        return[Attack('light pick', 'hit', 'hit', ' with a light pick', ' with a light pick', 0.6, 1.5, 1, 20, [], [])]
-
-    def minespeed(self):
-        return 0.25
-
-class HeavyPick(Item):
-    def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'heavy pick', '\\', (186, 100, 13))
-        self.wieldable = True
-        self.weapon = True
-        self.weight = 3000
-
-    def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.6, 1.5, 1, 30, [], [])]
-        else:
-            return[Attack('heavy pick', 'hit', 'hit', ' with a heavy pick', ' with a heavy pick', 0.4, 2, 1, 20, [], [])]
-
-    def minespeed(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return 0.33
-        else:
-            return 0.2
-
-def randomtool(owner, x, y):
-    return np.random.choice([HeavyPick, LightPick])(owner, x, y)
+    return np.random.choice([randomdagger, randomspear, randommace, randomsword, randompickaxe])(owner, x, y, level)
 
 class PieceOfArmor(Item):
     def __init__(self, owner, x, y, wearcategory, material, enchantment):
