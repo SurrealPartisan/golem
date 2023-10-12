@@ -27,15 +27,54 @@ materials = {'leather': Material(None, 5, 100, 4, (186, 100, 13)),
              'orichalcum': Material(40, 30, 500, 75, (255, 102, 102)),
              'nanotube': Material(40, 30, 500, 10, (51, 0, 0)),
              'neutronium': Material(45, 35, 600, 1000, (0, 255, 255)),
-             'angelbone': Material(45, 35, 600, 20, (204, 255, 255))
-             }
+             'angelbone': Material(45, 35, 600, 20, (204, 255, 255)),
+             'duranium': Material(50, 40, 700, 30, (200, 200, 200)),
+             'tritanium': Material(55, 45, 800, 50, (135, 134, 129)),
+             'octiron': Material(60, 50, 900, 85, (0, 0, 0)),
+             'diamond': Material(65, 55, 1000, 35, (200, 200, 255)),
+             'alicorn': Material(70, 60, 1100, 30, (150, 150, 255)),
+             'impervium': Material(75, 65, 1200, 80, (150, 150, 150)),
+             'dragonbone': Material(80, 70, 1300, 20, (255, 255, 204)),
+             'devilbone': Material(85, 75, 1400, 20, (255, 204, 204)),
+             'mithril': Material(90, 80, 1500, 10, (192, 192, 192)),
+             'infernal steel': Material(95, 85, 1600, 79, (255, 0, 0)),
+             'kryptonite': Material(100, 90, 1700, 32, (0, 255, 0)),
+             'corbomite': Material(105, 95, 1800, 50, (0, 150, 0)),
+             'tachyonite': Material(110, 100, 1900, -10, (0, 0, 255)),
+             'vibranium': Material(115, 105, 2000, 100, (200, 200, 255)),
+             'forbidium': Material(120, 110, 2100, 200, (200, 200, 200)),
+             'starmetal': Material(125, 115, 2200, 150, (255, 255, 255)),
+             'phlebotinum': Material(130, 120, 2300, 40, (255, 255, 0)),
+             'beskar': Material(135, 125, 2400, 80, (210, 210, 210)),
+             'unobtainium': Material(140, 130, 2500, 10, (255, 0, 255)),
+             'adamantine': Material(145, 135, 2600, 100, (0, 0, 0))}
 armormaterials = [material for material in materials if not materials[material].armor == None]
 weaponmaterials = [material for material in materials if not materials[material].damage == None]
 likeliestmaterialbylevel = ['bone',
                             'bronze',
                             'elven steel',
                             'orichalcum',
-                            'angelbone']
+                            'angelbone',
+                            'duranium',
+                            'tritanium',
+                            'octiron',
+                            'diamond',
+                            'alicorn',
+                            'impervium',
+                            'dragonbone',
+                            'devilbone',
+                            'mithril',
+                            'infernal steel',
+                            'kryptonite',
+                            'corbomite',
+                            'tachyonite',
+                            'vibranium',
+                            'forbidium',
+                            'starmetal',
+                            'phlebotinum',
+                            'beskar',
+                            'unobtainium',
+                            'adamantine']
 
 class Item():
     def __init__(self, owner, x, y, name, char, color):
@@ -168,7 +207,7 @@ def randomdagger(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Dagger(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment, bane)
+    return Dagger(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
 
 class Spear(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -203,7 +242,7 @@ def randomspear(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Spear(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment, bane)
+    return Spear(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
 
 class Mace(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -238,7 +277,7 @@ def randommace(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Mace(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment, bane)
+    return Mace(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
 
 def randomweapon(owner, x, y, level):
     return np.random.choice([randomdagger, randomspear, randommace])(owner, x, y, level)
@@ -313,7 +352,7 @@ def randomarmor(owner, x, y, level):
     enchantment = 0
     while np.random.rand() < 0.5 + level/100:
         enchantment += 1
-    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.05)), enchantment)
+    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment)
 
 class Backpack(Item):
     def __init__(self, owner, x, y):
