@@ -678,6 +678,33 @@ def game():
         for event in pygame.event.get():
             #try:
                 if event.type == pygame.locals.KEYDOWN:
+                    
+                    if player.dying() and gamestate != 'dead':
+                        if file_exists('highscores.pickle'):
+                            with open('highscores.pickle', 'rb') as f:
+                                highscores = pickle.load(f)
+                        else:
+                            highscores = []
+                        if player.causeofdeath[0] == 'attack':
+                            deathmessage = 'killed by a ' + player.causeofdeath[1].name
+                        elif player.causeofdeath[0] == 'smite':
+                            deathmessage = 'smitten to death by ' + player.causeofdeath[1].name+ ', the ' + player.causeofdeath[1].faction + '-god of ' + player.causeofdeath[1].sin
+                        elif player.causeofdeath[0] == 'bloodloss':
+                            deathmessage = 'bled to death after being attacked by a ' + ' and a '.join([creat.name for creat in player.causeofdeath[1]])
+                        elif player.causeofdeath[0] == 'starvation':
+                            deathmessage = 'starved to death'
+                        elif player.causeofdeath[0] == 'consumption':
+                            deathmessage = 'died from adverse effects of ' + player.causeofdeath[1].name
+                        else:
+                            deathmessage = 'died from unknown causes'
+                        deathmessage += (' on dungeon level ' + repr(player.world_i+1) + '.')
+                        highscores.append((player.xp, player.individualname, deathmessage))
+                        with open('highscores.pickle', 'wb') as f:
+                            pickle.dump(highscores, f)
+                        gamestate = 'dead'
+                        player.log().append('Press escape to end.')
+                        logback = 0
+
                     if gamestate == 'free':
                         # Player movements
                         if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
@@ -1361,32 +1388,6 @@ def game():
                                 logback = len(player.log())-logheight
                         if event.key == pygame.locals.K_END:
                             logback = 0
-
-                    if player.dying() and gamestate != 'dead':
-                        if file_exists('highscores.pickle'):
-                            with open('highscores.pickle', 'rb') as f:
-                                highscores = pickle.load(f)
-                        else:
-                            highscores = []
-                        if player.causeofdeath[0] == 'attack':
-                            deathmessage = 'killed by a ' + player.causeofdeath[1].name
-                        elif player.causeofdeath[0] == 'smite':
-                            deathmessage = 'smitten to death by ' + player.causeofdeath[1].name+ ', the ' + player.causeofdeath[1].faction + '-god of ' + player.causeofdeath[1].sin
-                        elif player.causeofdeath[0] == 'bloodloss':
-                            deathmessage = 'bled to death after being attacked by a ' + ' and a '.join([creat.name for creat in player.causeofdeath[1]])
-                        elif player.causeofdeath[0] == 'starvation':
-                            deathmessage = 'starved to death'
-                        elif player.causeofdeath[0] == 'consumption':
-                            deathmessage = 'died from adverse effects of ' + player.causeofdeath[1].name
-                        else:
-                            deathmessage = 'died from unknown causes'
-                        deathmessage += (' on dungeon level ' + repr(player.world_i+1) + '.')
-                        highscores.append((player.xp, player.individualname, deathmessage))
-                        with open('highscores.pickle', 'wb') as f:
-                            pickle.dump(highscores, f)
-                        gamestate = 'dead'
-                        player.log().append('Press escape to end.')
-                        logback = 0
 
                     # Update window after any command or keypress
                     draw()
