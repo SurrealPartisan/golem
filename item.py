@@ -117,6 +117,7 @@ class Item():
         self.bodypart = False
         self.wearable = False
         self.isarmor = False
+        self._info = 'No information available.'
 
     def hp(self):
         return self.maxhp - self.damagetaken
@@ -129,6 +130,9 @@ class Item():
 
     def minespeed(self):
         return 0
+
+    def info(self):
+        return self._info
 
 class Food(Item):
     def __init__(self, owner, x, y, name, char, color, maxhp, material, weight):
@@ -228,7 +232,7 @@ def randomdagger(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Dagger(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
+    return Dagger(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
 class Spear(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -264,7 +268,7 @@ def randomspear(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Spear(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
+    return Spear(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
 class Mace(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -300,7 +304,7 @@ def randommace(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Mace(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
+    return Mace(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
 class Sword(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -336,7 +340,7 @@ def randomsword(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return Sword(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
+    return Sword(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
 class PickAxe(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -362,9 +366,9 @@ class PickAxe(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack('pickaxe', 'hit', 'hit', ' with a pickaxe', ' with a pickaxe', self.hitpropability, 1.5, self.mindamage, self.maxdamage, self.bane, [])]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.5, self.mindamage, self.maxdamage, self.bane, [])]
         else:
-            return[Attack('pickaxe', 'hit', 'hit', ' with a pickaxe', ' with a pickaxe', 0.67*self.hitpropability, 2, self.mindamage, int(0.67*self.maxdamage), self.bane, [])]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 2, self.mindamage, int(0.67*self.maxdamage), self.bane, [])]
 
     def minespeed(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -379,7 +383,7 @@ def randompickaxe(owner, x, y, level):
     bane = []
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
-    return PickAxe(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment, bane)
+    return PickAxe(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
 def randomweapon(owner, x, y, level):
     return np.random.choice([randomdagger, randomspear, randommace, randomsword, randompickaxe])(owner, x, y, level)
@@ -419,7 +423,7 @@ def randomarmor(owner, x, y, level):
     enchantment = 0
     while np.random.rand() < 0.5 + level/100:
         enchantment += 1
-    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.01)), enchantment)
+    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment)
 
 class Backpack(Item):
     def __init__(self, owner, x, y):

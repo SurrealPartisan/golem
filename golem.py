@@ -152,45 +152,15 @@ def game():
                     y = np.random.randint(mapheight)
                 item.randomarmor(cave.items, x, y, i)
 
-            if i == 0:
-                for j in range(5):
-                    x = y = 0
-                    while cave.walls[x, y] != 0:
-                        x = np.random.randint(mapwidth)
-                        y = np.random.randint(mapheight)
-                    cave.creatures.append(creature.Zombie(cave, i, x, y))
-
-            if i < 2:
-                for j in range(5):
-                    x = y = 0
-                    while cave.walls[x, y] != 0:
-                        x = np.random.randint(mapwidth)
-                        y = np.random.randint(mapheight)
-                    cave.creatures.append(creature.MolePerson(cave, i, x, y))
-
-            if 0 < i < 3:
-                for j in range(5):
-                    x = y = 0
-                    while cave.walls[x, y] != 0:
-                        x = np.random.randint(mapwidth)
-                        y = np.random.randint(mapheight)
-                    cave.creatures.append(creature.CaveOctopus(cave, i, x, y))
-
-            if 1 < i < 4:
-                for j in range(5):
-                    x = y = 0
-                    while cave.walls[x, y] != 0:
-                        x = np.random.randint(mapwidth)
-                        y = np.random.randint(mapheight)
-                    cave.creatures.append(creature.Goblin(cave, i, x, y))
-
-            if 2 < i < 5:
-                for j in range(5):
-                    x = y = 0
-                    while cave.walls[x, y] != 0:
-                        x = np.random.randint(mapwidth)
-                        y = np.random.randint(mapheight)
-                    cave.creatures.append(creature.Wolf(cave, i, x, y))
+            for j in range(5):
+                x = y = 0
+                enemytypes = [typ[0] for typ in creature.enemytypesbylevel[i]]
+                p = np.array([typ[1] for typ in creature.enemytypesbylevel[i]])
+                p = p/sum(p)
+                while cave.walls[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                cave.creatures.append(np.random.choice(enemytypes, p=p)(cave, i, x, y))
 
             if 3 < i < 6:
                 for j in range(5):
@@ -1121,7 +1091,7 @@ def game():
                                 selecteditem.owner = selected.wielded
                                 player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
                                 player.previousaction = 'wield'
-                                logback = 0
+                            logback = 0
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0

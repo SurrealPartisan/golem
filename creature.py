@@ -618,26 +618,26 @@ class CaveOctopus(Creature):
         else:
             return(['wait', 1])
 
-class Goblin(Creature):
+class Hobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
         self.faction = 'goblinoid'
-        self.char = 'g'
+        self.char = 'h'
         self.color = (0, 255, 0)
-        self.name = 'goblin'
+        self.name = 'hobgoblin'
         self.x = x
         self.y = y
-        self.torso = bodypart.GoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.GoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.GoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.GoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.GoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.GoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.GoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.GoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.GoblinEye(self.bodyparts, 0, 0))
+        self.torso = bodypart.HobgoblinTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('left arm', bodypart.HobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right arm', bodypart.HobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.HobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.HobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.HobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.HobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.HobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.HobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
         
     def ai(self):
@@ -799,3 +799,265 @@ class Drillbot(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
+class Ghoul(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'undead'
+        self.char = 'g'
+        self.color = (191, 255, 255)
+        self.name = np.random.choice(['ghoul', 'headless ghoul', 'one-armed ghoul', 'crawler ghoul'], p=[0.7, 0.1, 0.1, 0.1])
+        self.x = x
+        self.y = y
+        self.torso = bodypart.GhoulTorso(self.bodyparts, 0, 0)
+        if self.name != 'one-armed ghoul':
+            self.bodyparts[0].connect('left arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect('right arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+        else:
+            if np.random.choice(2):
+                self.bodyparts[0].connect('left arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+            else:
+                self.bodyparts[0].connect('right arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+        if self.name != 'crawler ghoul':
+            self.bodyparts[0].connect('left leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect('right leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.GhoulHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.GhoulStomach(self.bodyparts, 0, 0))
+        if self.name != 'headless ghoul':
+            self.bodyparts[0].connect('head', bodypart.GhoulHead(self.bodyparts, 0, 0))
+            self.bodyparts[-1].connect('brain', bodypart.GhoulBrain(self.bodyparts, 0, 0))
+            self.bodyparts[-2].connect('left eye', bodypart.GhoulEye(self.bodyparts, 0, 0))
+            self.bodyparts[-3].connect('right eye', bodypart.GhoulEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+class SmallFireElemental(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'elemental'
+        self.char = 'f'
+        self.color = (255, 204, 0)
+        self.name = 'small fire elemental'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.SmallFireElementalTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('front left limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.SmallFireElementalHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.SmallFireElementalHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.SmallFireElementalBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('eye', bodypart.SmallFireElementalEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+class DireWolf(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'canine'
+        self.char = 'd'
+        self.color = (100, 100, 150)
+        self.name = 'dire wolf'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.DireWolfTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('front left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.DireWolfHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.DireWolfStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('tail', bodypart.DireWolfTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.DireWolfHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.DireWolfBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.DireWolfEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.DireWolfEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                maxdmglist = [atk[8] for atk in self.attackslist()]
+                i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+class Jobgoblin(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'goblinoid'
+        self.char = 'j'
+        self.color = (0, 255, 0)
+        self.name = 'jobgoblin'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.JobgoblinTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('left arm', bodypart.JobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right arm', bodypart.JobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.JobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.JobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.JobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.JobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.JobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.JobgoblinEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0:
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime()
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+
+
+enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy type and a propability weight for its presence.
+    [(Zombie, 10), (MolePerson, 10)],
+    [(Zombie, 5), (MolePerson, 5), (CaveOctopus, 10)],
+    [(CaveOctopus, 10), (Hobgoblin, 10)],
+    [(Hobgoblin, 10), (Wolf, 10)],
+    [(Wolf, 10), (Drillbot, 10)],
+    [(Drillbot, 10), (Ghoul, 10)],
+    [(Ghoul, 10), (SmallFireElemental, 10)],
+    [(SmallFireElemental, 10), (DireWolf, 10)],
+    [(DireWolf, 10), (Jobgoblin, 10)]
+    ]

@@ -10,9 +10,9 @@ import numpy as np
 import pygame.locals as lc
 
 mapwidth, mapheight = 100, 40
-numlevels = 5
+numlevels = 8
 
-enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot']
+enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot', 'elemental']
 sins = ['pride', 'greed', 'wrath', 'envy', 'lust', 'gluttony', 'sloth']
 letters = 'abcdefghijklmnopqrstuvwxyz'
 consonants = 'bcdfghjklmnpqrstvwxyz'
