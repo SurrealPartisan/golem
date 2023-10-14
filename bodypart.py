@@ -1331,6 +1331,8 @@ class SmallFireElementalTorso(BodyPart):
         self.weight = 400
         self.carryingcapacity = 60000
         self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
 
 class SmallFireElementalHead(BodyPart):
     def __init__(self, owner, x, y):
@@ -1345,6 +1347,8 @@ class SmallFireElementalHead(BodyPart):
         self._wearwieldname = 'head'
         self.weight = 100
         self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
 
 class SmallFireElementalEye(BodyPart):
     def __init__(self, owner, x, y):
@@ -1354,6 +1358,8 @@ class SmallFireElementalEye(BodyPart):
         self.maxhp = 20
         self.weight = 0
         self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
 
     def sight(self):
         if not self.destroyed():
@@ -1368,6 +1374,8 @@ class SmallFireElementalBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 30
         self.material = "elemental"
+        self.consumable = False
+        self.edible = False
         self.weight = 10
         self.log = []
         self.seen = []
@@ -1384,6 +1392,8 @@ class SmallFireElementalHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 30
         self.material = "elemental"
+        self.consumable = False
+        self.edible = False
         self.weight = 10
 
 class SmallFireElementalTentacle(BodyPart):
@@ -1397,6 +1407,8 @@ class SmallFireElementalTentacle(BodyPart):
         self._wearwieldname = 'tentacle'
         self.worn = {'tentacle armor': listwithowner([], self)}
         self.material = "elemental"
+        self.consumable = False
+        self.edible = False
         self.weight = 100
         self.carryingcapacity = 20000
 
