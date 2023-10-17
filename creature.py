@@ -99,7 +99,7 @@ class Creature():
 
     def gainhunger(self, time):
         livingmass = sum([part.weight for part in self.bodyparts if part.material == 'living flesh'])
-        self.hunger += livingmass*time*2e-06
+        self.hunger += livingmass*time*1e-06
 
     def starve(self):
         part = np.random.choice([part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()])

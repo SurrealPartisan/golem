@@ -139,6 +139,7 @@ class Food(Item):
         super().__init__(owner, x, y, name, char, color)
         self.maxhp = maxhp
         self.material = material
+        self.baseweight = weight
         self.weight = weight
         self.basename = name
         self.consumable = True
@@ -150,6 +151,7 @@ class Food(Item):
             user.hunger = 0
             user.log().append('You ate some of the ' + self.name + '.')
             user.log().append('You are satiated.')
+            self.weight = int(self.hp() / self.maxhp * self.baseweight)
             if self.damagetaken < 0.4*self.maxhp:
                 self.name = 'partially eaten ' + self.basename
             elif self.damagetaken < 0.6*self.maxhp:
@@ -165,11 +167,23 @@ class Food(Item):
                 user.log().append('You are satiated.')
 
 def randomfood(owner, x, y):
-    i = np.random.randint(2)
+    i = np.random.randint(8)
     if i == 0:
-        return Food(owner, x, y, 'hamburger', '*', (250, 220, 196), 20, 'cooked meat', 250)
+        return Food(owner, x, y, 'hamburger', '+', (250, 220, 196), 20, 'cooked meat', 250)
     elif i == 1:
-        return Food(owner, x, y, 'veggie burger', '*', (250, 220, 196), 20, 'vegetables', 250)
+        return Food(owner, x, y, 'veggie burger', '+', (250, 220, 196), 20, 'vegetables', 250)
+    elif i == 2:
+        return Food(owner, x, y, 'banana', '+', (227, 207, 87), 7, 'vegetables', 120)
+    elif i == 3:
+        return Food(owner, x, y, 'sausage', '+', (97,23,23), 8, 'cooked meat', 100)
+    elif i == 4:
+        return Food(owner, x, y, 'blood sausage', '+', (0, 0, 0), 12, 'cooked meat', 100)
+    elif i == 5:
+        return Food(owner, x, y, 'mushroom', '+', (191, 179, 162), 5, 'vegetables', 60)
+    elif i == 6:
+        return Food(owner, x, y, 'tomato', '+', (151, 46, 37), 3, 'vegetables', 100)
+    elif i == 7:
+        return Food(owner, x, y, 'fried fish', '+', (223, 130, 9), 10, 'cooked meat', 87)
 
 CureType = namedtuple('CureType', ['curedmaterial', 'name', 'hpgiven_base', 'dosage'])
 

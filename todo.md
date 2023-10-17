@@ -4,7 +4,7 @@ Minor
 * Solve the multiple brains problem
 * Different blessings and smites to different gods
 * Implement food poisoning
-* Make a setting for showing enemy movements sequentially
+* Prevent finishing an attack with a destroyed body part
 
 Major
 * Sense of smell for mole people and others
