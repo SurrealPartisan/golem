@@ -109,6 +109,7 @@ class Item():
         self.damagetaken = 0
         self.weight = 0
         self.carryingcapacity = 0
+        self.breathepoisonresistance = 0
         self.consumable = False
         self.edible = False
         self.cure = False

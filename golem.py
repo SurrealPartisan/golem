@@ -131,7 +131,7 @@ def game():
                     y = np.random.randint(mapheight)
                 item.Cure(cave.items, x, y, infusiontypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
 
-            for j in range(10):
+            for j in range(np.random.randint(6,11)):
                 x = y = 0
                 while cave.walls[x, y] != 0:
                     x = np.random.randint(mapwidth)
@@ -152,7 +152,7 @@ def game():
                     y = np.random.randint(mapheight)
                 item.randomarmor(cave.items, x, y, i)
 
-            for j in range(5):
+            for j in range(10):
                 x = y = 0
                 enemytypes = [typ[0] for typ in creature.enemytypesbylevel[i]]
                 p = np.array([typ[1] for typ in creature.enemytypesbylevel[i]])
@@ -161,14 +161,6 @@ def game():
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 cave.creatures.append(np.random.choice(enemytypes, p=p)(cave, i, x, y))
-
-            if 3 < i < 6:
-                for j in range(5):
-                    x = y = 0
-                    while cave.walls[x, y] != 0:
-                        x = np.random.randint(mapwidth)
-                        y = np.random.randint(mapheight)
-                    cave.creatures.append(creature.Drillbot(cave, i, x, y))
 
             for creat in cave.creatures:
                 for gd in gods:
@@ -186,6 +178,8 @@ def game():
         player.bodyparts[0].connect('left leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('right leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
+        player.bodyparts[0].connect('left lung', bodypart.HumanLung(player.bodyparts, 0, 0))
+        player.bodyparts[0].connect('right lung', bodypart.HumanLung(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('stomach', bodypart.HumanStomach(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('head', bodypart.HumanHead(player.bodyparts, 0, 0))
         player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
@@ -220,6 +214,7 @@ def game():
         fovmap = fov(cave.walls, player.x, player.y, player.sight())
         # Background
         # win.setscreencolors(None, (0,0,0), clear=True)
+        win.settint(0, 0, 0, (0, 0, mapwidth, mapheight + statuslines + logheight))
         for i in range(mapwidth):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')  # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
@@ -273,6 +268,13 @@ def game():
         win.putchars(player.char, x=player.x, y=player.y, 
                      bgcolor=(64,64,64), fgcolor=player.color)
 
+        # Poison gas
+        for i in range(mapwidth):
+            for j in range(mapheight):
+                if fovmap[i,j]:
+                    if cave.poisongas[i,j]:
+                        win.settint(0, 128, 0, (i, j, 1, 1))
+
         # Status
         for i in range(mapwidth):
             for j in range(statuslines):
@@ -316,8 +318,21 @@ def game():
             statuseffects.append(('Starving', (255, 0, 0)))
         elif player.hungry():
             statuseffects.append(('Hungry', (255, 255, 0)))
-        if player.slowed():
+        if player.poisonclock > 0:
+            if len([part for part in player.bodyparts if part.material == 'living flesh']) > 0:
+                statuseffects.append(('Poisoned', (255, 0, 0)))
+            else:
+                statuseffects.append(('Poisoned', (0, 0, 0)))
+        if player.slowed() == 1:
             statuseffects.append(('Slowed', (255, 255, 0)))
+        if player.slowed() > 1:
+            statuseffects.append(('Slowed', (255, 0, 0)))
+        if player.weakened():
+            statuseffects.append(('Weakened', (255, 255, 0)))
+        if player.vomitclock > 0:
+            statuseffects.append(('Vomiting', (255, 255, 0)))
+        if player.disorientedclock > 0:
+            statuseffects.append(('Disoriented', (255, 255, 0)))
         textx = 0
         for effect in statuseffects:
             win.putchars(effect[0], x=textx, y = mapheight+2, bgcolor=((128,128,128)), fgcolor = effect[1])
@@ -572,12 +587,27 @@ def game():
 
     def _updatetime(time):
         player.bleed(time)
+        player.applypoison(time)
+        player.weakenedclock = max(0, player.weakenedclock - time)
+        player.disorientedclock = max(0, player.disorientedclock - time)
+        player.slowedclock = max(0, player.slowedclock - time)
         player.gainhunger(time)
+        vomiting = player.vomitclock > 0
+        player.vomitclock = max(0, player.vomitclock - time)
+        if vomiting and player.vomitclock == 0:
+            player.log().append('You stopped vomiting.')
         if player.starving():
             player.starvationclock += time
             for i in range(int(player.starvationclock // 1)):
                 player.starve()
             player.starvationclock = player.starvationclock % 1
+        player.suffocate(time)
+        if cave.poisongas[player.x, player.y]:
+            livingparts = [part for part in player.bodyparts if part.material == 'living flesh']
+            if np.random.rand() > player.breathepoisonresistance() and len(livingparts) > 0:
+                if player.poisonclock == 0:
+                    player.log().append('You were poisoned by the gas.')
+                player.poisonclock = max(player.poisonclock, np.random.rand()*20)
         for gd in gods:
             for creat in gd.prayerclocks:
                 gd.prayerclocks[creat] += time
@@ -596,8 +626,16 @@ def game():
         _updatetime(time)
 
     def moveorattack(dx, dy):
+        disoriented = False
+        if player.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            player.log().append('You stumble around.')
+            originaldxdy = (dx, dy)
+            while (dx,dy) == (0,0) or (dx,dy) == originaldxdy:
+                dx = np.random.choice([-1,0,1])
+                dy = np.random.choice([-1,0,1])
         targets = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
-        if len(targets) > 0:
+        if len(targets) > 0 and not disoriented:
             target = targets[0]
             gamestate = 'chooseattack'
             logback = len(player.attackslist()) - logheight + 1
@@ -663,6 +701,10 @@ def game():
                             deathmessage = 'bled to death after being attacked by a ' + ' and a '.join([creat.name for creat in player.causeofdeath[1]])
                         elif player.causeofdeath[0] == 'starvation':
                             deathmessage = 'starved to death'
+                        elif player.causeofdeath[0] == 'starvation':
+                            deathmessage = 'starved to death'
+                        elif player.causeofdeath[0] == 'suffocation':
+                            deathmessage = 'suffocated to death'
                         elif player.causeofdeath[0] == 'consumption':
                             deathmessage = 'died from adverse effects of ' + player.causeofdeath[1].name
                         else:
@@ -1040,9 +1082,12 @@ def game():
                                                 player.log().append(stomach.foodprocessing[selected.material][2])
                                         elif stomach.foodprocessing[selected.material][0] == 0 and player.starving():
                                             selected.consume(player, stomach.foodprocessing[selected.material][1])
-                                            if stomach.foodprocessing[selected.material][2] != None:
-                                                player.log().append(stomach.foodprocessing[selected.material][2])
-                                            # Add the possibility of getting sick
+                                            if np.random.rand() > 0.2:
+                                                if stomach.foodprocessing[selected.material][2] != None:
+                                                    player.log().append(stomach.foodprocessing[selected.material][2])
+                                            else:
+                                                player.log().append('You got food poisoning and started vomiting!')
+                                                player.vomitclock += np.random.rand()*20
                                         elif stomach.foodprocessing[selected.material][0] == 0:
                                             player.log().append('Your stomach doesn\'t tolerate ' + selected.material + ' very well, and you are not desperate enough to try.')
                                         elif stomach.foodprocessing[selected.material][0] == -1:
@@ -1720,6 +1765,7 @@ def mainmenu():
     buttonfunctions = [game, halloffame, options, credits, quitgame]
     selected = 0
     while True:
+        win.settint(0, 0, 0, (0, 0, mapwidth, mapheight + statuslines + logheight))
         for i in range(mapwidth):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')

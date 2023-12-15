@@ -18,6 +18,7 @@ class World():
         self.height = height
         self.walls = np.ones((width, height))
         self.spiderwebs = np.zeros((width, height))
+        self.poisongas = np.zeros((width, height))
         self.items = []
         self.creatures = []
         self.altars = []
@@ -102,6 +103,18 @@ class World():
                 x = np.random.randint(self.width)
                 y = np.random.randint(self.height)
             spreadwebs(x, y)
+
+        def spreadgas(x, y):
+            self.poisongas[x, y] = 1
+            for neighbor in [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
+                if 0 < neighbor[0] < self.width-1 and 0 < neighbor[1] < self.height-1 and self.walls[neighbor] == 0 and self.poisongas[neighbor] == 0 and np.random.randint(3) == 0:
+                    spreadgas(neighbor[0], neighbor[1])
+        for i in range(np.random.randint(10)):
+            x = y = 0
+            while self.walls[x, y] != 0:
+                x = np.random.randint(self.width)
+                y = np.random.randint(self.height)
+            spreadgas(x, y)
 
         x = y = 0
         while self.walls[x, y] != 0:

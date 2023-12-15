@@ -42,6 +42,7 @@ class BodyPart(item.Item):
         self.consumable = True
         self.edible = True
         self._defensecoefficient = 0.8
+        self._attackpoisonresistance = 0
         self._wearwieldname = name
         self.bleedclocks = []
 
@@ -71,6 +72,9 @@ class BodyPart(item.Item):
             return self._defensecoefficient
         else:
             return self.parentalconnection.defensecoefficient*self._defensecoefficient
+
+    def attackpoisonresistance(self):
+        return self._attackpoisonresistance
 
     def wearwieldname(self):
         if self.parentalconnection == None:
@@ -133,6 +137,8 @@ class HumanTorso(BodyPart):
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
@@ -263,6 +269,15 @@ class HumanHeart(BodyPart):
         self.maxhp = 10
         self.weight = 300
 
+class HumanLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'human lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 600
+        self.breathepoisonresistance = 0
+
 class HumanStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'human stomach', '*', (255, 0, 0))
@@ -290,6 +305,8 @@ class ZombieTorso(BodyPart):
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], False, ''),
             'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
@@ -298,6 +315,7 @@ class ZombieTorso(BodyPart):
         self._wearwieldname = 'torso'
         self.weight = 40000
         self.carryingcapacity = 30000
+        self._attackpoisonresistance = 1
 
 class ZombieArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -311,6 +329,7 @@ class ZombieArm(BodyPart):
         self._wearwieldname = 'hand'
         self.worn = {'gauntlet': listwithowner([], self)}
         self.weight = 4000
+        self._attackpoisonresistance = 1
 
     def speed(self):
         if not self.destroyed():
@@ -350,6 +369,7 @@ class ZombieLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 15000
         self.carryingcapacity = 30000
+        self._attackpoisonresistance = 1
 
     def attackslist(self):
         if not self.destroyed():
@@ -380,6 +400,7 @@ class ZombieHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
+        self._attackpoisonresistance = 1
 
     def attackslist(self):
         if not self.destroyed():
@@ -395,6 +416,7 @@ class ZombieEye(BodyPart):
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 7
+        self._attackpoisonresistance = 1
 
     def sight(self):
         if not self.destroyed():
@@ -417,6 +439,7 @@ class ZombieBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self._attackpoisonresistance = 1
 
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -426,6 +449,17 @@ class ZombieHeart(BodyPart):
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 250
+        self._attackpoisonresistance = 1
+
+class ZombieLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie lung', '*', (150, 178, 82))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.material = 'undead flesh'
+        self.weight = 500
+        self.breathepoisonresistance = 0.5
 
 class ZombieStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -433,6 +467,7 @@ class ZombieStomach(BodyPart):
         self.categories = ['stomach']
         self.childconnections = {}
         self.maxhp = 10
+        self.material = "undead flesh"
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -440,6 +475,7 @@ class ZombieStomach(BodyPart):
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
             }
+        self._attackpoisonresistance = 1
 
 
 
@@ -454,6 +490,8 @@ class MolePersonTorso(BodyPart):
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
@@ -584,6 +622,15 @@ class MolePersonHeart(BodyPart):
         self.maxhp = 10
         self.weight = 300
 
+class MolePersonLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole person lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 600
+        self.breathepoisonresistance = 0
+
 class MolePersonStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole person stomach', '*', (255, 0, 0))
@@ -608,7 +655,11 @@ class OctopusHead(BodyPart):
             'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.8, armorapplies=True),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.8, armorapplies=True),
+            'central heart': BodyPartConnection(self, ['heart'], True, 'central ', defensecoefficient=0.8, armorapplies=True),
+            'left heart': BodyPartConnection(self, ['heart'], True, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right heart': BodyPartConnection(self, ['heart'], True, 'right ', defensecoefficient=0.8, armorapplies=True),
+            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
             'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left '),
@@ -711,6 +762,15 @@ class OctopusHeart(BodyPart):
         self.maxhp = 20
         self.weight = 500
 
+class OctopusGills(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'octopus gills', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 500
+        self.breathepoisonresistance = 0
+
 class OctopusStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'cave octopus stomach', '*', (255, 0, 0))
@@ -738,6 +798,8 @@ class HobgoblinTorso(BodyPart):
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 100
@@ -868,6 +930,15 @@ class HobgoblinHeart(BodyPart):
         self.maxhp = 20
         self.weight = 250
 
+class HobgoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'hobgoblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 600
+        self.breathepoisonresistance = 0.2
+
 class HobgoblinStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'hobgoblin stomach', '*', (255, 0, 0))
@@ -895,6 +966,8 @@ class WolfTorso(BodyPart):
             'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
@@ -989,6 +1062,15 @@ class WolfHeart(BodyPart):
         self.maxhp = 20
         self.weight = 500
 
+class WolfLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 600
+        self.breathepoisonresistance = 0
+
 class WolfStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'wolf stomach', '*', (255, 0, 0))
@@ -1024,6 +1106,7 @@ class DrillbotChassis(BodyPart):
             'back right wheel': BodyPartConnection(self, ['leg'], False, 'back right '),
             'arm': BodyPartConnection(self, ['arm'], False, ''),
             'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'coolant aerator system': BodyPartConnection(self, ['lung'], False, '', defensecoefficient=0.5, armorapplies=True),
             'biomass processor': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'left camera': BodyPartConnection(self, ['eye'], False, 'left '),
             'right camera': BodyPartConnection(self, ['eye'], False, 'right '),
@@ -1037,6 +1120,7 @@ class DrillbotChassis(BodyPart):
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
 class DrillbotWheel(BodyPart):
     def __init__(self, owner, x, y):
@@ -1051,6 +1135,7 @@ class DrillbotWheel(BodyPart):
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
     def speed(self):
         if not self.destroyed():
@@ -1073,6 +1158,7 @@ class DrillArm(BodyPart):
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
     def minespeed(self):
         return 0.5
@@ -1093,6 +1179,7 @@ class DrillbotCamera(BodyPart):
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
     def sight(self):
         if not self.destroyed():
@@ -1110,6 +1197,17 @@ class DrillbotPump(BodyPart):
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
+
+class DrillbotAerator(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'coolant aerator, model DB-100', '*', (0, 0, 255))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.weight = 600
+        self.material = 'electronics'
+        self.breathepoisonresistance = 0.5
 
 class DrillbotProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -1128,6 +1226,7 @@ class DrillbotProcessor(BodyPart):
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
 class DrillBotBiomassProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -1139,6 +1238,7 @@ class DrillBotBiomassProcessor(BodyPart):
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
@@ -1159,6 +1259,8 @@ class GhoulTorso(BodyPart):
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], False, ''),
             'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 175
@@ -1167,6 +1269,7 @@ class GhoulTorso(BodyPart):
         self._wearwieldname = 'torso'
         self.weight = 40000
         self.carryingcapacity = 60000
+        self._attackpoisonresistance = 1
 
 class GhoulArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -1180,6 +1283,7 @@ class GhoulArm(BodyPart):
         self._wearwieldname = 'hand'
         self.worn = {'gauntlet': listwithowner([], self)}
         self.weight = 4000
+        self._attackpoisonresistance = 1
 
     def speed(self):
         if not self.destroyed():
@@ -1219,6 +1323,7 @@ class GhoulLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 15000
         self.carryingcapacity = 30000
+        self._attackpoisonresistance = 1
 
     def attackslist(self):
         if not self.destroyed():
@@ -1249,6 +1354,7 @@ class GhoulHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
+        self._attackpoisonresistance = 1
 
     def attackslist(self):
         if not self.destroyed():
@@ -1264,6 +1370,7 @@ class GhoulEye(BodyPart):
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 7
+        self._attackpoisonresistance = 1
 
     def sight(self):
         if not self.destroyed():
@@ -1286,6 +1393,7 @@ class GhoulBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self._attackpoisonresistance = 1
 
 class GhoulHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1295,6 +1403,17 @@ class GhoulHeart(BodyPart):
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 250
+        self._attackpoisonresistance = 1
+
+class GhoulLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ghoul lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 25
+        self.material = 'undead flesh'
+        self.weight = 600
+        self.breathepoisonresistance = 0
 
 class GhoulStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -1302,6 +1421,7 @@ class GhoulStomach(BodyPart):
         self.categories = ['stomach']
         self.childconnections = {}
         self.maxhp = 25
+        self.material = "undead flesh"
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -1309,6 +1429,7 @@ class GhoulStomach(BodyPart):
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
             }
+        self._attackpoisonresistance = 1
 
 
 
@@ -1319,6 +1440,8 @@ class SmallFireElementalTorso(BodyPart):
         self.childconnections = {
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.8, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
             'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left '),
@@ -1333,6 +1456,7 @@ class SmallFireElementalTorso(BodyPart):
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
 class SmallFireElementalHead(BodyPart):
     def __init__(self, owner, x, y):
@@ -1349,6 +1473,7 @@ class SmallFireElementalHead(BodyPart):
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
 class SmallFireElementalEye(BodyPart):
     def __init__(self, owner, x, y):
@@ -1360,6 +1485,7 @@ class SmallFireElementalEye(BodyPart):
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
+        self._attackpoisonresistance = 1
 
     def sight(self):
         if not self.destroyed():
@@ -1384,6 +1510,7 @@ class SmallFireElementalBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self._attackpoisonresistance = 1
 
 class SmallFireElementalHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1395,6 +1522,17 @@ class SmallFireElementalHeart(BodyPart):
         self.consumable = False
         self.edible = False
         self.weight = 10
+        self._attackpoisonresistance = 1
+
+class SmallFireElementalLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'small fire elemental lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.material = 'elemental'
+        self.weight = 600
+        self.breathepoisonresistance = 0
 
 class SmallFireElementalTentacle(BodyPart):
     def __init__(self, owner, x, y):
@@ -1411,6 +1549,7 @@ class SmallFireElementalTentacle(BodyPart):
         self.edible = False
         self.weight = 100
         self.carryingcapacity = 20000
+        self._attackpoisonresistance = 1
 
     def speed(self):
         if not self.destroyed():
@@ -1455,6 +1594,8 @@ class DireWolfTorso(BodyPart):
             'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
@@ -1546,8 +1687,17 @@ class DireWolfHeart(BodyPart):
         super().__init__(owner, x, y, 'dire wolf heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 35
         self.weight = 700
+
+class DireWolfLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dire wolf lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 35
+        self.weight = 800
+        self.breathepoisonresistance = 0
 
 class DireWolfStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -1584,6 +1734,8 @@ class JobgoblinTorso(BodyPart):
             'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 250
@@ -1713,6 +1865,15 @@ class JobgoblinHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 40
         self.weight = 250
+
+class JobGoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'jobgoblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 40
+        self.weight = 500
+        self.breathepoisonresistance = 0.2
 
 class JobgoblinStomach(BodyPart):
     def __init__(self, owner, x, y):

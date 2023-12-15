@@ -40,6 +40,12 @@ class Creature():
         self.causeofdeath = None
         self.hunger = 0
         self.starvationclock = 0
+        self.suffocationclock = 0
+        self.weakenedclock = 0
+        self.vomitclock = 0
+        self.disorientedclock = 0
+        self.slowedclock = 0
+        self.poisonclock = 0
 
     def log(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
@@ -82,9 +88,13 @@ class Creature():
         else:
             return []
 
+    def weakened(self):
+        return self.weakenedclock > 0
+
     def carryingcapacity(self):
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
-        return sum([part.carryingcapacity for part in self.bodyparts]) + sum([it.carryingcapacity for it in wornlist])
+        divider = 2 if self.weakened() else 1
+        return int(sum([part.carryingcapacity for part in self.bodyparts]) + sum([it.carryingcapacity for it in wornlist]) / divider)
 
     def weightcarried(self):
         wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
@@ -99,7 +109,10 @@ class Creature():
 
     def gainhunger(self, time):
         livingmass = sum([part.weight for part in self.bodyparts if part.material == 'living flesh'])
-        self.hunger += livingmass*time*1e-06
+        if self.faction == 'player':
+            self.hunger += livingmass*time*1e-06
+        if self.vomitclock > 0:
+            self.hunger += livingmass*min(time, self.vomitclock)*1e-05
 
     def starve(self):
         part = np.random.choice([part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()])
@@ -119,6 +132,62 @@ class Creature():
             self.die()
             self.causeofdeath = ('starvation',)
 
+    def suffocate(self, time):
+        lungs = [part for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+        if len(lungs) == 0:
+            self.suffocationclock += time
+            for i in range(int(self.suffocationclock // 1)):
+                livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
+                for part in livingparts:
+                    part.damagetaken += 1
+                    if part.damagetaken > part.maxhp:
+                        part.damagetaken = part.maxhp
+                    if part.parentalconnection != None:
+                        partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                    elif part == self.torso:
+                        partname = 'torso'
+                    if not part.destroyed():
+                        self.log().append('Your ' + partname + ' took 1 damage from suffocation.')
+                    else:
+                        self.log().append('Your ' + partname + ' was destroyed by suffocation.')
+            self.suffocationclock = self.suffocationclock % 1
+            if self.dying():
+                self.log().append("You are dead!")
+                self.die()
+                self.causeofdeath = ('suffocation',)
+
+    def breathepoisonresistance(self):
+        lungresistances = [part.breathepoisonresistance for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+        wornresistances = [it[0].breathepoisonresistance for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        return min(1, np.mean(lungresistances) + sum(wornresistances))
+
+    def applypoison(self, time):
+        oldclock = self.poisonclock
+        self.poisonclock = max(0, self.poisonclock - time)
+        ticks = int(oldclock) - int(self.poisonclock)
+        if len([part for part in self.bodyparts if part.material == 'living flesh']) > 0:
+            for i in range(ticks):
+                if np.random.rand() < 0.5:
+                    affliction = np.random.randint(4)
+                    if affliction == 0:
+                        if self.weakenedclock == 0:
+                            self.log().append('The poison made you weak!')
+                        self.weakenedclock += np.random.rand()*10
+                    if affliction == 1:
+                        if self.vomitclock == 0:
+                            self.log().append('The poison made you start vomiting!')
+                        self.vomitclock += np.random.rand()*10
+                    if affliction == 2:
+                        if self.disorientedclock == 0:
+                            self.log().append('The poison made you disoriented!')
+                        self.disorientedclock += np.random.rand()*10
+                    if affliction == 3:
+                        if self.slowedclock == 0:
+                            self.log().append('The poison made you slowed!')
+                        self.slowedclock += np.random.rand()*10
+        if oldclock > 0 and self.poisonclock == 0:
+            self.log().append('You are no longer poisoned, but some aftereffects may linger.')
+
     def burdened(self):
         return self.weightcarried() > self.carryingcapacity()/2
 
@@ -126,7 +195,7 @@ class Creature():
         return self.weightcarried() > self.carryingcapacity()
     
     def slowed(self):
-        return self.world.spiderwebs[self.x, self.y]
+        return self.world.spiderwebs[self.x, self.y] + (self.slowedclock > 0)
     
     def speed(self):
         if self.overloaded():
@@ -146,6 +215,8 @@ class Creature():
         self.y += dy
         if self.world.spiderwebs[self.x, self.y]:
             self.log().append('There is spiderweb here.')
+        if self.world.poisongas[self.x, self.y]:
+            self.log().append('There is a cloud of poison gas here.')
         if (self.x, self.y) == self.world.stairsupcoords:
             self.log().append('There are stairs up here.')
         if (self.x, self.y) == self.world.stairsdowncoords:
@@ -405,12 +476,49 @@ class Creature():
                 self.previousaction = 'fight'
 
     def update(self, time):
-        if time < self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait')):
+        timetoact = self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait'))
+        if time < timetoact:
             self.nextaction[-1] -= time/(1 + self.slowed()*(self.nextaction[0] != 'wait'))
             self.bleed(time)
+            self.applypoison(time)
+            self.weakenedclock = max(0, self.weakenedclock - time)
+            self.disorientedclock = max(0, self.disorientedclock - time)
+            self.slowedclock = max(0, self.slowedclock - time)
+            self.gainhunger(time)
+            vomiting = self.vomitclock > 0
+            self.vomitclock = max(0, self.vomitclock - time)
+            if vomiting and self.vomitclock == 0:
+                self.log().append('You stopped vomiting.')
+            if self.starving():
+                self.starvationclock += time
+                for i in range(int(self.starvationclock // 1)):
+                    self.starve()
+                self.starvationclock = self.starvationclock % 1
+            self.suffocate(time)
         else:
-            timeleft = time - self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait'))
-            self.bleed(self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait')))
+            timeleft = time - timetoact
+            self.bleed(timetoact)
+            self.applypoison(timetoact)
+            self.weakenedclock = max(0, self.weakenedclock - timetoact)
+            self.disorientedclock = max(0, self.disorientedclock - timetoact)
+            self.slowedclock = max(0, self.slowedclock - timetoact)
+            self.gainhunger(timetoact)
+            vomiting = self.vomitclock > 0
+            self.vomitclock = max(0, self.vomitclock - timetoact)
+            if vomiting and self.vomitclock == 0:
+                self.log().append('You stopped vomiting.')
+            if self.starving():
+                self.starvationclock += timetoact
+                for i in range(int(self.starvationclock // 1)):
+                    self.starve()
+                self.starvationclock = self.starvationclock % 1
+            self.suffocate(timetoact)
+            if self.world.poisongas[self.x, self.y]:
+                livingparts = [part for part in self.bodyparts if part.material == 'living flesh']
+                if np.random.rand() > self.breathepoisonresistance() and len(livingparts) > 0:
+                    if self.poisonclock == 0:
+                        self.log().append('You were poisoned by the gas.')
+                    self.poisonclock = max(self.poisonclock, np.random.rand()*20)
             if not self.dead:
                 self.resolveaction()
     
@@ -449,6 +557,8 @@ class Zombie(Creature):
             self.bodyparts[0].connect('left leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
             self.bodyparts[0].connect('right leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.ZombieStomach(self.bodyparts, 0, 0))
         if self.name != 'headless zombie':
             self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
@@ -458,6 +568,10 @@ class Zombie(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -466,11 +580,11 @@ class Zombie(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -510,6 +624,8 @@ class MolePerson(Creature):
         self.bodyparts[0].connect('left leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.MolePersonHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.MolePersonStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.MolePersonHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.MolePersonBrain(self.bodyparts, 0, 0))
@@ -518,6 +634,10 @@ class MolePerson(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -526,11 +646,11 @@ class MolePerson(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -573,7 +693,11 @@ class CaveOctopus(Creature):
         self.bodyparts[0].connect('center-front right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('center-back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('central heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.OctopusStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('brain', bodypart.OctopusBrain(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
@@ -581,6 +705,10 @@ class CaveOctopus(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -589,11 +717,11 @@ class CaveOctopus(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -633,6 +761,8 @@ class Hobgoblin(Creature):
         self.bodyparts[0].connect('left leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.HobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.HobgoblinStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.HobgoblinHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.HobgoblinBrain(self.bodyparts, 0, 0))
@@ -641,6 +771,10 @@ class Hobgoblin(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -649,11 +783,11 @@ class Hobgoblin(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -693,6 +827,8 @@ class Wolf(Creature):
         self.bodyparts[0].connect('back left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.WolfHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.WolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.WolfLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.WolfStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('tail', bodypart.WolfTail(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.WolfHead(self.bodyparts, 0, 0))
@@ -702,6 +838,10 @@ class Wolf(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -710,12 +850,12 @@ class Wolf(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -756,6 +896,7 @@ class Drillbot(Creature):
         self.bodyparts[0].connect('back right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('arm', bodypart.DrillArm(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('coolant pumping system', bodypart.DrillbotPump(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('coolant aerator system', bodypart.DrillbotAerator(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('biomass processor', bodypart.DrillBotBiomassProcessor(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('central processor', bodypart.DrillbotProcessor(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
@@ -763,6 +904,10 @@ class Drillbot(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -771,11 +916,11 @@ class Drillbot(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -822,6 +967,8 @@ class Ghoul(Creature):
             self.bodyparts[0].connect('left leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
             self.bodyparts[0].connect('right leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.GhoulHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.GhoulStomach(self.bodyparts, 0, 0))
         if self.name != 'headless ghoul':
             self.bodyparts[0].connect('head', bodypart.GhoulHead(self.bodyparts, 0, 0))
@@ -831,6 +978,10 @@ class Ghoul(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -839,11 +990,11 @@ class Ghoul(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -883,12 +1034,18 @@ class SmallFireElemental(Creature):
         self.bodyparts[0].connect('front right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.SmallFireElementalHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.SmallFireElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.SmallFireElementalLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.SmallFireElementalHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.SmallFireElementalBrain(self.bodyparts, 0, 0))
         self.bodyparts[-2].connect('eye', bodypart.SmallFireElementalEye(self.bodyparts, 0, 0))
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -897,11 +1054,11 @@ class SmallFireElemental(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -941,6 +1098,8 @@ class DireWolf(Creature):
         self.bodyparts[0].connect('back left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.DireWolfHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.DireWolfStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('tail', bodypart.DireWolfTail(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.DireWolfHead(self.bodyparts, 0, 0))
@@ -950,6 +1109,10 @@ class DireWolf(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -958,12 +1121,12 @@ class DireWolf(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
@@ -1003,6 +1166,8 @@ class Jobgoblin(Creature):
         self.bodyparts[0].connect('left leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.JobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.JobgoblinStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.JobgoblinHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.JobgoblinBrain(self.bodyparts, 0, 0))
@@ -1011,6 +1176,10 @@ class Jobgoblin(Creature):
         self.targetcoords = None
         
     def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
@@ -1019,11 +1188,11 @@ class Jobgoblin(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0:
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords:
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
