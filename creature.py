@@ -514,8 +514,9 @@ class Creature():
                 self.starvationclock = self.starvationclock % 1
             self.suffocate(timetoact)
             if self.world.poisongas[self.x, self.y]:
-                livingparts = [part for part in self.bodyparts if part.material == 'living flesh']
-                if np.random.rand() > self.breathepoisonresistance() and len(livingparts) > 0:
+                livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
+                lungs = [part for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+                if np.random.rand() > self.breathepoisonresistance() and len(livingparts) > 0 and len(lungs) > 0:
                     if self.poisonclock == 0:
                         self.log().append('You were poisoned by the gas.')
                     self.poisonclock = max(self.poisonclock, np.random.rand()*20)

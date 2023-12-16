@@ -603,8 +603,9 @@ def game():
             player.starvationclock = player.starvationclock % 1
         player.suffocate(time)
         if cave.poisongas[player.x, player.y]:
-            livingparts = [part for part in player.bodyparts if part.material == 'living flesh']
-            if np.random.rand() > player.breathepoisonresistance() and len(livingparts) > 0:
+            livingparts = [part for part in player.bodyparts if part.material == 'living flesh' and not part.destroyed()]
+            lungs = [part for part in player.bodyparts if 'lung' in part.categories and not part.destroyed()]
+            if np.random.rand() > player.breathepoisonresistance() and len(livingparts) > 0 and len(lungs) > 0:
                 if player.poisonclock == 0:
                     player.log().append('You were poisoned by the gas.')
                 player.poisonclock = max(player.poisonclock, np.random.rand()*20)
