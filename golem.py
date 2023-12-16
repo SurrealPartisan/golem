@@ -12,15 +12,17 @@ import creature
 import world
 import bodypart
 import god
-from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, drugname, infusionname
+from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, drugname, infusionname, bodypartshortnames
 
 pygame.init()
 
 logheight = 8
 statuslines = 3
+hpbarwidth = 10
+hpmargin = 1
 icon = pygame.image.load('icon.png')
 pygame.display.set_icon(icon)
-win = pygcurse.PygcurseWindow(mapwidth, mapheight + statuslines + logheight, 'Golem: A Self-Made Person!')
+win = pygcurse.PygcurseWindow(mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight, 'Golem: A Self-Made Person!')
 if file_exists('options.pickle'):
     with open('options.pickle', 'rb') as f:
         font, fontsize, showsequentially = pickle.load(f)
@@ -194,7 +196,7 @@ def game():
         player.log().append('Welcome to the cave!')
         player.log().append("Press 'h' for help.")
 
-        for i in range(mapwidth):
+        for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')  # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
         prompt = 'Give your character a name:'
@@ -214,10 +216,11 @@ def game():
         fovmap = fov(cave.walls, player.x, player.y, player.sight())
         # Background
         # win.setscreencolors(None, (0,0,0), clear=True)
-        win.settint(0, 0, 0, (0, 0, mapwidth, mapheight + statuslines + logheight))
-        for i in range(mapwidth):
+        win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight))
+        for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')  # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
+        for i in range(mapwidth):
             for j in range(mapheight):
                 if fovmap[i,j]:
                     if cave.walls[i,j] == 1:
@@ -279,35 +282,45 @@ def game():
         for i in range(mapwidth):
             for j in range(statuslines):
                 win.putchars(' ', x=i, y=mapheight+j, bgcolor=((128,128,128)))
-        win.putchars('hp: ', x=0, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
-        hptext = repr(int(sum([part.maxhp for part in player.bodyparts])/2-sum([part.damagetaken for part in player.bodyparts]))) + '/' + repr(int(sum([part.maxhp for part in player.bodyparts])/2))
-        win.putchars(hptext, x=4, y=mapheight, bgcolor=((128,128,128)), fgcolor=(255, 0, 0))
-        textx = len(hptext) + 5
-        win.putchars('(', x=textx, y = mapheight, bgcolor=((128,128,128)), fgcolor = 'white')
-        textx += 1
-        textx_original = textx
-        texty = mapheight
-        for part in player.bodyparts:
-            if player.dying():
-                textcolor = (0, 0, 0)
-            elif part.vital():
-                textcolor = (255, 0, 0)
-            elif part.destroyed():
-                textcolor = (0, 0, 0)
-            else:
-                textcolor = (0, 255, 0)
-            hptext = repr(part.maxhp - part.damagetaken) + '/' + repr(part.maxhp)
-            if textx + len(hptext) > mapwidth:
-                texty += 1
-                textx = textx_original
-            win.putchars(hptext, x=textx, y=texty, bgcolor=((128,128,128)), fgcolor=textcolor)
-            textx += len(hptext) + 1
-        win.putchars(')', x=textx-1, y = texty, bgcolor=((128,128,128)), fgcolor = 'white')
+        for i in range(hpmargin):
+            for j in range(mapheight + statuslines + logheight):
+                win.putchars(' ', x=mapwidth+i, y=j, bgcolor=((128,128,128)))
+        if not player.dying():
+            win.putchars('HP', x=mapwidth + hpmargin + hpbarwidth//2 - 1, y = 0, fgcolor = 'white')
+            hptext = repr(int(sum([part.maxhp for part in player.bodyparts])/2-sum([part.damagetaken for part in player.bodyparts]))) + '/' + repr(int(sum([part.maxhp for part in player.bodyparts])/2))
+            win.putchars('total:', x=mapwidth + hpmargin, y=1, fgcolor=(255, 0, 0))
+            win.putchars(hptext, x=mapwidth + hpmargin + hpbarwidth - len(hptext), y=2, fgcolor=(255, 0, 0))
+            texty = 3
+            for part in player.bodyparts:
+                if player.dying():
+                    textcolor = (128,128,128)
+                elif part.vital():
+                    textcolor = (255, 0, 0)
+                elif part.destroyed():
+                    textcolor = (128,128,128)
+                else:
+                    textcolor = (0, 255, 0)
+                if part.parentalconnection != None:
+                    partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                elif part == player.torso:
+                    partname = 'torso'
+                shortname = bodypartshortnames[partname]
+                win.putchars(shortname + ':', x=mapwidth + hpmargin, y=texty, fgcolor=textcolor)
+                hptext = repr(part.maxhp - part.damagetaken) + '/' + repr(part.maxhp)
+                win.putchars(hptext, x=mapwidth + hpmargin + hpbarwidth - len(hptext), y=texty+1, fgcolor=textcolor)
+                texty += 2
+
+        win.putchars(player.individualname + ' the golem', x=0, y=mapheight, fgcolor='white', bgcolor=(128,128,128))
+        win.putchars('Score: ' + repr(player.xp), x=30, y=mapheight, fgcolor='white', bgcolor=(128,128,128))
+        win.putchars('Dungeon level ' + repr(cave_i + 1), x=50, y=mapheight, fgcolor='white', bgcolor=(128,128,128))
+
         statuseffects = []
         if player.overloaded():
             statuseffects.append(('Overloaded', (255, 0, 0)))
         elif player.burdened():
             statuseffects.append(('Burdened', (255, 255, 0)))
+        if player.suffocating():
+            statuseffects.append(('Suffocating', (255, 0, 0)))
         bleed = False
         for part in player.bodyparts:
             if len(part.bleedclocks) > 0 and not part.destroyed():
@@ -334,9 +347,16 @@ def game():
         if player.disorientedclock > 0:
             statuseffects.append(('Disoriented', (255, 255, 0)))
         textx = 0
-        for effect in statuseffects:
-            win.putchars(effect[0], x=textx, y = mapheight+2, bgcolor=((128,128,128)), fgcolor = effect[1])
-            textx += len(effect[0]) + 1
+        texty = mapheight + 1
+        if not player.dying():
+            for effect in statuseffects:
+                if textx + len(effect[0]) > mapwidth:
+                    textx = 0
+                    texty += 1
+                win.putchars(effect[0], x=textx, y=texty, bgcolor=((128,128,128)), fgcolor=effect[1])
+                textx += len(effect[0]) + 1
+        else:
+            win.putchars('Dead', x=textx, y=texty, bgcolor=((128,128,128)), fgcolor=(255, 0, 0))
 
         # log
         if gamestate == 'free' or gamestate == 'dead' or gamestate == 'win':
@@ -1427,11 +1447,12 @@ def game():
 def halloffame():
     cont = False
     while not cont:
-        for i in range(mapwidth):
+        win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight))
+        for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
         title = 'GOLEM HALL OF FAME'
-        win.write(title, x=(mapwidth-len(title))//2, y=0, fgcolor=(255, 255, 255))
+        win.write(title, x=(mapwidth + hpbarwidth + hpmargin - len(title)) // 2, y=0, fgcolor=(255, 255, 255))
         if file_exists('highscores.pickle'):
             with open('highscores.pickle', 'rb') as f:
                 highscores = pickle.load(f)
@@ -1461,15 +1482,15 @@ def keybingsoptions():
     selected = (0, 0)
     state = 0
     while not cont:
-        for i in range(mapwidth):
+        for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
         text = 'KEYBINDINGS'
-        win.write(text, x=(mapwidth-len(text))//2, y=0, fgcolor=(255, 255, 255))
+        win.write(text, x=(mapwidth + hpbarwidth + hpmargin - len(text)) // 2, y=0, fgcolor=(255, 255, 255))
         text = 'Arrow keys, return, and escape are reserved keys. Left shift can be used as a modifier.'
-        win.write(text, x=(mapwidth-len(text))//2, y=1, fgcolor=(255, 255, 255))
+        win.write(text, x=(mapwidth + hpbarwidth + hpmargin - len(text)) // 2, y=1, fgcolor=(255, 255, 255))
         text = 'Select with arrows, edit with return.'
-        win.write(text, x=(mapwidth-len(text))//2, y=2, fgcolor=(255, 255, 255))
+        win.write(text, x=(mapwidth + hpbarwidth + hpmargin - len(text)) // 2, y=2, fgcolor=(255, 255, 255))
         longest = max([len(command) for command in keybindings])
         for i in range(len(keybindings)):
             if selected[0] == i:
@@ -1577,11 +1598,11 @@ def options():
     fontnames = ('Hack', 'Software Tester 7', 'Courier Prime Sans', 'Square', 'Press Start 2P')
     font_i = fonts.index(font)
     while not cont:
-        for i in range(mapwidth):
+        for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
         title = 'OPTIONS'
-        win.write(title, x=(mapwidth-len(title))//2, y=20, fgcolor=(255, 255, 255))
+        win.write(title, x=(mapwidth + hpbarwidth + hpmargin-len(title))//2, y=20, fgcolor=(255, 255, 255))
         fonttext = 'Font: < ' + fontnames[font_i] + ' >'
         if selected == 0:
             bgcolor = (255, 255, 255)
@@ -1589,7 +1610,7 @@ def options():
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(fonttext, x=(mapwidth-len(fonttext))//2, y=22, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.write(fonttext, x=(mapwidth + hpbarwidth + hpmargin-len(fonttext))//2, y=22, fgcolor=fgcolor, bgcolor=bgcolor)
         fontsizetext = 'Font size: < ' + repr(fontsize) + ' >'
         if selected == 1:
             bgcolor = (255, 255, 255)
@@ -1597,7 +1618,7 @@ def options():
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(fontsizetext, x=(mapwidth-len(fontsizetext))//2, y=24, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.write(fontsizetext, x=(mapwidth + hpbarwidth + hpmargin-len(fontsizetext))//2, y=24, fgcolor=fgcolor, bgcolor=bgcolor)
         showsequentiallytext = 'Show enemy movements sequentially: < ' + repr(showsequentially) + ' >'
         if selected == 2:
             bgcolor = (255, 255, 255)
@@ -1605,7 +1626,7 @@ def options():
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(showsequentiallytext, x=(mapwidth-len(showsequentiallytext))//2, y=26, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.write(showsequentiallytext, x=(mapwidth + hpbarwidth + hpmargin-len(showsequentiallytext))//2, y=26, fgcolor=fgcolor, bgcolor=bgcolor)
         keybindingstext = 'Keybindings'
         if selected == 3:
             bgcolor = (255, 255, 255)
@@ -1613,7 +1634,7 @@ def options():
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(keybindingstext, x=(mapwidth-len(keybindingstext))//2, y=28, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.write(keybindingstext, x=(mapwidth + hpbarwidth + hpmargin-len(keybindingstext))//2, y=28, fgcolor=fgcolor, bgcolor=bgcolor)
         backtomenutext = 'Save and return'
         if selected == 4:
             bgcolor = (255, 255, 255)
@@ -1621,7 +1642,7 @@ def options():
         else:
             bgcolor = (0, 0, 0)
             fgcolor = (255, 255, 255)
-        win.write(backtomenutext, x=(mapwidth-len(backtomenutext))//2, y=30, fgcolor=fgcolor, bgcolor=bgcolor)
+        win.write(backtomenutext, x=(mapwidth + hpbarwidth + hpmargin-len(backtomenutext))//2, y=30, fgcolor=fgcolor, bgcolor=bgcolor)
         win.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1668,10 +1689,10 @@ def options():
 def credits():
     cont = False
     while not cont:
-        for i in range(mapwidth):
+        for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
-        x0 = (mapwidth-29)/2
+        x0 = (mapwidth + hpbarwidth + hpmargin - 29)/2
         y0 = 5
 
         win.write('     ', x=x0, y=y0, bgcolor='red')
@@ -1746,7 +1767,7 @@ def credits():
                     'This game is dedicated to the transgender community.']
         for i in range(len(credlist)):
             cred = credlist[i]
-            win.write(cred, x=(mapwidth-len(cred))//2, y=y0+10+i, fgcolor='white')
+            win.write(cred, x=(mapwidth + hpbarwidth + hpmargin-len(cred))//2, y=y0+10+i, fgcolor='white')
 
         win.update()
 
@@ -1766,11 +1787,11 @@ def mainmenu():
     buttonfunctions = [game, halloffame, options, credits, quitgame]
     selected = 0
     while True:
-        win.settint(0, 0, 0, (0, 0, mapwidth, mapheight + statuslines + logheight))
-        for i in range(mapwidth):
+        win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight))
+        for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')
-        x0 = (mapwidth-29)/2
+        x0 = (mapwidth + hpbarwidth + hpmargin - 29)/2
         y0 = 15
 
         win.write('     ', x=x0, y=y0, bgcolor='red')
@@ -1821,7 +1842,7 @@ def mainmenu():
 
         for i in range(len(buttontexts)):
             y = 30+2*i
-            x = (mapwidth-len(buttontexts[i]))/2
+            x = (mapwidth + hpbarwidth + hpmargin-len(buttontexts[i]))/2
             if i == selected:
                 fgcolor=(0,0,0)
                 bgcolor=(255,255,255)

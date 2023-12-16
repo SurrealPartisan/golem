@@ -1440,8 +1440,8 @@ class SmallFireElementalTorso(BodyPart):
         self.childconnections = {
             'head': BodyPartConnection(self, ['head'], True, ''),
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.8, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
+            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
             'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left '),
@@ -1524,7 +1524,7 @@ class SmallFireElementalHeart(BodyPart):
         self.weight = 10
         self._attackpoisonresistance = 1
 
-class SmallFireElementalLung(BodyPart):
+class SmallFireElementalBellows(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'small fire elemental lung', '*', (255, 0, 0))
         self.categories = ['lung']

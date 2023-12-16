@@ -132,6 +132,11 @@ class Creature():
             self.die()
             self.causeofdeath = ('starvation',)
 
+    def suffocating(self):
+        lungs = [part for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+        livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
+        return len(lungs) == 0 and len(livingparts) > 0
+
     def suffocate(self, time):
         lungs = [part for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
         if len(lungs) == 0:
@@ -1035,8 +1040,8 @@ class SmallFireElemental(Creature):
         self.bodyparts[0].connect('front right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('heart', bodypart.SmallFireElementalHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.SmallFireElementalLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.SmallFireElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.SmallFireElementalHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.SmallFireElementalBrain(self.bodyparts, 0, 0))
         self.bodyparts[-2].connect('eye', bodypart.SmallFireElementalEye(self.bodyparts, 0, 0))
