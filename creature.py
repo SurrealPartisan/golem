@@ -121,10 +121,14 @@ class Creature():
 
     def gainhunger(self, time):
         livingmass = sum([part.weight for part in self.bodyparts if part.material == 'living flesh'])
+        itemmultipliers = [it[0].hungermultiplier for part in self.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'hungermultiplier')]
+        multiplier = 1
+        for m in itemmultipliers:
+            multiplier *= m
         if self.faction == 'player':
-            self.hunger += livingmass*time*1e-06
+            self.hunger += livingmass*time*multiplier*1e-06
         if self.vomitclock > 0:
-            self.hunger += livingmass*min(time, self.vomitclock)*1e-05
+            self.hunger += livingmass*min(time, self.vomitclock)*multiplier*1e-05
 
     def starve(self):
         part = np.random.choice([part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()])
@@ -258,8 +262,8 @@ class Creature():
         return 1/self.minespeed()
 
     def sight(self):
-        return 1 + sum([part.sight() for part in self.bodyparts])
-    
+        return 1 + sum([part.sight() for part in self.bodyparts]) + sum([it[0].sight() for part in self.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'sight')])
+
     def heal(self, part, hpgiven):
         healed = min(hpgiven, part.damagetaken)
         part.damagetaken -= healed
@@ -328,12 +332,16 @@ class Creature():
                 attackerstancecoefficient = 1.25
             elif self.stance == 'defensive':
                 attackerstancecoefficient = 0.9
+            elif self.stance == 'berserker':
+                attackerstancecoefficient = 1.5
             else:
                 attackerstancecoefficient = 1
             if target.stance == 'aggressive':
                 defenderstancecoefficient = 1.111
             elif target.stance == 'defensive':
                 defenderstancecoefficient = 0.80
+            elif target.stance == 'berserker':
+                defenderstancecoefficient = 1.222
             else:
                 defenderstancecoefficient = 1
             if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient, 0.95), 0.05):
@@ -505,6 +513,8 @@ class Creature():
                 self.previousaction = ('fight', self.nextaction[3].weapon, self.nextaction[2])
 
     def update(self, time):
+        if not self.stance in self.stancesknown():
+            self.stance = 'neutral'
         timetoact = self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait'))
         if time < timetoact:
             self.nextaction[-1] -= time/(1 + self.slowed()*(self.nextaction[0] != 'wait'))

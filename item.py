@@ -440,10 +440,117 @@ def randomarmor(owner, x, y, level):
         enchantment += 1
     return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment)
 
-class Backpack(Item):
+class SchoolkidBackpack(Item):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'backpack', '¤', (0, 155, 0))
+        super().__init__(owner, x, y, 'schoolkid backpack', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'backpack'
+        self.carryingcapacity = 10000
+        self.weight = 500
+
+class TouristBackpack(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'tourist backpack', '(', (0, 155, 0))
         self.wearable = True
         self.wearcategory = 'backpack'
         self.carryingcapacity = 20000
-        self.weight = 500
+        self.weight = 1000
+
+class HikerBackpack(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'hiker backpack', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'backpack'
+        self.carryingcapacity = 40000
+        self.weight = 2000
+
+class MilitaryBackpack(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'military backpack', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'backpack'
+        self.carryingcapacity = 80000
+        self.weight = 4000
+
+class BackpackOfHolding(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'backpack of holding', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'backpack'
+        self.carryingcapacity = 160000
+        self.weight = 1000
+
+class GreaterBackpackOfHolding(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'greater backpack of holding', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'backpack'
+        self.carryingcapacity = 320000
+        self.weight = 1000
+
+def randomBackpack(owner, x, y):
+    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding])(owner, x, y)
+
+class RingOfCarrying(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ring of carrying', '=', (255, 255, 0))
+        self.wearable = True
+        self.wearcategory = 'ring'
+        self.carryingcapacity = 20000
+        self.weight = 5
+
+class RingOfVision(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ring of vision', '=', (255, 255, 0))
+        self.wearable = True
+        self.wearcategory = 'ring'
+        self.weight = 5
+
+    def sight(self):
+        return 1
+
+class RingOfSustenance(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ring of sustenance', '=', (255, 255, 0))
+        self.wearable = True
+        self.wearcategory = 'ring'
+        self.weight = 5
+        self.hungermultiplier = 0.5
+
+def randomRing(owner, x, y):
+    return np.random.choice([RingOfCarrying, RingOfVision, RingOfSustenance])(owner, x, y)
+
+class Eyeglasses(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'eyeglasses', '(', (0, 255, 255))
+        self.wearable = True
+        self.wearcategory = 'face'
+        self.weight = 9
+
+    def sight(self):
+        if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not part.destroyed()]) > 0:
+            return 1
+        else:
+            return 0
+
+class GasMask(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'gas mask', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'face'
+        self.weight = 900
+        self.breathepoisonresistance = 1
+
+class BerserkerMask(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'berserker mask', '(', (255, 0, 0))
+        self.wearable = True
+        self.wearcategory = 'face'
+        self.weight = 200
+        self.stances = 'berserker'
+
+def randomFaceItem(owner, x, y):
+    return np.random.choice([Eyeglasses, GasMask, BerserkerMask])(owner, x, y)
+
+def randomUtilityItem(owner, x, y):
+    return np.random.choice([randomBackpack, randomRing, randomFaceItem])(owner, x, y)

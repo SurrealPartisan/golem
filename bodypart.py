@@ -156,7 +156,7 @@ class HumanArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
-        self.worn = {'gauntlet': listwithowner([], self)}
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 5000
 
     def speed(self):
@@ -222,7 +222,7 @@ class HumanHead(BodyPart):
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 20
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
 
@@ -328,7 +328,7 @@ class ZombieArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
-        self.worn = {'gauntlet': listwithowner([], self)}
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
 
@@ -398,7 +398,7 @@ class ZombieHead(BodyPart):
             }
         self.maxhp = 20
         self.material = "undead flesh"
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
         self._attackpoisonresistance = 1
@@ -511,7 +511,7 @@ class MolePersonArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
-        self.worn = {'gauntlet': listwithowner([], self)}
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 6000
 
     def speed(self):
@@ -577,7 +577,7 @@ class MolePersonHead(BodyPart):
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 20
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
 
@@ -674,7 +674,7 @@ class OctopusHead(BodyPart):
             'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ')
             }
         self.maxhp = 80
-        self.worn = {'helmet': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self), 'backpack': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 40000
         self.carryingcapacity = 20000
@@ -694,7 +694,7 @@ class OctopusTentacle(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'tentacle'
-        self.worn = {'tentacle armor': listwithowner([], self)}
+        self.worn = {'tentacle armor': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 10000
         self.carryingcapacity = 10000
 
@@ -821,7 +821,7 @@ class HobgoblinArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
-        self.worn = {'gauntlet': listwithowner([], self)}
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 5000
 
     def speed(self):
@@ -887,7 +887,7 @@ class HobgoblinHead(BodyPart):
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 30
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 6000
 
@@ -1020,7 +1020,7 @@ class WolfHead(BodyPart):
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 30
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 4000
 
@@ -1288,7 +1288,7 @@ class GhoulArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
-        self.worn = {'gauntlet': listwithowner([], self)}
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
 
@@ -1358,7 +1358,7 @@ class GhoulHead(BodyPart):
             }
         self.maxhp = 50
         self.material = "undead flesh"
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
         self._attackpoisonresistance = 1
@@ -1475,7 +1475,7 @@ class SmallFireElementalHead(BodyPart):
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 55
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 100
         self.material = 'elemental'
@@ -1552,7 +1552,7 @@ class SmallFireElementalTentacle(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'tentacle'
-        self.worn = {'tentacle armor': listwithowner([], self)}
+        self.worn = {'tentacle armor': listwithowner([], self), 'ring': listwithowner([], self)}
         self.material = "elemental"
         self.consumable = False
         self.edible = False
@@ -1652,7 +1652,7 @@ class DireWolfHead(BodyPart):
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 60
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 6000
 
@@ -1763,7 +1763,7 @@ class JobgoblinArm(BodyPart):
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
-        self.worn = {'gauntlet': listwithowner([], self)}
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 5000
 
     def speed(self):
@@ -1829,7 +1829,7 @@ class JobgoblinHead(BodyPart):
             'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 60
-        self.worn = {'helmet': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 6000
 

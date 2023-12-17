@@ -156,6 +156,13 @@ def game():
                     y = np.random.randint(mapheight)
                 item.randomarmor(cave.items, x, y, i)
 
+            for j in range(np.random.randint(1,4)):
+                x = y = 0
+                while cave.walls[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                item.randomUtilityItem(cave.items, x, y)
+
             for j in range(10):
                 x = y = 0
                 enemytypes = [typ[0] for typ in creature.enemytypesbylevel[i]]
@@ -189,7 +196,7 @@ def game():
         player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
         player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
         player.bodyparts[-3].connect('right eye', bodypart.HumanEye(player.bodyparts, 0, 0))
-        item.Backpack(player.torso.worn['backpack'], 0, 0)
+        #item.Backpack(player.torso.worn['backpack'], 0, 0)
         player.faction = 'player'
         player.x = cave.stairsupcoords[0]
         player.y = cave.stairsupcoords[1]
@@ -669,6 +676,8 @@ def game():
                     stancetext = 'Aggressive (+25% to hit, +11.1% to get hit)'
                 elif player.stancesknown()[j] == 'defensive':
                     stancetext = 'Defensive (-20% to get hit, -10% to hit)'
+                elif player.stancesknown()[j] == 'berserker':
+                    stancetext = 'Berserker (+50% to hit, +22.2% to get hit)'
                 else:
                     stancetext = player.stancesknown()[j].capitalize()
                 if j != chosen:
@@ -693,6 +702,8 @@ def game():
         win.update()
 
     def _updatetime(time):
+        if not player.stance in player.stancesknown():
+            player.stance = 'neutral'
         player.bleed(time)
         player.applypoison(time)
         player.weakenedclock = max(0, player.weakenedclock - time)
