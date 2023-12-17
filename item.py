@@ -547,7 +547,7 @@ class BerserkerMask(Item):
         self.wearable = True
         self.wearcategory = 'face'
         self.weight = 200
-        self.stances = 'berserker'
+        self.stances = ['berserker']
 
 def randomFaceItem(owner, x, y):
     return np.random.choice([Eyeglasses, GasMask, BerserkerMask])(owner, x, y)
