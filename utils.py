@@ -57,6 +57,21 @@ class listwithowner(list):
         super().__init__(iterable)
         self.owner = owner
 
+class loglist(list):
+    def append(self, item):
+        if len(item) <= mapwidth:
+            super().append(item)
+        else:
+            start = item[:mapwidth]
+            end = item[mapwidth:]
+            lastspace = start.rfind(' ')
+            if lastspace == -1:
+                super().append(start)
+                self.append(end)
+            else:
+                super().append(start[:lastspace])
+                self.append(start[lastspace+1:] + end)
+
 bodypartshortnames = {'torso': 'torso',
                       'left arm': 'l arm',
                       'right arm': 'r arm',

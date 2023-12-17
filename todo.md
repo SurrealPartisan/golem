@@ -3,7 +3,6 @@
 Minor
 * Solve the multiple brains problem
 * Different blessings and smites to different gods
-* Implement food poisoning
 * Prevent finishing an attack with a destroyed body part
 
 Major

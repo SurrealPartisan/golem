@@ -9,7 +9,7 @@ Created on Thu Jun 15 21:26:04 2023
 import numpy as np
 import item
 from item import Attack
-from utils import listwithowner, mapwidth, mapheight, numlevels
+from utils import listwithowner, loglist, mapwidth, mapheight, numlevels
 
 class BodyPartConnection():
     def __init__(self, parent, categories, vital, prefix, defensecoefficient=1, armorapplies=False):
@@ -253,7 +253,7 @@ class HumanBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 1300
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -433,7 +433,7 @@ class ZombieBrain(BodyPart):
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 1000
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -608,7 +608,7 @@ class MolePersonBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 1300
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -749,7 +749,7 @@ class OctopusBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 2000
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -918,7 +918,7 @@ class HobgoblinBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 1000
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -1051,7 +1051,7 @@ class WolfBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 120
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -1222,7 +1222,7 @@ class DrillbotProcessor(BodyPart):
         self.childconnections = {}
         self.maxhp = 30
         self.weight = 2000
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -1393,7 +1393,7 @@ class GhoulBrain(BodyPart):
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 1000
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -1511,7 +1511,7 @@ class SmallFireElementalBrain(BodyPart):
         self.consumable = False
         self.edible = False
         self.weight = 10
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -1683,7 +1683,7 @@ class DireWolfBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 120
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))
@@ -1860,7 +1860,7 @@ class JobgoblinBrain(BodyPart):
         self.childconnections = {}
         self.maxhp = 40
         self.weight = 1000
-        self.log = []
+        self.log = loglist()
         self.seen = []
         for i in range(numlevels):
             self.seen.append(np.zeros((mapwidth, mapheight)))

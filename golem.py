@@ -40,6 +40,7 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'move southwest': ((None, False, True), (pygame.locals.K_KP1, False, True)),
                        'move southeast': ((None, False, True), (pygame.locals.K_KP3, False, True)),
                        'wait': ((pygame.locals.K_PERIOD, False, True), (pygame.locals.K_KP5, False, True)),
+                       'look': ((pygame.locals.K_l, False, True), (None, False, True)),
                        'go down': ((pygame.locals.K_GREATER, False, True), (pygame.locals.K_LESS, True, True)),
                        'go up': ((pygame.locals.K_LESS, False, True), (None, False, True)),
                        'mine': ((pygame.locals.K_m, False, True), (None, False, True)),
@@ -210,6 +211,7 @@ def game():
     logback = 0 # How far the log has been scrolled
     chosen = 0 # Used for different item choosing gamestates
     target = None # Target of an attack
+    lookx = looky = 0 # Coords of looking
 
     gamestate = 'free'
 
@@ -369,9 +371,67 @@ def game():
                 c = 255 + (max(j+1, -logheight))*128//logheight
                 win.write(player.log()[j], x=0, y=mapheight+statuslines+i, fgcolor=(c,c,c))
 
+        elif gamestate == 'look':
+            win.settint(128, 128, 0, (lookx, looky, 1, 1))
+
+            instructions = 'Move the looking cursor with the movement keys. ESC to stop looking.'
+            win.write(instructions, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            lookinglist = []
+            if cave.walls[lookx, looky]:
+                lookinglist.append('a wall')
+            if cave.spiderwebs[lookx, looky]:
+                lookinglist.append('spiderweb')
+            if cave.poisongas[lookx, looky]:
+                lookinglist.append('poison gas')
+            if cave.stairsupcoords == (lookx, looky):
+                lookinglist.append('stairs up')
+            if cave.stairsdowncoords == (lookx, looky):
+                lookinglist.append('stairs down')
+            for x, y, gd in cave.altars:
+                if (lookx, looky) == (x, y):
+                    lookinglist.append('an altar of ' + gd.name)
+            for it in cave.items:
+                if it.x == lookx and it.y == looky:
+                    lookinglist.append('a ' + it.name)
+            for creat in cave.creatures:
+                if creat.x == lookx and creat.y == looky:
+                    lookinglist.append('a ' + creat.name)
+            if player.sight() > 1:
+                verb = 'see '
+            else:
+                verb = 'sense '
+            if len(lookinglist) > 10:
+                win.write('You ' + verb + 'a large pile of things here.', x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+            elif len(lookinglist) == 0:
+                win.write('You ' + verb + 'nothing here.', x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+            else:
+                if len(lookinglist) > 1:
+                    lookinglist[-1] = 'and ' + lookinglist[-1]
+                if len(lookinglist) > 2:
+                    joiner = ', '
+                else:
+                    joiner = ' '
+                looktext = 'You ' + verb + joiner.join(lookinglist) + ' here.'
+                if len(looktext) <= mapwidth:
+                    win.write(looktext, x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+                else:
+                    texty = mapheight+statuslines+1
+                    while len(looktext) > mapwidth:
+                        start = looktext[:mapwidth]
+                        end = looktext[mapwidth:]
+                        lastspace = start.rfind(' ')
+                        if lastspace != -1:
+                            looktext = start[lastspace+1:] + end
+                            start = start[:lastspace]
+                        else:
+                            looktext = end
+                        win.write(start, x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+                        texty += 1
+                    win.write(looktext, x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+
         elif gamestate == 'mine':
             minemessage = 'Choose the direction to mine!'
-            win.write(minemessage, x=0, y=mapheight+statuslines, fgcolor=(255,255,255))
+            win.write(minemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
 
         elif gamestate == 'pick':
             pickmessage = 'Choose the item to pick:'
@@ -846,6 +906,11 @@ def game():
                                     player.previousaction = ('move',)
                                     logback = 0
 
+                        if (event.key == keybindings['look'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['look'][0][1])) or (event.key == keybindings['look'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['look'][1][1])):
+                            gamestate = 'look'
+                            lookx = player.x
+                            looky = player.y
+
                         if (event.key == keybindings['mine'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['mine'][0][1])) or (event.key == keybindings['mine'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['mine'][1][1])):
                             if player.minespeed() > 0:
                                 gamestate = 'mine'
@@ -1000,6 +1065,7 @@ def game():
                             player.log().append('  - arrows or numpad: move')
                             player.log().append('  - period or numpad 5: wait a moment')
                             player.log().append('  - < or >: go up or down')
+                            player.log().append('  - l: look')
                             player.log().append('  - m: mine')
                             player.log().append('  - comma: pick up an item')
                             player.log().append('  - d: drop an item')
@@ -1015,7 +1081,7 @@ def game():
                             player.log().append('  - p: pray')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 11 # Increase when adding commands
+                                logback = 12 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
@@ -1034,6 +1100,40 @@ def game():
                                 pickle.dump((caves, player, gods), f)
                             gamegoeson = False
 
+                    elif gamestate == 'look':
+                        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+                        if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
+                            if fovmap[lookx, looky-1]:
+                                looky -= 1
+                        if (event.key == keybindings['move south'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][0][1])) or (event.key == keybindings['move south'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][1][1])):
+                            if fovmap[lookx, looky+1]:
+                                looky += 1
+                        if (event.key == keybindings['move west'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][0][1])) or (event.key == keybindings['move west'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][1][1])):
+                            if fovmap[lookx-1, looky]:
+                                lookx -= 1
+                        if (event.key == keybindings['move east'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][0][1])) or (event.key == keybindings['move east'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][1][1])):
+                            if fovmap[lookx+1, looky]:
+                                lookx += 1
+                        if (event.key == keybindings['move northwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][0][1])) or (event.key == keybindings['move northwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][1][1])):
+                            if fovmap[lookx-1, looky-1]:
+                                lookx -= 1
+                                looky -= 1
+                        if (event.key == keybindings['move northeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][0][1])) or (event.key == keybindings['move northeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][1][1])):
+                            if fovmap[lookx+1, looky-1]:
+                                lookx += 1
+                                looky -= 1
+                        if (event.key == keybindings['move southwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][0][1])) or (event.key == keybindings['move southwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][1][1])):
+                            if fovmap[lookx-1, looky+1]:
+                                lookx -= 1
+                                looky += 1
+                        if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
+                            if fovmap[lookx+1, looky+1]:
+                                lookx += 1
+                                looky += 1
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+
                     elif gamestate == 'mine':
                         if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
                             gamestate, logback = mine(0, -1)
@@ -1051,6 +1151,9 @@ def game():
                             gamestate, logback = mine(-1, 1)
                         if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
                             gamestate, logback = mine(1, 1)
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
 
                     elif gamestate == 'pick':
                         picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
