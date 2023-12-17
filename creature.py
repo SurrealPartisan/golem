@@ -332,9 +332,9 @@ class Creature():
                 knocked_back = False
                 knocked_to_wall = False
                 for special in attack.special:
-                    if special[0] == 'charge' and self.previousaction == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
+                    if special[0] == 'charge' and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
                         totaldamage = int(1.5*totaldamage)
-                        attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10])
+                        attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11])
                     if special[0] == 'knockback' and np.random.rand() < special[1]:
                         dx = target.x - self.x
                         dy = target.y - self.y
@@ -471,14 +471,14 @@ class Creature():
             creaturesintheway = [creature for creature in self.world.creatures if creature.x == self.x+self.nextaction[1] and creature.y == self.y+self.nextaction[2]]
             if len(creaturesintheway) == 0:
                 self.move(self.nextaction[1], self.nextaction[2])
-                self.previousaction = 'move'
+                self.previousaction = ('move',)
             else:
                 self.log().append("There's a " + creaturesintheway[0].name + " in your way.")
-                self.previousaction = 'wait'
+                self.previousaction = ('wait',)
         elif self.nextaction[0] == 'fight':
             if not self.nextaction[1].dead:  # prevent a crash
                 self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
-                self.previousaction = 'fight'
+                self.previousaction = ('fight', self.nextaction[3].weapon, self.nextaction[2])
 
     def update(self, time):
         timetoact = self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait'))
@@ -539,6 +539,8 @@ class Creature():
                         self.log().append('You see a ' + creat.name +'.')
     
                 self.nextaction = self.ai()
+                if self.nextaction[0] == 'fight' and self.previousaction[0] == 'fight' and self.nextaction[3].weapon == self.previousaction[1] and self.nextaction[2] == self.previousaction[2]:
+                    self.nextaction[-1] = self.nextaction[-1]*1.5
                 self.update(timeleft)
 
 class Zombie(Creature):
