@@ -46,6 +46,7 @@ class Creature():
         self.disorientedclock = 0
         self.slowedclock = 0
         self.poisonclock = 0
+        self.stance = 'neutral'
 
     def log(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
@@ -87,6 +88,17 @@ class Creature():
             return brains[0].creaturesseen
         else:
             return []
+
+    def stancesknown(self):
+        known = ['neutral', 'aggressive', 'defensive']
+        for part in self.bodyparts:
+            if hasattr(part, 'stances'):
+                known += part.stances
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        for it in wornlist:
+            if hasattr(it, 'stances'):
+                known += it.stances
+        return known
 
     def weakened(self):
         return self.weakenedclock > 0
@@ -312,7 +324,19 @@ class Creature():
     
     def fight(self, target, targetbodypart, attack):
         if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
-            if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient(), 0.95), 0.05):
+            if self.stance == 'aggressive':
+                attackerstancecoefficient = 1.25
+            elif self.stance == 'defensive':
+                attackerstancecoefficient = 0.9
+            else:
+                attackerstancecoefficient = 1
+            if target.stance == 'aggressive':
+                defenderstancecoefficient = 1.111
+            elif target.stance == 'defensive':
+                defenderstancecoefficient = 0.80
+            else:
+                defenderstancecoefficient = 1
+            if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient, 0.95), 0.05):
                 hit = True
             else:
                 adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]

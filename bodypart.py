@@ -260,6 +260,7 @@ class HumanBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
 
 class HumanHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -439,6 +440,7 @@ class ZombieBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
         self._attackpoisonresistance = 1
 
 class ZombieHeart(BodyPart):
@@ -613,6 +615,7 @@ class MolePersonBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
 
 class MolePersonHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -753,6 +756,7 @@ class OctopusBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
 
 class OctopusHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -921,6 +925,7 @@ class HobgoblinBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
 
 class HobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1053,6 +1058,7 @@ class WolfBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
 
 class WolfHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1223,6 +1229,7 @@ class DrillbotProcessor(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
@@ -1393,6 +1400,7 @@ class GhoulBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
         self._attackpoisonresistance = 1
 
 class GhoulHeart(BodyPart):
@@ -1510,6 +1518,7 @@ class SmallFireElementalBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
         self._attackpoisonresistance = 1
 
 class SmallFireElementalHeart(BodyPart):
@@ -1681,6 +1690,7 @@ class DireWolfBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
 
 class DireWolfHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1857,6 +1867,7 @@ class JobgoblinBrain(BodyPart):
         self.creaturesseen = []
         self.godsknown = []
         self.curesknown = []
+        self.stances = []
 
 class JobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):

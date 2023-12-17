@@ -51,6 +51,7 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'wear': ((pygame.locals.K_w, True, True), (None, False, True)),
                        'unwield': ((pygame.locals.K_u, False, True), (None, False, True)),
                        'undress': ((pygame.locals.K_u, True, True), (None, False, True)),
+                       'choose stance': ((pygame.locals.K_s, False, True), (None, False, True)),
                        'pray': ((pygame.locals.K_p, False, True), (None, False, True)),
                        'list bodyparts': ((pygame.locals.K_b, False, True), (None, False, True)),
                        'choose bodyparts': ((pygame.locals.K_b, True, True), (None, False, True)),
@@ -315,6 +316,8 @@ def game():
         win.putchars('Dungeon level ' + repr(cave_i + 1), x=50, y=mapheight, fgcolor='white', bgcolor=(128,128,128))
 
         statuseffects = []
+        if player.stance != 'neutral':
+            statuseffects.append((player.stance.capitalize(), (0, 255, 0)))
         if player.overloaded():
             statuseffects.append(('Overloaded', (255, 0, 0)))
         elif player.burdened():
@@ -592,6 +595,26 @@ def game():
                     win.write(partdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
                     win.write(partdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+        elif gamestate == 'choosestance':
+            stancemessage = 'Which stance do you want to be in'
+            win.write(stancemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1,len(player.stancesknown()))
+            for i in range(logrows):
+                if len(player.stancesknown()) <= logheight-1:
+                    j = i
+                else:
+                    j = len(player.stancesknown())+i-logrows-logback
+                if player.stancesknown()[j] == 'aggressive':
+                    stancetext = 'Aggressive (+25% to hit, +11.1% to get hit)'
+                elif player.stancesknown()[j] == 'defensive':
+                    stancetext = 'Defensive (-20% to get hit, -10% to hit)'
+                else:
+                    stancetext = player.stancesknown()[j].capitalize()
+                if j != chosen:
+                    win.write(stancetext, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                if j == chosen:
+                    win.write(stancetext, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         elif gamestate == 'pray':
             praymessage = 'To which sinful god of the underground do you wish to pray?'
@@ -940,6 +963,12 @@ def game():
                                 player.log().append("You have nothing to undress.")
                                 logback = 0
 
+                        # Stance:
+                        if (event.key == keybindings['choose stance'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose stance'][0][1])) or (event.key == keybindings['choose stance'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose stance'][1][1])):
+                                gamestate = 'choosestance'
+                                logback = len(player.stancesknown()) - logheight + 1
+                                chosen = 0
+
                         # Praying:
                         if (event.key == keybindings['pray'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][0][1])) or (event.key == keybindings['pray'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][1][1])):
                             if len(player.godsknown()) > 0:
@@ -982,10 +1011,11 @@ def game():
                             player.log().append('  - u: unwield an item')
                             player.log().append('  - W: wear an item')
                             player.log().append('  - U: undress an item')
+                            player.log().append('  - s: choose stance')
                             player.log().append('  - p: pray')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 10 # Increase when adding commands
+                                logback = 11 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
@@ -1397,6 +1427,27 @@ def game():
                             logback = 0
                             gamestate = 'free'
 
+                    elif gamestate == 'choosestance':
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                            chosen = max(0, chosen-1)
+                            if chosen == len(player.stancesknown()) - logback - (logheight - 1) - 1:
+                                logback += 1
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                            chosen = min(len(player.stancesknown())-1, chosen+1)
+                            if chosen == len(player.stancesknown()) - logback:
+                                logback -= 1
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            updatetime(0.5)
+                            if not player.dying():
+                                selected = player.stancesknown()[chosen]
+                                player.stance = selected
+                                player.previousaction = ('choosestance',)
+                                logback = 0
+                            gamestate = 'free'
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+
                     elif gamestate == 'pray':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
@@ -1411,6 +1462,7 @@ def game():
                             if not player.dying():
                                 selected = player.godsknown()[chosen]
                                 player.pray(selected)
+                                player.previousaction = ('pray',)
                                 logback = 0
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
