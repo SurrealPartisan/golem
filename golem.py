@@ -591,7 +591,12 @@ def game():
                     j = i
                 else:
                     j = len(player.attackslist())+i-logrows-logback
-                attackdescription = player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ', ' + repr(player.attackslist()[j].time * (1 + player.slowed())) + ' s'
+                attacktime = player.attackslist()[j].time * (1 + player.slowed())
+                if int(attacktime) == attacktime:
+                    attacktime = int(attacktime)
+                else:
+                    attacktime = round(attacktime, 2)
+                attackdescription = player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ' ' + player.attackslist()[j].damagetype + ', ' + repr(attacktime) + ' s'
                 for special in player.attackslist()[j].special:
                     if special[0] == 'bleed':
                         attackdescription += ', bleed ' + repr(int(special[1] * 100)) + '%'

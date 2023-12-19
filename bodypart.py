@@ -45,6 +45,7 @@ class BodyPart(item.Item):
         self._attackpoisonresistance = 0
         self._wearwieldname = name
         self.bleedclocks = []
+        self._resistances = {'sharp': 0, 'blunt': 0, 'hewing': 0, 'fire': 0}
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -75,6 +76,9 @@ class BodyPart(item.Item):
 
     def attackpoisonresistance(self):
         return self._attackpoisonresistance
+
+    def resistance(self, damagetype):
+        return self._resistances[damagetype]
 
     def wearwieldname(self):
         if self.parentalconnection == None:
@@ -180,7 +184,7 @@ class HumanArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -208,7 +212,7 @@ class HumanLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
         else:
             return []
 
@@ -228,7 +232,7 @@ class HumanHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -317,6 +321,7 @@ class ZombieTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 class ZombieArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -331,6 +336,7 @@ class ZombieArm(BodyPart):
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def speed(self):
         if not self.destroyed():
@@ -353,7 +359,7 @@ class ZombieArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -371,10 +377,11 @@ class ZombieLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
         else:
             return []
 
@@ -402,10 +409,11 @@ class ZombieHead(BodyPart):
         self._wearwieldname = 'head'
         self.weight = 7000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -418,6 +426,7 @@ class ZombieEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def sight(self):
         if not self.destroyed():
@@ -442,6 +451,7 @@ class ZombieBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -452,6 +462,7 @@ class ZombieHeart(BodyPart):
         self.material = "undead flesh"
         self.weight = 250
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 class ZombieLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -462,6 +473,8 @@ class ZombieLung(BodyPart):
         self.material = 'undead flesh'
         self.weight = 500
         self.breathepoisonresistance = 0.5
+        self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 class ZombieStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -478,6 +491,7 @@ class ZombieStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
             }
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 
 
@@ -535,7 +549,7 @@ class MolePersonArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'hewing', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -563,7 +577,7 @@ class MolePersonLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
         else:
             return []
 
@@ -583,7 +597,7 @@ class MolePersonHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -681,7 +695,7 @@ class OctopusHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -722,7 +736,7 @@ class OctopusTentacle(BodyPart):
         if not self.destroyed():
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
-                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10, 'blunt', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -811,6 +825,8 @@ class HobgoblinTorso(BodyPart):
         self._wearwieldname = 'torso'
         self.weight = 35000
         self.carryingcapacity = 20000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
 class HobgoblinArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -823,6 +839,8 @@ class HobgoblinArm(BodyPart):
         self._wearwieldname = 'hand'
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 5000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
     def speed(self):
         if not self.destroyed():
@@ -845,7 +863,7 @@ class HobgoblinArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'sharp', [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -861,6 +879,8 @@ class HobgoblinLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 13000
         self.carryingcapacity = 15000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
     def speed(self):
         if not self.destroyed():
@@ -873,7 +893,7 @@ class HobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', [], [], self)]
         else:
             return []
 
@@ -890,10 +910,12 @@ class HobgoblinHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1006,7 +1028,7 @@ class WolfLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 10, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 10, 'sharp', [], [], self)]
         else:
             return []
 
@@ -1026,7 +1048,7 @@ class WolfHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 40, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 40, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1127,6 +1149,7 @@ class DrillbotChassis(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.2
 
 class DrillbotWheel(BodyPart):
     def __init__(self, owner, x, y):
@@ -1142,6 +1165,7 @@ class DrillbotWheel(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.5
 
     def speed(self):
         if not self.destroyed():
@@ -1165,13 +1189,14 @@ class DrillArm(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.2
 
     def minespeed(self):
         return 0.5
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, [], [('bleed', 0.2)], self)]
+            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, 'hewing', [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1186,6 +1211,7 @@ class DrillbotCamera(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.2
 
     def sight(self):
         if not self.destroyed():
@@ -1204,6 +1230,7 @@ class DrillbotPump(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.2
 
 class DrillbotAerator(BodyPart):
     def __init__(self, owner, x, y):
@@ -1214,6 +1241,7 @@ class DrillbotAerator(BodyPart):
         self.weight = 600
         self.material = 'electronics'
         self.breathepoisonresistance = 0.5
+        self._resistances['sharp'] = 0.2
 
 class DrillbotProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -1234,6 +1262,7 @@ class DrillbotProcessor(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.2
 
 class DrillBotBiomassProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -1246,6 +1275,7 @@ class DrillBotBiomassProcessor(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.2
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
@@ -1277,6 +1307,7 @@ class GhoulTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 60000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 class GhoulArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -1291,6 +1322,7 @@ class GhoulArm(BodyPart):
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def speed(self):
         if not self.destroyed():
@@ -1313,7 +1345,7 @@ class GhoulArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 50, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 50, 'blunt', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1331,10 +1363,11 @@ class GhoulLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 75, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 75, 'blunt', [], [], self)]
         else:
             return []
 
@@ -1362,10 +1395,11 @@ class GhoulHead(BodyPart):
         self._wearwieldname = 'head'
         self.weight = 7000
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 50, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 50, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1378,6 +1412,7 @@ class GhoulEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
     def sight(self):
         if not self.destroyed():
@@ -1402,6 +1437,7 @@ class GhoulBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 class GhoulHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1412,6 +1448,7 @@ class GhoulHeart(BodyPart):
         self.material = "undead flesh"
         self.weight = 250
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 class GhoulLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -1422,6 +1459,7 @@ class GhoulLung(BodyPart):
         self.material = 'undead flesh'
         self.weight = 600
         self.breathepoisonresistance = 0
+        self._resistances['sharp'] = -0.2
 
 class GhoulStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -1438,6 +1476,7 @@ class GhoulStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
             }
         self._attackpoisonresistance = 1
+        self._resistances['sharp'] = -0.2
 
 
 
@@ -1465,6 +1504,7 @@ class SmallFireElementalTorso(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
 
 class SmallFireElementalHead(BodyPart):
     def __init__(self, owner, x, y):
@@ -1482,6 +1522,7 @@ class SmallFireElementalHead(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
 
 class SmallFireElementalEye(BodyPart):
     def __init__(self, owner, x, y):
@@ -1494,6 +1535,7 @@ class SmallFireElementalEye(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
 
     def sight(self):
         if not self.destroyed():
@@ -1520,6 +1562,7 @@ class SmallFireElementalBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
 
 class SmallFireElementalHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1532,6 +1575,7 @@ class SmallFireElementalHeart(BodyPart):
         self.edible = False
         self.weight = 10
         self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
 
 class SmallFireElementalBellows(BodyPart):
     def __init__(self, owner, x, y):
@@ -1542,6 +1586,7 @@ class SmallFireElementalBellows(BodyPart):
         self.material = 'elemental'
         self.weight = 600
         self.breathepoisonresistance = 0
+        self._resistances['fire'] = 1
 
 class SmallFireElementalTentacle(BodyPart):
     def __init__(self, owner, x, y):
@@ -1559,6 +1604,7 @@ class SmallFireElementalTentacle(BodyPart):
         self.weight = 100
         self.carryingcapacity = 20000
         self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
 
     def speed(self):
         if not self.destroyed():
@@ -1584,7 +1630,7 @@ class SmallFireElementalTentacle(BodyPart):
         if not self.destroyed():
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
-                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.8, timetaken, 1, 30, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.8, timetaken, 1, 30, 'fire', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1638,7 +1684,7 @@ class DireWolfLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 20, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 20, 'sharp', [], [], self)]
         else:
             return []
 
@@ -1658,7 +1704,7 @@ class DireWolfHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 60, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 60, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1753,6 +1799,8 @@ class JobgoblinTorso(BodyPart):
         self._wearwieldname = 'torso'
         self.weight = 35000
         self.carryingcapacity = 50000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
 class JobgoblinArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -1765,6 +1813,8 @@ class JobgoblinArm(BodyPart):
         self._wearwieldname = 'hand'
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 5000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
     def speed(self):
         if not self.destroyed():
@@ -1787,7 +1837,7 @@ class JobgoblinArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 65, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 65, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 65, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 65, 'sharp', [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1803,6 +1853,8 @@ class JobgoblinLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 13000
         self.carryingcapacity = 15000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
     def speed(self):
         if not self.destroyed():
@@ -1815,7 +1867,7 @@ class JobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 90, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 90, 'blunt', [], [], self)]
         else:
             return []
 
@@ -1832,10 +1884,12 @@ class JobgoblinHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 70, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 70, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
