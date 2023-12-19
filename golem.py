@@ -1267,7 +1267,7 @@ def game():
                                         elif stomach.foodprocessing[selected.material][0] == -1:
                                             player.log().append('Your stomach doesn\'t tolerate ' + selected.material + ' under any circumstances.')
                                     else:
-                                        player.log.append('You have no stomach, so you cannot eat!')
+                                        player.log().append('You have no stomach, so you cannot eat!')
                                     logback = 0
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
