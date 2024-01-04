@@ -45,7 +45,10 @@ class BodyPart(item.Item):
         self._attackpoisonresistance = 0
         self._wearwieldname = name
         self.bleedclocks = []
-        self._resistances = {'sharp': 0, 'blunt': 0, 'hewing': 0, 'fire': 0}
+        self._resistances = {'sharp': 0, 'blunt': 0, 'rough': 0, 'fire': 0}
+        self.detectiondistance = 0
+        self.detectionprobability = 0
+        self.carefulness = 0
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -126,7 +129,24 @@ class BodyPart(item.Item):
             user.log().append('You ate the ' + self.name + '.')
             if user.hunger == 0:
                 user.log().append('You are satiated.')
-            
+
+    def on_destruction(self, dead):
+        if not dead:
+            if self.capableofwielding:
+                for it in self.wielded:
+                    it.owner.remove(it)
+                    self.owner.owner.world.items.append(it)
+                    it.owner = self.owner.owner.world.items
+                    it.x = self.owner.owner.x
+                    it.y = self.owner.owner.y
+                    self.owner.owner.log().append('You dropped your ' + it.name)
+            for it in [l[0] for l in self.worn.values() if len(l) > 0]:
+                it.owner.remove(it)
+                self.owner.owner.world.items.append(it)
+                it.owner = self.owner.owner.world.items
+                it.x = self.owner.owner.x
+                it.y = self.owner.owner.y
+                self.owner.owner.log().append('You dropped your ' + it.name)
 
 
 
@@ -146,7 +166,7 @@ class HumanTorso(BodyPart):
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
-        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 45000
         self.carryingcapacity = 20000
@@ -162,6 +182,7 @@ class HumanArm(BodyPart):
         self._wearwieldname = 'hand'
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 5000
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -200,6 +221,7 @@ class HumanLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 17000
         self.carryingcapacity = 20000
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -243,6 +265,8 @@ class HumanEye(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 8
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
 
     def sight(self):
         if not self.destroyed():
@@ -260,8 +284,9 @@ class HumanBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -316,7 +341,7 @@ class ZombieTorso(BodyPart):
             }
         self.maxhp = 50
         self.material = "undead flesh"
-        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 40000
         self.carryingcapacity = 30000
@@ -337,6 +362,7 @@ class ZombieArm(BodyPart):
         self.weight = 4000
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
+        self.carefulness = 0.3
 
     def speed(self):
         if not self.destroyed():
@@ -378,6 +404,7 @@ class ZombieLeg(BodyPart):
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
+        self.carefulness = 0.3
 
     def attackslist(self):
         if not self.destroyed():
@@ -427,6 +454,8 @@ class ZombieEye(BodyPart):
         self.weight = 7
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
 
     def sight(self):
         if not self.destroyed():
@@ -445,8 +474,9 @@ class ZombieBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -511,7 +541,7 @@ class MolePersonTorso(BodyPart):
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
-        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 45000
         self.carryingcapacity = 20000
@@ -527,6 +557,7 @@ class MolePersonArm(BodyPart):
         self._wearwieldname = 'hand'
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 6000
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -549,7 +580,7 @@ class MolePersonArm(BodyPart):
     def attackslist(self):
         if not self.destroyed():
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'hewing', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'rough', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -565,6 +596,7 @@ class MolePersonLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 15000
         self.carryingcapacity = 15000
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -608,6 +640,8 @@ class MolePersonEye(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
 
     def sight(self):
         if not self.destroyed():
@@ -625,8 +659,9 @@ class MolePersonBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -664,6 +699,188 @@ class MolePersonStomach(BodyPart):
 
 
 
+class GoblinTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin torso', '*', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
+            'head': BodyPartConnection(self, ['head'], True, ''),
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            }
+        self.maxhp = 50
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 25000
+        self.carryingcapacity = 20000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+
+class GoblinArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin arm', '~', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 4000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'sharp', [], [('bleed', 0.2)], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class GoblinLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin leg', '~', (0, 255, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 10000
+        self.carryingcapacity = 15000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+                return 1
+            else:
+                return 0.5
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
+        else:
+            return []
+
+class GoblinHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin head', '*', (0, 255, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 20
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 5000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 15, 'sharp', [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class GoblinEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
+
+    def sight(self):
+        if not self.destroyed():
+            return 3
+        else:
+            return 0
+
+class GoblinBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+
+class GoblinHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 250
+
+class GoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 600
+        self.breathepoisonresistance = 0.2
+
+class GoblinStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 900
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+
+
+
 class OctopusHead(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'cave octopus head', '*', (255, 0, 255))
@@ -688,7 +905,7 @@ class OctopusHead(BodyPart):
             'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ')
             }
         self.maxhp = 80
-        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 40000
         self.carryingcapacity = 20000
@@ -711,6 +928,7 @@ class OctopusTentacle(BodyPart):
         self.worn = {'tentacle armor': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 10000
         self.carryingcapacity = 10000
+        self.carefulness = 0.4
 
     def speed(self):
         if not self.destroyed():
@@ -749,6 +967,8 @@ class OctopusEye(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 10
+        self.detectiondistance = 2.9
+        self.detectionprobability = 0.2
 
     def sight(self):
         if not self.destroyed():
@@ -766,8 +986,9 @@ class OctopusBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -805,6 +1026,151 @@ class OctopusStomach(BodyPart):
 
 
 
+class DogTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog torso', '*', (170, 130, 70))
+        self.categories = ['torso']
+        self.childconnections = {
+            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left '),
+            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right '),
+            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left '),
+            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
+            'head': BodyPartConnection(self, ['head'], True, ''),
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
+            'tail': BodyPartConnection(self, ['tail'], False, '')
+            }
+        self.maxhp = 75
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 20000
+        self.carryingcapacity = 20000
+
+class DogLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog leg', '~', (170, 130, 70))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self.maxhp = 25
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 3000
+        self.carryingcapacity = 6000
+        self.carefulness = 0.5
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 3:
+                return 1.5
+            elif len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+                return 1
+            else:
+                return 0.5
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 5, 'sharp', [], [], self)]
+        else:
+            return []
+
+class DogHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog head', '*', (170, 130, 70))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 25
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 3000
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 0.80, 1, 1, 25, 'sharp', [], [('bleed', 0.2)], self)]
+        else:
+            return []
+
+class DogEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog eye', '*', (255, 255, 0))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self.maxhp = 15
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
+
+    def sight(self):
+        if not self.destroyed():
+            return 3
+        else:
+            return 0
+
+class DogBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self.maxhp = 15
+        self.weight = 100
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+
+class DogHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 15
+        self.weight = 400
+
+class DogLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 15
+        self.weight = 450
+        self.breathepoisonresistance = 0
+
+class DogStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 15
+        self.weight = 800
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
+            'living flesh': (1, 1, None),
+            'undead flesh': (-1,)
+            }
+
+class DogTail(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog tail', '~', (170, 130, 70))
+        self.categories = ['tail']
+        self.childconnections = {}
+        self.maxhp = 7
+        self.weight = 400
+
+
+
 class HobgoblinTorso(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'hobgoblin torso', '*', (0, 255, 0))
@@ -821,7 +1187,7 @@ class HobgoblinTorso(BodyPart):
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 100
-        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 35000
         self.carryingcapacity = 20000
@@ -841,6 +1207,7 @@ class HobgoblinArm(BodyPart):
         self.weight = 5000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
 
     def speed(self):
         if not self.destroyed():
@@ -881,6 +1248,7 @@ class HobgoblinLeg(BodyPart):
         self.carryingcapacity = 15000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
 
     def speed(self):
         if not self.destroyed():
@@ -926,6 +1294,8 @@ class HobgoblinEye(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
 
     def sight(self):
         if not self.destroyed():
@@ -943,8 +1313,9 @@ class HobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -971,7 +1342,181 @@ class HobgoblinStomach(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
-        self.maxhp = 10
+        self.maxhp = 20
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+
+
+
+class MoleMonkTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk torso', '*', (186, 100, 13))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
+            'head': BodyPartConnection(self, ['head'], True, ''),
+            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            }
+        self.maxhp = 100
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 50000
+        self.carryingcapacity = 30000
+
+class MoleMonkArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk arm', '~', (186, 100, 13))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 7000
+        self.carefulness = 0.5
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return 0.5
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'rough', [], [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class MoleMonkLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk leg', '~', (186, 100, 13))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 17000
+        self.carryingcapacity = 20000
+        self.carefulness = 0.5
+
+    def speed(self):
+        if not self.destroyed():
+            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+                return 1.5
+            else:
+                return 0.75
+        else:
+            return 0
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', [], [], self)]
+        else:
+            return []
+
+class MoleMonkHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk head', '*', (186, 100, 13))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 30
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 7000
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 45, 'sharp', [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class MoleMonkEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
+
+    def sight(self):
+        if not self.destroyed():
+            return 1
+        else:
+            return 0
+
+class MoleMonkBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 1300
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = ['fasting']
+
+class MoleMonkHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 300
+
+class MoleMonkLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 600
+        self.breathepoisonresistance = 0
+
+class MoleMonkStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self.maxhp = 20
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -999,7 +1544,7 @@ class WolfTorso(BodyPart):
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
         self.maxhp = 150
-        self.worn = {'barding': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 25000
         self.carryingcapacity = 25000
@@ -1014,6 +1559,7 @@ class WolfLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 4000
         self.carryingcapacity = 7500
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -1059,6 +1605,8 @@ class WolfEye(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
 
     def sight(self):
         if not self.destroyed():
@@ -1076,8 +1624,9 @@ class WolfBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -1104,7 +1653,7 @@ class WolfStomach(BodyPart):
         super().__init__(owner, x, y, 'wolf stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
-        self.maxhp = 10
+        self.maxhp = 20
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -1141,7 +1690,7 @@ class DrillbotChassis(BodyPart):
             'central processor': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
             }
         self.maxhp = 150
-        self.worn = {'barding': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'chassis'
         self.weight = 30000
         self.carryingcapacity = 50000
@@ -1166,6 +1715,8 @@ class DrillbotWheel(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.5
+        self._resistances['rough'] = -0.5
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -1196,7 +1747,7 @@ class DrillArm(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, 'hewing', [], [('bleed', 0.2)], self)]
+            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, 'rough', [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1212,6 +1763,8 @@ class DrillbotCamera(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
 
     def sight(self):
         if not self.destroyed():
@@ -1253,8 +1806,9 @@ class DrillbotProcessor(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -1269,7 +1823,7 @@ class DrillBotBiomassProcessor(BodyPart):
         super().__init__(owner, x, y, 'drillbot biomass processor', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
-        self.maxhp = 10
+        self.maxhp = 30
         self.weight = 2000
         self.material = 'electronics'
         self.consumable = False
@@ -1302,7 +1856,7 @@ class GhoulTorso(BodyPart):
             }
         self.maxhp = 175
         self.material = "undead flesh"
-        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 40000
         self.carryingcapacity = 60000
@@ -1323,6 +1877,7 @@ class GhoulArm(BodyPart):
         self.weight = 4000
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
+        self.carefulness = 0.3
 
     def speed(self):
         if not self.destroyed():
@@ -1364,6 +1919,7 @@ class GhoulLeg(BodyPart):
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
+        self.carefulness = 0.3
 
     def attackslist(self):
         if not self.destroyed():
@@ -1413,6 +1969,8 @@ class GhoulEye(BodyPart):
         self.weight = 7
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
 
     def sight(self):
         if not self.destroyed():
@@ -1431,8 +1989,9 @@ class GhoulBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -1496,7 +2055,7 @@ class SmallFireElementalTorso(BodyPart):
             'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ')
             }
         self.maxhp = 200
-        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 400
         self.carryingcapacity = 60000
@@ -1536,6 +2095,8 @@ class SmallFireElementalEye(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
 
     def sight(self):
         if not self.destroyed():
@@ -1556,8 +2117,9 @@ class SmallFireElementalBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -1605,6 +2167,7 @@ class SmallFireElementalTentacle(BodyPart):
         self.carryingcapacity = 20000
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -1655,7 +2218,7 @@ class DireWolfTorso(BodyPart):
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
         self.maxhp = 225
-        self.worn = {'barding': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 35000
         self.carryingcapacity = 40000
@@ -1670,6 +2233,7 @@ class DireWolfLeg(BodyPart):
         self._wearwieldname = 'leg'
         self.weight = 6000
         self.carryingcapacity = 10000
+        self.carefulness = 0.5
 
     def speed(self):
         if not self.destroyed():
@@ -1715,6 +2279,8 @@ class DireWolfEye(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
 
     def sight(self):
         if not self.destroyed():
@@ -1732,8 +2298,9 @@ class DireWolfBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -1760,7 +2327,7 @@ class DireWolfStomach(BodyPart):
         super().__init__(owner, x, y, 'dire wolf stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
-        self.maxhp = 10
+        self.maxhp = 30
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -1795,7 +2362,7 @@ class JobgoblinTorso(BodyPart):
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 250
-        self.worn = {'chest armor': listwithowner([], self), 'backpack': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 35000
         self.carryingcapacity = 50000
@@ -1815,6 +2382,7 @@ class JobgoblinArm(BodyPart):
         self.weight = 5000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
 
     def speed(self):
         if not self.destroyed():
@@ -1855,6 +2423,7 @@ class JobgoblinLeg(BodyPart):
         self.carryingcapacity = 15000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
 
     def speed(self):
         if not self.destroyed():
@@ -1889,7 +2458,7 @@ class JobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not self.destroyed():
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 70, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 90, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1900,6 +2469,8 @@ class JobgoblinEye(BodyPart):
         self.childconnections = {}
         self.maxhp = 40
         self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
 
     def sight(self):
         if not self.destroyed():
@@ -1917,8 +2488,9 @@ class JobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append(np.zeros((mapwidth, mapheight)))
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         self.creaturesseen = []
+        self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
         self.stances = []
@@ -1945,7 +2517,7 @@ class JobgoblinStomach(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
-        self.maxhp = 20
+        self.maxhp = 40
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -1955,3 +2527,148 @@ class JobgoblinStomach(BodyPart):
             }
 
 
+
+class VelociraptorSkull(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fossilized velociraptor skull', '*', (255, 255, 255))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 50
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 1000
+        self.material = "fossil"
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['fire'] = 0.5
+        self._resistances['rough'] = -1
+        
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 0.9, 1, 1, 50, 'sharp', [], [('bleed', 0.2)], self)]
+        else:
+            return []
+
+class DeinonychusSkull(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fossilized deinonychus skull', '*', (255, 255, 255))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 75
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 5500
+        self.material = "fossil"
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['fire'] = 0.5
+        self._resistances['rough'] = -1
+        
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 75, 'sharp', [], [('bleed', 0.2)], self)]
+        else:
+            return []
+
+class CeratosaurusSkull(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fossilized ceratosaurus skull', '*', (255, 255, 255))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 100
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 13500
+        self.material = "fossil"
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['fire'] = 0.5
+        self._resistances['rough'] = -1
+        
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 100, 'sharp', [], [('bleed', 0.2)], self)]
+        else:
+            return []
+
+class AllosaurusSkull(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fossilized allosaurus skull', '*', (255, 255, 255))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 125
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 48500
+        self.material = "fossil"
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['fire'] = 0.5
+        self._resistances['rough'] = -1
+        
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 125, 'sharp', [], [('bleed', 0.2)], self)]
+        else:
+            return []
+
+class TyrannosaurusSkull(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fossilized tyrannosaurus skull', '*', (255, 255, 255))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
+            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            }
+        self.maxhp = 150
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 270000
+        self.material = "fossil"
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['fire'] = 0.5
+        self._resistances['rough'] = -1
+        
+
+    def attackslist(self):
+        if not self.destroyed():
+            return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 150, 'sharp', [], [('bleed', 0.2)], self)]
+        else:
+            return []

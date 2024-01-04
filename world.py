@@ -17,11 +17,14 @@ class World():
         self.width = width
         self.height = height
         self.walls = np.ones((width, height))
+        self.lavapits = np.zeros((width, height))
         self.spiderwebs = np.zeros((width, height))
         self.poisongas = np.zeros((width, height))
         self.items = []
         self.creatures = []
         self.altars = []
+        self.largerocks = np.zeros((width, height))
+        self.campfires = np.zeros((width, height))
         self.stairsupcoords = None
         self.stairsdowncoords = None
         self.curetypes = []
@@ -92,14 +95,26 @@ class World():
                 self.walls[coords[0], coords[1]] = 0
             roomsconnected[newroom] = 1
 
-        def spreadwebs(x, y):
-            self.spiderwebs[x, y] = 1
+        def spreadlava(x, y):
+            self.lavapits[x, y] = 1
             for neighbor in [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
-                if 0 < neighbor[0] < self.width-1 and 0 < neighbor[1] < self.height-1 and self.walls[neighbor] == 0 and self.spiderwebs[neighbor] == 0 and np.random.randint(3) == 0:
-                    spreadwebs(neighbor[0], neighbor[1])
+                if 0 < neighbor[0] < self.width-1 and 0 < neighbor[1] < self.height-1 and self.walls[neighbor] == 0 and self.lavapits[neighbor] == 0 and np.random.randint(3) == 0:
+                    spreadlava(neighbor[0], neighbor[1])
         for i in range(np.random.randint(10)):
             x = y = 0
             while self.walls[x, y] != 0:
+                x = np.random.randint(self.width)
+                y = np.random.randint(self.height)
+            spreadlava(x, y)
+
+        def spreadwebs(x, y):
+            self.spiderwebs[x, y] = 1
+            for neighbor in [(x-1,y), (x+1,y), (x,y-1), (x,y+1)]:
+                if 0 < neighbor[0] < self.width-1 and 0 < neighbor[1] < self.height-1 and self.walls[neighbor] == 0 and self.lavapits[neighbor] == 0 and self.spiderwebs[neighbor] == 0 and np.random.randint(3) == 0:
+                    spreadwebs(neighbor[0], neighbor[1])
+        for i in range(np.random.randint(10)):
+            x = y = 0
+            while self.walls[x, y] != 0 or self.lavapits[x, y] != 0:
                 x = np.random.randint(self.width)
                 y = np.random.randint(self.height)
             spreadwebs(x, y)
@@ -117,12 +132,12 @@ class World():
             spreadgas(x, y)
 
         x = y = 0
-        while self.walls[x, y] != 0:
+        while self.walls[x, y] != 0 or self.lavapits[x, y] != 0:
             x = np.random.randint(self.width)
             y = np.random.randint(self.height)
         self.stairsdowncoords = (x, y)
         x = y = 0
-        while self.walls[x, y] != 0 or (x, y) == self.stairsdowncoords:
+        while self.walls[x, y] != 0  or self.lavapits[x, y] != 0 or (x, y) == self.stairsdowncoords:
             x = np.random.randint(self.width)
             y = np.random.randint(self.height)
         self.stairsupcoords = (x, y)

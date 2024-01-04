@@ -12,7 +12,7 @@ import creature
 import world
 import bodypart
 import god
-from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, drugname, infusionname, bodypartshortnames
+from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, drugname, infusionname, bodypartshortnames, listwithowner
 
 pygame.init()
 
@@ -48,6 +48,7 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'drop': ((pygame.locals.K_d, False, True), (None, False, True)),
                        'inventory': ((pygame.locals.K_i, False, True), (None, False, True)),
                        'consume': ((pygame.locals.K_c, False, True), (None, False, True)),
+                       'cook': ((pygame.locals.K_c, True, True), (None, False, True)),
                        'wield': ((pygame.locals.K_w, False, True), (None, False, True)),
                        'wear': ((pygame.locals.K_w, True, True), (None, False, True)),
                        'unwield': ((pygame.locals.K_u, False, True), (None, False, True)),
@@ -114,51 +115,85 @@ def game():
             cave = world.World(mapwidth, mapheight)
             cave.rooms()
             cave.curetypes = curetypes
+            altarcoords = []
             for j in range(np.random.randint(4)):
                 x = y = 0
-                while cave.walls[x, y] != 0 or (x, y) == cave.stairsdowncoords or (x, y) == cave.stairsupcoords:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or (x, y) == cave.stairsdowncoords or (x, y) == cave.stairsupcoords:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
+                altarcoords.append((x, y))
                 cave.altars.append(world.Altar(x, y, np.random.choice(gods)))
+
+            for j in range(np.random.randint(41)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.largerocks[x, y] != 0 or (x, y) == cave.stairsdowncoords or (x, y) == cave.stairsupcoords or (x, y) in altarcoords:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                cave.largerocks[x, y] = 1
+
+            for j in range(np.random.randint(4)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.largerocks[x, y] != 0 or cave.spiderwebs[x, y] != 0 or cave.campfires[x, y] != 0 or (x, y) == cave.stairsdowncoords or (x, y) == cave.stairsupcoords or (x, y) in altarcoords:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                cave.campfires[x, y] = 1
+
+            caltropscoords = []
+            for j in range(np.random.randint(11)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0 or (x, y) in caltropscoords:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                caltropscoords.append((x, y))
+                item.randomcaltrops(cave.items, x, y, i)
+
+            pebblescoords = []
+            for j in range(np.random.randint(11)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0 or (x, y) in caltropscoords or (x, y) in pebblescoords:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                pebblescoords.append((x, y))
+                item.LooseRoundPebbles(cave.items, x, y)
 
             for j in range(10):
                 x = y = 0
-                while cave.walls[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.Cure(cave.items, x, y, drugtypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
 
             for j in range(5):
                 x = y = 0
-                while cave.walls[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.Cure(cave.items, x, y, infusiontypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
 
             for j in range(np.random.randint(6,11)):
                 x = y = 0
-                while cave.walls[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomfood(cave.items, x, y)
 
             for j in range(5):
                 x = y = 0
-                while cave.walls[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomweapon(cave.items, x, y, i)
 
             for j in range(5):
                 x = y = 0
-                while cave.walls[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomarmor(cave.items, x, y, i)
 
             for j in range(np.random.randint(1,4)):
                 x = y = 0
-                while cave.walls[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomUtilityItem(cave.items, x, y)
@@ -168,7 +203,7 @@ def game():
                 enemytypes = [typ[0] for typ in creature.enemytypesbylevel[i]]
                 p = np.array([typ[1] for typ in creature.enemytypesbylevel[i]])
                 p = p/sum(p)
-                while cave.walls[x, y] != 0:
+                while cave.walls[x, y] != 0  or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 cave.creatures.append(np.random.choice(enemytypes, p=p)(cave, i, x, y))
@@ -230,56 +265,89 @@ def game():
         for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')  # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
+        seen = player.seen() # This should prevent at least some of the lag when the player has no brain.
         for i in range(mapwidth):
             for j in range(mapheight):
                 if fovmap[i,j]:
-                    if cave.walls[i,j] == 1:
+                    if cave.lavapits[i,j]:
+                        visiblebgcolor = (255, 0, 0)
+                        nonvisiblebgcolor = (128, 0, 0)
+                    else:
+                        visiblebgcolor = (64, 64, 64)
+                        nonvisiblebgcolor = (0, 0, 0)
+                    if cave.walls[i,j]:
                         win.putchars(' ', x=i, y=j, bgcolor='white')
+                        seen[cave_i][i][j] = (' ', (0, 0, 0), (128, 128, 128), (0, 0, 0))
                     elif cave.spiderwebs[i,j]:
                         win.putchars('#', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
+                        seen[cave_i][i][j] = ('#', (128, 128, 128), (0, 0, 0), (0, 0, 0))
+                    elif cave.largerocks[i,j]:
+                        win.putchars('%', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
+                        seen[cave_i][i][j] = ('%', (128, 128, 128), (0, 0, 0), (0, 0, 0))
+                    elif cave.campfires[i,j]:
+                        win.putchars('%', x=i, y=j, bgcolor=(64,64,64), fgcolor=(255, 204, 0))
+                        seen[cave_i][i][j] = ('%', (128, 102, 0), (0, 0, 0), (0, 0, 0))
                     else:
-                        win.putchars(' ', x=i, y=j, bgcolor=(64,64,64))
-                    player.seen()[cave_i][i,j] = 1
-                elif player.seen()[cave_i][i,j] == 1:
-                    if cave.walls[i,j] == 1:
-                        win.putchars(' ', x=i, y=j, bgcolor=(128,128,128))
-                    elif cave.spiderwebs[i,j]:
-                        win.putchars('#', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
+                        win.putchars(' ', x=i, y=j, bgcolor=visiblebgcolor)
+                        seen[cave_i][i][j] = (' ', (255, 255, 255), nonvisiblebgcolor, (0, 0, 0))
+                else:
+                    win.putchars(seen[cave_i][i][j][0], x=i, y=j, fgcolor=player.seen()[cave_i][i][j][1], bgcolor = seen[cave_i][i][j][2])
+                    win.settint(seen[cave_i][i][j][3][0], player.seen()[cave_i][i][j][3][1], seen[cave_i][i][j][3][2], (i,j,1,1))
         i, j = cave.stairsdowncoords
         if fovmap[i,j]:
             win.putchars('>', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
-        elif player.seen()[cave_i][i,j] == 1:
-            win.putchars('>', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
+            seen[cave_i][i][j] = ('>', (128, 128, 128), (0, 0, 0), (0, 0, 0))
         i, j = cave.stairsupcoords
         if fovmap[i,j]:
             win.putchars('<', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
-        elif player.seen()[cave_i][i,j] == 1:
-            win.putchars('<', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
+            seen[cave_i][i][j] = ('<', (128, 128, 128), (0, 0, 0), (0, 0, 0))
         for i, j, _ in cave.altars:
             if fovmap[i,j]:
-                win.putchars('%', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
-            elif player.seen()[cave_i][i,j] == 1:
-                win.putchars('%', x=i, y=j, bgcolor='black', fgcolor=(128,128,128))
+                win.putchars('%', x=i, y=j, bgcolor=(64,64,64), fgcolor=(0, 255, 255))
+                seen[cave_i][i][j] = ('%', (0, 128, 128), (0, 0, 0), (0, 0, 0))
 
         # Items
         for it in cave.items:
             if fovmap[it.x, it.y]:
-                win.putchars(it.char, x=it.x, y=it.y, 
-                     bgcolor=(64,64,64), fgcolor=it.color)
-            elif player.seen()[cave_i][it.x,it.y] == 1:
-                win.putchars('?', x=it.x, y=it.y, 
-                     bgcolor='black', fgcolor=(128,128,128))
+                if not it in player.itemsseen() and not it.hidden:
+                    brains = [part for part in player.bodyparts if 'brain' in part.categories and not part.destroyed()]
+                    if len(brains) > 0:
+                        player.itemsseen().append(it)
+                if it in player.itemsseen() or not it.hidden:
+                    if cave.lavapits[it.x,it.y]:
+                        visiblebgcolor = (255, 0, 0)
+                        nonvisiblebgcolor = (128, 0, 0)
+                    else:
+                        visiblebgcolor = (64, 64, 64)
+                        nonvisiblebgcolor = (0, 0, 0)
+                    win.putchars(it.char, x=it.x, y=it.y, 
+                         bgcolor=visiblebgcolor, fgcolor=it.color)
+                    seen[cave_i][it.x][it.y] = ('?', (128, 128, 128), nonvisiblebgcolor, (0, 0, 0))
 
         # Creatures
         for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
             if fovmap[npc.x, npc.y]:
-                win.putchars(npc.char, npc.x, npc.y, bgcolor=(64,64,64),
+                if cave.lavapits[npc.x,npc.y]:
+                        bgcolor = (255, 0, 0)
+                else:
+                    bgcolor = (64, 64, 64)
+                win.putchars(npc.char, npc.x, npc.y, bgcolor=bgcolor,
                              fgcolor=npc.color)
                 if not npc in player.creaturesseen():
                     player.creaturesseen().append(npc)
-                    player.log().append('You see a ' + npc.name +'.')
+                    if player in npc.creaturesseen():
+                            player.log().append('You see a ' + npc.name +'. It has noticed you.')
+                            fovmap2 = fov(npc.world.walls, npc.x, npc.y, npc.sight())
+                            if fovmap2[player.x, player.y]:
+                                npc.log().append('The ' + player.name + ' noticed you!')
+                    else:
+                        player.log().append('You see a ' + npc.name +'. It hasn\'t noticed you.')
+        if cave.lavapits[player.x,player.y]:
+            bgcolor = (255, 0, 0)
+        else:
+            bgcolor = (64, 64, 64)
         win.putchars(player.char, x=player.x, y=player.y, 
-                     bgcolor=(64,64,64), fgcolor=player.color)
+                     bgcolor=bgcolor, fgcolor=player.color)
 
         # Poison gas
         for i in range(mapwidth):
@@ -287,6 +355,7 @@ def game():
                 if fovmap[i,j]:
                     if cave.poisongas[i,j]:
                         win.settint(0, 128, 0, (i, j, 1, 1))
+                        seen[cave_i][i][j] = (seen[cave_i][i][j][0], seen[cave_i][i][j][1], seen[cave_i][i][j][2], (0, 64, 0))
 
         # Status
         for i in range(mapwidth):
@@ -386,6 +455,8 @@ def game():
             lookinglist = []
             if cave.walls[lookx, looky]:
                 lookinglist.append('a wall')
+            if cave.lavapits[lookx, looky]:
+                lookinglist.append('a lava pit')
             if cave.spiderwebs[lookx, looky]:
                 lookinglist.append('spiderweb')
             if cave.poisongas[lookx, looky]:
@@ -394,11 +465,15 @@ def game():
                 lookinglist.append('stairs up')
             if cave.stairsdowncoords == (lookx, looky):
                 lookinglist.append('stairs down')
+            if cave.largerocks[lookx, looky]:
+                lookinglist.append('a large rock')
+            if cave.campfires[lookx, looky]:
+                lookinglist.append('a campfire')
             for x, y, gd in cave.altars:
                 if (lookx, looky) == (x, y):
                     lookinglist.append('an altar of ' + gd.name)
             for it in cave.items:
-                if it.x == lookx and it.y == looky:
+                if it.x == lookx and it.y == looky and (it in player.itemsseen() or not it.hidden):
                     lookinglist.append('a ' + it.name)
             for creat in cave.creatures:
                 if creat.x == lookx and creat.y == looky:
@@ -432,9 +507,9 @@ def game():
                             start = start[:lastspace]
                         else:
                             looktext = end
-                        win.write(start, x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+                        win.write(start, x=0, y=texty, fgcolor=(255,255,255))
                         texty += 1
-                    win.write(looktext, x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+                    win.write(looktext, x=0, y=texty, fgcolor=(255,255,255))
 
         elif gamestate == 'mine':
             minemessage = 'Choose the direction to mine!'
@@ -443,7 +518,7 @@ def game():
         elif gamestate == 'pick':
             pickmessage = 'Choose the item to pick:'
             win.write(pickmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
+            picklist = [it for it in cave.items if it.x == player.x and it.y == player.y and (it in player.itemsseen() or not it.hidden)]
             logrows = min(logheight-1,len(picklist))
             for i in range(logrows):
                 if len(picklist) <= logheight-1:
@@ -493,6 +568,22 @@ def game():
                     if it.hpgiven() >= 0:
                         itemdescription += '+'
                     itemdescription += repr(it.hpgiven()) + ' hp to ' + it.curedmaterial + ')'
+                if j != chosen:
+                    win.write(itemdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                if j == chosen:
+                    win.write(itemdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+        elif gamestate == 'cook':
+            cookmessage = 'Choose the item to cook:'
+            win.write(cookmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1,len([item for item in player.inventory if item.material == 'living flesh']))
+            for i in range(logrows):
+                if len([item for item in player.inventory if item.material == 'living flesh']) <= logheight-1:
+                    j = i
+                else:
+                    j = len([item for item in player.inventory if item.material == 'living flesh'])+i-logrows-logback
+                it = [item for item in player.inventory if item.material == 'living flesh'][j]
+                itemdescription = it.name
                 if j != chosen:
                     win.write(itemdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
@@ -564,9 +655,9 @@ def game():
                 else:
                     j = len(partlist)+i-logrows-logback
                 if j != chosen:
-                    win.write(partlist[j].wearwieldname(), x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                    win.write(partlist[j].wearwieldname() + ' (' + selecteditem.wearcategory + ' slot)', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
-                    win.write(partlist[j].wearwieldname(), x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                    win.write(partlist[j].wearwieldname() + ' (' + selecteditem.wearcategory + ' slot)', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         elif gamestate == 'undress':
             choosemessage = 'Choose the item to take off:'
@@ -681,8 +772,12 @@ def game():
                     stancetext = 'Aggressive (+25% to hit, +11.1% to get hit)'
                 elif player.stancesknown()[j] == 'defensive':
                     stancetext = 'Defensive (-20% to get hit, -10% to hit)'
-                elif player.stancesknown()[j] == 'berserker':
-                    stancetext = 'Berserker (+50% to hit, +22.2% to get hit)'
+                elif player.stancesknown()[j] == 'berserk':
+                    stancetext = 'Berserk (+50% to hit, +22.2% to get hit)'
+                elif player.stancesknown()[j] == 'fasting':
+                    stancetext = 'Fasting (deal 2x damage on unarmed attacks when hungry, 3x when starving)'
+                elif player.stancesknown()[j] == 'flying':
+                    stancetext = 'Flying (avoid traps etc., see farther, and gain high ground (+5% to hit, -5% to get hit))'
                 else:
                     stancetext = player.stancesknown()[j].capitalize()
                 if j != chosen:
@@ -693,23 +788,46 @@ def game():
         elif gamestate == 'pray':
             praymessage = 'To which sinful god of the underground do you wish to pray?'
             win.write(praymessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            logrows = min(logheight-1,len(player.godsknown()))
+            logrows = min(logheight-1,min(7, len(player.godsknown()) + 1))
             for i in range(logrows):
                 if len(player.godsknown()) <= logheight-1:
                     j = i
                 else:
-                    j = len(player.godsknown())+i-logrows-logback
+                    j = min(7, len(player.godsknown()) + 1)+i-logrows-logback
                 if j != chosen:
-                    win.write(player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                    if j < len(player.godsknown()):
+                        win.write(player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                    else:
+                        win.write('whomever listens', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
-                    win.write(player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                    if j < len(player.godsknown()):
+                        win.write(player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                    else:
+                        win.write('whomever listens', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         win.update()
 
     def _updatetime(time):
         if not player.stance in player.stancesknown():
+            oldstance = player.stance
             player.stance = 'neutral'
+            if oldstance == 'flying':
+                for it in cave.items:
+                    if (it.x, it.y) == (player.x, player.y) and it.trap:
+                        part = player.approxfastestpart()
+                        if it in player.itemsseen() or not it.hidden:
+                            if np.random.rand() < part.carefulness:
+                                player.log().append('You managed to land carefully and avoided the ' + it.name + '.')
+                            else:
+                                it.entrap(player, part)
+                        else:
+                            it.entrap(player, part)
+                            player.itemsseen().append(it)
         player.bleed(time)
+        if cave.campfires[player.x, player.y] and player.stance != 'flying':
+            player.burn('campfire', time)
+        if cave.lavapits[player.x, player.y] and player.stance != 'flying':
+            player.burn('lava', time)
         player.applypoison(time)
         player.weakenedclock = max(0, player.weakenedclock - time)
         player.disorientedclock = max(0, player.disorientedclock - time)
@@ -749,6 +867,16 @@ def game():
         #_updatetime(time % 0.1)
         _updatetime(time)
 
+    def detecthiddenitems():
+        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+        for it in cave.items:
+            if fovmap[it.x, it.y]:
+                if not it in player.itemsseen() and it.hidden:
+                    for part in player.bodyparts:
+                        if np.sqrt((it.x-player.x)**2 + (it.y-player.y)**2) < part.detectiondistance and np.random.rand() < part.detectionprobability:
+                            player.log().append('You noticed ' + it.name + '!')
+                            player.itemsseen().append(it)
+
     def moveorattack(dx, dy):
         disoriented = False
         if player.disorientedclock > 0 and np.random.rand() < 0.5:
@@ -763,18 +891,27 @@ def game():
             target = targets[0]
             gamestate = 'chooseattack'
             logback = len(player.attackslist()) - logheight + 1
+        elif player.speed() == 0:
+            player.log().append('You are unable to move!')
+            logback = 0
+            gamestate = 'free'
+            target = None
         elif player.overloaded():
             player.log().append('You are too overloaded to move!')
             logback = 0
             gamestate = 'free'
             target = None
         elif cave.walls[player.x+dx, player.y+dy]:
-            player.log().append("There's a wall in your way.")
+            updatetime((np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')))/2)
+            if not player.dying():
+                player.log().append("You bumped into a wall.")
+                player.previousaction = ('wait',)
+                detecthiddenitems()
             logback = 0
             gamestate = 'free'
             target = None
         else:
-            updatetime(np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()))
+            updatetime(np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')))
             if not player.dying():
                 creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
                 if len(creaturesintheway) == 0:
@@ -783,6 +920,7 @@ def game():
                 else:
                     player.log().append("There's a " + creaturesintheway[0].name + " in your way.")
                     player.previousaction = ('wait',)
+                detecthiddenitems()
             logback = 0
             gamestate = 'free'
             target = None
@@ -797,7 +935,25 @@ def game():
             if not player.dying():
                 player.log().append('You mined a hole in the wall.')
                 cave.walls[player.x+dx, player.y+dy] = 0
+                found = np.random.choice([0, 1, 2, 3], p=[0.79-0.01*(cave_i%5), 0.1, 0.1, 0.01+0.01*(cave_i%5)])
+                if found == 1:
+                    cave.largerocks[player.x+dx, player.y+dy] = 1
+                if found == 2:
+                    pebbles = item.LooseRoundPebbles(cave.items, player.x+dx, player.y+dy)
+                    player.itemsseen().append(pebbles)
+                if found == 3:
+                    if cave_i < 5:
+                        bodypart.VelociraptorSkull(cave.items, player.x+dx, player.y+dy)
+                    elif cave_i < 10:
+                        bodypart.DeinonychusSkull(cave.items, player.x+dx, player.y+dy)
+                    elif cave_i < 15:
+                        bodypart.CeratosaurusSkull(cave.items, player.x+dx, player.y+dy)
+                    elif cave_i < 20:
+                        bodypart.AllosaurusSkull(cave.items, player.x+dx, player.y+dy)
+                    else:
+                        bodypart.TyrannosaurusSkull(cave.items, player.x+dx, player.y+dy)
                 player.previousaction = ('mine',)
+            detecthiddenitems()
         else:
             player.log().append("There's no wall there.")
         return('free', 0)  # gamestate and logback
@@ -830,7 +986,11 @@ def game():
                         elif player.causeofdeath[0] == 'suffocation':
                             deathmessage = 'suffocated to death'
                         elif player.causeofdeath[0] == 'consumption':
-                            deathmessage = 'died from adverse effects of ' + player.causeofdeath[1].name
+                            deathmessage = 'died from adverse effects of ' + player.causeofdeath[1].curetype.name
+                        elif player.causeofdeath[0] == 'burning':
+                            deathmessage = 'burned to death ' + player.causeofdeath[1]
+                        elif player.causeofdeath[0] == 'step':
+                            deathmessage = 'died from stepping on ' + player.causeofdeath[1].name
                         else:
                             deathmessage = 'died from unknown causes'
                         deathmessage += (' on dungeon level ' + repr(player.world_i+1) + '.')
@@ -862,6 +1022,9 @@ def game():
 
                         if (event.key == keybindings['wait'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][0][1])) or (event.key == keybindings['wait'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][1][1])):
                             updatetime(1)
+                            if not player.dying():
+                                player.log().append('You waited a second.')
+                                detecthiddenitems()
                             logback = 0
                             player.previousaction = ('wait',)
 
@@ -898,6 +1061,7 @@ def game():
                                     player.x = cave.stairsupcoords[0]
                                     player.y = cave.stairsupcoords[1]
                                     player.log().append('You went down the stairs.')
+                                    detecthiddenitems()
                                     player.previousaction = ('move',)
                                     logback = 0
 
@@ -919,6 +1083,7 @@ def game():
                                     player.x = cave.stairsdowncoords[0]
                                     player.y = cave.stairsdowncoords[1]
                                     player.log().append('You went up the stairs.')
+                                    detecthiddenitems()
                                     player.previousaction = ('move',)
                                     logback = 0
 
@@ -936,7 +1101,7 @@ def game():
 
                         # Items
                         if (event.key == keybindings['pick up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][0][1])) or (event.key == keybindings['pick up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][1][1])):
-                            picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
+                            picklist = [it for it in cave.items if it.x == player.x and it.y == player.y and (it in player.itemsseen() or not it.hidden)]
                             if len(picklist) == 0:
                                 player.log().append('Nothing to pick up here.')
                                 logback = 0
@@ -948,6 +1113,7 @@ def game():
                                     player.inventory.append(it)
                                     it.owner = player.inventory
                                     player.log().append('You picked up the ' + it.name + '.')
+                                    detecthiddenitems()
                                     player.previousaction = ('pick',)
                                     logback = 0
                             else:
@@ -1007,6 +1173,23 @@ def game():
                                 player.log().append("You don't have anything to consume.")
                                 logback = 0
 
+                        if (event.key == keybindings['cook'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['cook'][0][1])) or (event.key == keybindings['cook'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['cook'][1][1])):
+                            campfiresnear = False
+                            for x in range(player.x-1, player.x+2):
+                                for y in range(player.y-1, player.y+2):
+                                    if cave.campfires[x, y]:
+                                        campfiresnear = True
+                            if not campfiresnear:
+                                player.log().append("You need a campfire for cooking.")
+                                logback = 0
+                            elif len([item for item in player.inventory if item.material == 'living flesh']) == 0:
+                                player.log().append("You have nothing to cook.")
+                                logback = 0
+                            else:
+                                gamestate = 'cook'
+                                logback = len([item for item in player.inventory if item.material == 'living flesh']) - logheight + 1
+                                chosen = 0
+
                         if (event.key == keybindings['wield'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wield'][0][1])) or (event.key == keybindings['wield'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wield'][1][1])):
                             if len([item for item in player.inventory if item.wieldable]) > 0 and len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) > 0:
                                 gamestate = 'wieldchooseitem'
@@ -1052,12 +1235,9 @@ def game():
 
                         # Praying:
                         if (event.key == keybindings['pray'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][0][1])) or (event.key == keybindings['pray'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pray'][1][1])):
-                            if len(player.godsknown()) > 0:
-                                gamestate = 'pray'
-                                logback = len(player.godsknown()) - logheight + 1
-                                chosen = 0
-                            else:
-                                player.log().append('You don\'t know any of the sinful gods of the underground!')
+                            gamestate = 'pray'
+                            logback = min(7, len(player.godsknown()) + 1) - logheight + 1
+                            chosen = 0
 
                         # Bodyparts:
                         if (event.key == keybindings['list bodyparts'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][0][1])) or (event.key == keybindings['list bodyparts'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][1][1])):
@@ -1088,7 +1268,8 @@ def game():
                             player.log().append('  - i: check your inventory')
                             player.log().append('  - b: list your body parts')
                             player.log().append('  - B: choose your body parts')
-                            player.log().append('  - c: take some medication')
+                            player.log().append('  - c: consume')
+                            player.log().append('  - C: cook')
                             player.log().append('  - w: wield an item')
                             player.log().append('  - u: unwield an item')
                             player.log().append('  - W: wear an item')
@@ -1097,7 +1278,7 @@ def game():
                             player.log().append('  - p: pray')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 12 # Increase when adding commands
+                                logback = 13 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
@@ -1172,7 +1353,7 @@ def game():
                             gamestate = 'free'
 
                     elif gamestate == 'pick':
-                        picklist = [it for it in cave.items if it.x == player.x and it.y == player.y]
+                        picklist = [it for it in cave.items if it.x == player.x and it.y == player.y and (it in player.itemsseen() or not it.hidden)]
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(picklist) - logback - (logheight - 1) - 1:
@@ -1189,6 +1370,7 @@ def game():
                                 player.inventory.append(selected)
                                 cave.items.remove(selected)
                                 player.log().append('You picked up the ' + selected.name + '.')
+                                detecthiddenitems()
                                 player.previousaction = ('pick',)
                                 logback = 0
                             gamestate = 'free'
@@ -1215,6 +1397,7 @@ def game():
                                 selected.x = player.x
                                 selected.y = player.y
                                 player.log().append('You dropped the ' + selected.name + '.')
+                                detecthiddenitems()
                                 player.previousaction = ('drop',)
                                 logback = 0
                             gamestate = 'free'
@@ -1269,6 +1452,31 @@ def game():
                                     else:
                                         player.log().append('You have no stomach, so you cannot eat!')
                                     logback = 0
+                                detecthiddenitems()
+                            gamestate = 'free'
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+
+                    elif gamestate == 'cook':
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                            chosen = max(0, chosen-1)
+                            if chosen == len([item for item in player.inventory if item.material == 'living flesh']) - logback - (logheight - 1) - 1:
+                                logback += 1
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                            chosen = min(len([item for item in player.inventory if item.material == 'living flesh'])-1, chosen+1)
+                            if chosen == len([item for item in player.inventory if item.material == 'living flesh']) - logback:
+                                logback -= 1
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            updatetime(5 * (1 + player.slowed()))
+                            if not player.dying():
+                                selected = [item for item in player.inventory if item.material == 'living flesh'][chosen]
+                                player.inventory.remove(selected)
+                                item.Food(player.inventory, 0, 0, 'roast ' + selected.name, selected.char, ((97+selected.color[0])//2, (23+selected.color[1])//2, (23+selected.color[2])//2), selected.maxhp, 'cooked meat', selected.weight)
+                                player.log().append('You roasted the ' + selected.name + '.')
+                                logback = 0
+                                detecthiddenitems()
+                                player.previousaction = ('cook',)
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
@@ -1309,6 +1517,7 @@ def game():
                                 selected.wielded.append(selecteditem)
                                 selecteditem.owner = selected.wielded
                                 player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                                detecthiddenitems()
                                 player.previousaction = ('wield',)
                             logback = 0
                             gamestate = 'free'
@@ -1334,6 +1543,7 @@ def game():
                                 player.inventory.append(selected)
                                 selected.owner = player.inventory
                                 player.log().append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
+                                detecthiddenitems()
                                 player.previousaction = ('unwield',)
                                 logback = 0
                             gamestate = 'free'
@@ -1358,7 +1568,7 @@ def game():
                                 gamestate = 'wearchoosebodypart'
                                 chosen = 0
                             else:
-                                player.log().append('You have no suitable free body part for wearing that.')
+                                player.log().append('You have no free ' + selecteditem.wearcategory + ' slot.')
                                 logback = 0
                                 gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -1382,6 +1592,7 @@ def game():
                                 selected.worn[selecteditem.wearcategory].append(selecteditem)
                                 selecteditem.owner = selected.worn[selecteditem.wearcategory]
                                 player.log().append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                                detecthiddenitems()
                                 player.previousaction = ('wear',)
                                 logback = 0
                             gamestate = 'free'
@@ -1407,6 +1618,7 @@ def game():
                                 player.inventory.append(selected)
                                 selected.owner = player.inventory
                                 player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
+                                detecthiddenitems()
                                 player.previousaction = ('undress',)
                                 logback = 0
                             gamestate = 'free'
@@ -1455,6 +1667,7 @@ def game():
                                 else:
                                     player.log().append('The ' + target.name + ' is already dead.')
                                     player.previousaction = ('wait',)
+                                detecthiddenitems()
                             logback = 0
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -1473,7 +1686,7 @@ def game():
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selected = torsolist[chosen]
-                            bodypartcandidates = [selected]
+                            bodypartcandidates = listwithowner([selected], player)
                             connectioncandidates = []
                             connectionname = list(selected.childconnections.keys())[0]
                             connection = selected.childconnections[connectionname]
@@ -1539,6 +1752,7 @@ def game():
                                         if part != None:
                                             connection.connect(part)
                                     player.log().append('You have selected your bodyparts.')
+                                    detecthiddenitems()
                                     player.previousaction = ('choosebody',)
                                     logback = 0
                                     gamestate = 'free'
@@ -1559,9 +1773,23 @@ def game():
                             updatetime(0.5)
                             if not player.dying():
                                 selected = player.stancesknown()[chosen]
+                                oldstance = player.stance
                                 player.stance = selected
+                                if oldstance == 'flying' and player.stance != 'flying':
+                                    for it in cave.items:
+                                        if (it.x, it.y) == (player.x, player.y) and it.trap:
+                                            part = player.approxfastestpart()
+                                            if it in player.itemsseen() or not it.hidden:
+                                                if np.random.rand() < part.carefulness:
+                                                    player.log().append('You managed to land carefully and avoided the ' + it.name + '.')
+                                                else:
+                                                    it.entrap(player, part)
+                                            else:
+                                                it.entrap(player, part)
+                                                player.itemsseen().append(it)
+                                detecthiddenitems()
                                 player.previousaction = ('choosestance',)
-                                logback = 0
+                            logback = 0
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
@@ -1570,17 +1798,29 @@ def game():
                     elif gamestate == 'pray':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
-                            if chosen == len(player.godsknown()) - logback - (logheight - 1) - 1:
+                            if chosen == min(7, len(player.godsknown()) + 1) - logback - (logheight - 1) - 1:
                                 logback += 1
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(player.godsknown())-1, chosen+1)
-                            if chosen == len(player.godsknown()) - logback:
+                            chosen = min(min(7, len(player.godsknown()) + 1)-1, chosen+1)
+                            if chosen == min(7, len(player.godsknown()) + 1) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             updatetime(1)
                             if not player.dying():
-                                selected = player.godsknown()[chosen]
-                                player.pray(selected)
+                                if chosen < len(player.godsknown()):
+                                    selected = player.godsknown()[chosen]
+                                    player.pray(selected)
+                                else:
+                                    if np.random.rand() < 0.05:
+                                        gd = np.random.choice([gd for gd in gods if not gd in player.godsknown()])
+                                        player.log().append('You prayed, and someone answered!')
+                                        player.godsknown().append(gd)
+                                        player.log().append('You learn the ways of ' + gd.name + ', the ' + gd.faction + '-god of ' + gd.sin + '.')
+                                        player.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
+                                        player.pray(gd)
+                                    else:
+                                        player.log().append('You prayed, but no one answered.')
+                                detecthiddenitems()
                                 player.previousaction = ('pray',)
                                 logback = 0
                             gamestate = 'free'
@@ -1638,7 +1878,13 @@ def halloffame():
         else:
             highscores = []
         highscores_sorted = sorted(highscores, reverse=True)
-        for i in range(min(len(highscores_sorted), mapheight + statuslines + logheight - 1)):
+        if highscores_sorted.index(highscores[-1]) >=  mapheight + statuslines + logheight - 1:
+            listlength = mapheight + statuslines + logheight - 3
+            latestoutoftop = True
+        else:
+            listlength = min(len(highscores_sorted), mapheight + statuslines + logheight - 1)
+            latestoutoftop = False
+        for i in range(listlength):
             score = highscores_sorted[i]
             if score == highscores[-1]:
                 fgcolor = (0, 255, 255)
@@ -1647,6 +1893,14 @@ def halloffame():
             win.write(repr(i+1), x=0, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
             win.write(repr(score[0]), x=5, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
             win.write(score[1] + ', ' + score[2], x=15, y = i+1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
+        if latestoutoftop:
+            win.write('...', x=0, y=mapheight + statuslines + logheight - 2, fgcolor=(255, 255, 255), bgcolor=(0, 0, 0))
+            i = highscores_sorted.index(highscores[-1])
+            score = highscores[-1]
+            fgcolor = (0, 255, 255)
+            win.write(repr(i+1), x=0, y=mapheight + statuslines + logheight - 1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
+            win.write(repr(score[0]), x=5, y=mapheight + statuslines + logheight - 1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
+            win.write(score[1] + ', ' + score[2], x=15, y=mapheight + statuslines + logheight - 1, fgcolor=fgcolor, bgcolor=(0, 0, 0))
         win.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:

@@ -70,31 +70,31 @@ materials = {'leather': Material(None, None, None, 5, 100, 4, (186, 100, 13)),
              'eternium': Material(145, 0.5, 0.5, 135, 2600, 50, (255, 255, 255))}
 armormaterials = [material for material in materials if not materials[material].armor == None]
 weaponmaterials = [material for material in materials if not materials[material].damage == None]
-likeliestmaterialbylevel = ['bone',
-                            'bronze',
-                            'elven steel',
-                            'orichalcum',
-                            'angelbone',
-                            'duranium',
-                            'tritanium',
-                            'octiron',
-                            'diamond',
-                            'alicorn',
-                            'impervium',
-                            'dragonbone',
-                            'devilbone',
-                            'mithril',
-                            'infernal steel',
-                            'kryptonite',
-                            'corbomite',
-                            'tachyonite',
-                            'vibranium',
-                            'forbidium',
-                            'starmetal',
-                            'phlebotinum',
-                            'beskar',
-                            'unobtainium',
-                            'adamantine']
+likeliestmaterialbylevel = ['bone',           # 1
+                            'bronze',         # 2
+                            'elven steel',    # 3
+                            'orichalcum',     # 4
+                            'angelbone',      # 5
+                            'duranium',       # 6
+                            'tritanium',      # 7
+                            'octiron',        # 8
+                            'diamond',        # 9
+                            'alicorn',        # 10
+                            'impervium',      # 11
+                            'dragonbone',     # 12
+                            'devilbone',      # 13
+                            'mithril',        # 14
+                            'infernal steel', # 15
+                            'kryptonite',     # 16
+                            'corbomite',      # 17
+                            'tachyonite',     # 18
+                            'vibranium',      # 19
+                            'forbidium',      # 20
+                            'starmetal',      # 21
+                            'phlebotinum',    # 22
+                            'beskar',         # 23
+                            'unobtainium',    # 24
+                            'adamantine']     # 25
 
 class Item():
     def __init__(self, owner, x, y, name, char, color):
@@ -107,6 +107,7 @@ class Item():
         self.color = color
         self.maxhp = np.inf
         self.damagetaken = 0
+        self.material = None
         self.weight = 0
         self.carryingcapacity = 0
         self.breathepoisonresistance = 0
@@ -118,6 +119,8 @@ class Item():
         self.bodypart = False
         self.wearable = False
         self.isarmor = False
+        self.hidden = False
+        self.trap = False  # If True, must have the entrap(creature, bodypart) method
         self._info = 'No information available.'
 
     def hp(self):
@@ -147,6 +150,9 @@ class Food(Item):
         self.edible = True
 
     def consume(self, user, efficiency):
+        if user.stance == 'fasting':
+            user.stance = 'neutral'
+            user.log().append('You stopped fasting.')
         if int(self.hp()*efficiency) > user.hunger:
             self.damagetaken += int(user.hunger/efficiency)
             user.hunger = 0
@@ -198,6 +204,7 @@ class Cure(Item):
             name = 'vial of ectoplasmic infusion labeled "' + curetype.name + ', ' + repr(curetype.dosage*level) + ' mmol/l"'
         super().__init__(owner, x, y, name, '!', color)
         self.consumable = True
+        self.material = 'chemical'
         self.cure = True
         self.curetype = curetype
         self.curedmaterial = curetype.curedmaterial
@@ -271,7 +278,7 @@ class Spear(Item):
         self.weight = 6*density + 2000
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('charge',)], self)]
         else:
             return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', self.bane, [('charge',)], self)]
@@ -307,7 +314,7 @@ class Mace(Item):
         self.weight = 50*density
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', self.bane, [('knockback', 0.2)], self)]
         else:
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', self.bane, [('knockback', 0.1)], self)]
@@ -343,7 +350,7 @@ class Sword(Item):
         self.weight = 50*density
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [], self)]
         else:
             return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', self.bane, [], self)]
@@ -380,13 +387,13 @@ class PickAxe(Item):
         self.weight = 12*density + 1500
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.5, self.mindamage, self.maxdamage, 'hewing', self.bane, [], self)]
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.5, self.mindamage, self.maxdamage, 'rough', self.bane, [], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 2, self.mindamage, int(0.67*self.maxdamage), 'hewing', self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 2, self.mindamage, int(0.67*self.maxdamage), 'rough', self.bane, [], self)]
 
     def minespeed(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
             return self._minespeed
         else:
             return 0.75*self._minespeed
@@ -402,6 +409,131 @@ def randompickaxe(owner, x, y, level):
 
 def randomweapon(owner, x, y, level):
     return np.random.choice([randomdagger, randomspear, randommace, randomsword, randompickaxe])(owner, x, y, level)
+
+class Caltrops(Item):
+    def __init__(self, owner, x, y, material, enchantment, bane):
+        if enchantment == 0:
+            enchaname = ''
+        elif enchantment > 0:
+            enchaname = '+' + repr(enchantment) + ' '
+        banename = ''
+        for b in bane:
+            banename += b + '-bane '
+        name = enchaname + banename + material + ' caltrops'
+        color = materials[material].color
+        super().__init__(owner, x, y, name, ',', color)
+        self.hidden = True
+        self.trap = True
+        self.bane = bane
+        self.mindamage = 1 + enchantment
+        self.maxdamage = int(materials[material].damage) + enchantment
+        density = materials[material].density
+        self.weight = 12*density
+
+    def entrap(self, creat, part):
+        if creat.faction in self.bane:
+            banemultiplier = 2
+        else:
+            banemultiplier = 1
+        resistancemultiplier = 1 - part.resistance('sharp')
+        totaldamage = np.random.randint(self.mindamage, self.maxdamage+1)
+        if part.armor() != None:
+            armor = part.armor()
+            armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+            armor.damagetaken += armordamage
+        else:
+            armor = None
+            armordamage = 0
+        damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        part.damagetaken += damage
+        if part.parentalconnection != None:
+            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+        elif part == creat.torso:
+            partname = 'torso'
+        if not creat.dying():
+            if not part.destroyed():
+                creat.log().append('You stepped on ' + self.name + '. They dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was destroyed!')
+                        armor.owner.remove(armor)
+            else:
+                creat.log().append('You stepped on ' + self.name + '. They destroyed your ' + partname + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was also destroyed!')
+                        armor.owner.remove(armor)
+                part.on_destruction(False)
+        else:
+            creat.log().append('You stepped on ' + self.name + '. They killed you.')
+            creat.log().append('You are dead!')
+            if part.destroyed():
+                part.on_destruction(True)
+            creat.die()
+            creat.causeofdeath = ('step', self)
+
+def randomcaltrops(owner, x, y, level):
+    enchantment = 0
+    while np.random.rand() < 0.5 + level/100:
+        enchantment += 1
+    bane = []
+    if np.random.rand() < 0.2:
+        bane = [np.random.choice(utils.enemyfactions)]
+    return Caltrops(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
+
+class LooseRoundPebbles(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'loose round pebbles', ':', (255, 255, 255))
+        self.hidden = True
+        self.trap = True
+        self.weight = 10000
+
+    def entrap(self, creat, part):
+        part = np.random.choice(creat.bodyparts)
+        resistancemultiplier = 1 - part.resistance('blunt')
+        totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
+        if part.armor() != None:
+            armor = part.armor()
+            armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+            armor.damagetaken += armordamage
+        else:
+            armor = None
+            armordamage = 0
+        damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        part.damagetaken += damage
+        if part.parentalconnection != None:
+            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+        elif part == creat.torso:
+            partname = 'torso'
+        if not creat.dying():
+            if not part.destroyed():
+                creat.log().append('You stepped on ' + self.name + ', falling prone. It dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was destroyed!')
+                        armor.owner.remove(armor)
+            else:
+                creat.log().append('You stepped on ' + self.name + ', falling prone. It destroyed your ' + partname + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was also destroyed!')
+                        armor.owner.remove(armor)
+                part.on_destruction(False)
+        else:
+            creat.log().append('You stepped on ' + self.name + ', falling prone. It killed you.')
+            creat.log().append('You are dead!')
+            if part.destroyed():
+                part.on_destruction(True)
+            creat.die()
+            creat.causeofdeath = ('step', self)
 
 class PieceOfArmor(Item):
     def __init__(self, owner, x, y, wearcategory, material, enchantment):
@@ -442,17 +574,17 @@ def randomarmor(owner, x, y, level):
 
 class SchoolkidBackpack(Item):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'schoolkid backpack', '(', (0, 155, 0))
+        super().__init__(owner, x, y, 'schoolkid backpack', '(', (255, 0, 255))
         self.wearable = True
-        self.wearcategory = 'backpack'
+        self.wearcategory = 'back'
         self.carryingcapacity = 10000
         self.weight = 500
 
 class TouristBackpack(Item):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'tourist backpack', '(', (0, 155, 0))
+        super().__init__(owner, x, y, 'tourist backpack', '(', (0, 0, 255))
         self.wearable = True
-        self.wearcategory = 'backpack'
+        self.wearcategory = 'back'
         self.carryingcapacity = 20000
         self.weight = 1000
 
@@ -460,7 +592,7 @@ class HikerBackpack(Item):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'hiker backpack', '(', (0, 155, 0))
         self.wearable = True
-        self.wearcategory = 'backpack'
+        self.wearcategory = 'back'
         self.carryingcapacity = 40000
         self.weight = 2000
 
@@ -468,28 +600,36 @@ class MilitaryBackpack(Item):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'military backpack', '(', (0, 155, 0))
         self.wearable = True
-        self.wearcategory = 'backpack'
+        self.wearcategory = 'back'
         self.carryingcapacity = 80000
         self.weight = 4000
 
 class BackpackOfHolding(Item):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'backpack of holding', '(', (0, 155, 0))
+        super().__init__(owner, x, y, 'backpack of holding', '(', (190, 110, 0))
         self.wearable = True
-        self.wearcategory = 'backpack'
+        self.wearcategory = 'back'
         self.carryingcapacity = 160000
         self.weight = 1000
 
 class GreaterBackpackOfHolding(Item):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'greater backpack of holding', '(', (0, 155, 0))
+        super().__init__(owner, x, y, 'greater backpack of holding', '(', (190, 110, 0))
         self.wearable = True
-        self.wearcategory = 'backpack'
+        self.wearcategory = 'back'
         self.carryingcapacity = 320000
         self.weight = 1000
 
-def randomBackpack(owner, x, y):
-    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding])(owner, x, y)
+class CapeOfFlying(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cape of flying', '(', (255, 255, 255))
+        self.wearable = True
+        self.wearcategory = 'back'
+        self.weight = 500
+        self.stances = ['flying']
+
+def randomBackItem(owner, x, y):
+    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying])(owner, x, y)
 
 class RingOfCarrying(Item):
     def __init__(self, owner, x, y):
@@ -547,10 +687,10 @@ class BerserkerMask(Item):
         self.wearable = True
         self.wearcategory = 'face'
         self.weight = 200
-        self.stances = ['berserker']
+        self.stances = ['berserk']
 
 def randomFaceItem(owner, x, y):
     return np.random.choice([Eyeglasses, GasMask, BerserkerMask])(owner, x, y)
 
 def randomUtilityItem(owner, x, y):
-    return np.random.choice([randomBackpack, randomRing, randomFaceItem])(owner, x, y)
+    return np.random.choice([randomBackItem, randomRing, randomFaceItem])(owner, x, y)
