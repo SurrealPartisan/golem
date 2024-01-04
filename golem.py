@@ -739,12 +739,52 @@ def game():
                 if j == chosen:
                     win.write(torsolist[j].name + ' (hp: ' + repr(torsolist[j].hp()) + '/' + repr(torsolist[j].maxhp) + ')', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
+        elif gamestate == 'choosebodypartconnection':
+            choosemessage = 'Choose the bodypart to change (when you are done, choose "Ready!"):'
+            win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1, len(connectioncandidates))
+            for i in range(logrows):
+                if len(connectioncandidates) <= logheight-1:
+                    j = i
+                else:
+                    j = len(connectioncandidates)+i-logrows-logback
+                if j == 0:
+                    part = [part for part in bodypartcandidates if 'torso' in part.categories][0]
+                    connectiondescription = 'torso: ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ')'
+                    fgcolorchosen = (0,0,0)
+                    fgcolorunchosen = (255,255,255)
+                elif j == len(connectioncandidates) - 1:
+                    connectiondescription = 'Ready!'
+                    if len([cn for cn in connectioncandidates if cn != None and cn[0].vital and cn[0].child == None]) == 0:
+                        fgcolorchosen = (0,0,0)
+                        fgcolorunchosen = (255,255,255)
+                    else:
+                        fgcolorchosen = (128,128,128)
+                        fgcolorunchosen = (128,128,128)
+                else:
+                    connectionname2 = list(connectioncandidates[j][0].parent.childconnections.keys())[list(connectioncandidates[j][0].parent.childconnections.values()).index(connectioncandidates[j][0])]
+                    part = connectioncandidates[j][1]
+                    if part != None:
+                        connectiondescription = connectionname2 + ': ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ')'
+                    else:
+                        connectiondescription = connectionname2 + ': ' + 'none'
+                    if connectioncandidates[j][0].vital and connectioncandidates[j][1] == None:
+                        fgcolorchosen = (255,0,0)
+                        fgcolorunchosen = (255,0,0)
+                    else:
+                        fgcolorchosen = (0,0,0)
+                        fgcolorunchosen = (255,255,255)
+                if j != chosen:
+                    win.write(connectiondescription, x=0, y=mapheight+statuslines+i+1, fgcolor=fgcolorunchosen)
+                if j == chosen:
+                    win.write(connectiondescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=fgcolorchosen)
+
         elif gamestate == 'choosebodypart':
             choosemessage = 'Choose your ' + connectionname + ':'
             win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
             logrows = min(logheight-1,len(partslist))
             if logrows == 0:
-                win.write('No suitable options for a vital bodypart. Press ESC to cancel the body building process', x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+                win.write('No suitable options for a vital bodypart. Press ESC to cancel.', x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
             for i in range(logrows):
                 if len(partslist) <= logheight-1:
                     j = i
@@ -1250,9 +1290,15 @@ def game():
                                 logback = 0
 
                         if (event.key == keybindings['choose bodyparts'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose bodyparts'][0][1])) or (event.key == keybindings['choose bodyparts'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose bodyparts'][1][1])):
-                            gamestate = 'choosetorso'
-                            len([part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]) - logheight + 1
+                            #gamestate = 'choosetorso'
+                            #len([part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]) - logheight + 1
+                            #chosen = 0
+                            gamestate = 'choosebodypartconnection'
+                            bodypartcandidates = listwithowner([part for part in player.bodyparts], player)
+                            connectioncandidates = [None] + [(connection, connection.child) for part in bodypartcandidates for connection in part.childconnections.values()] + [None]
+                            logback = len(connectioncandidates) - logheight + 1
                             chosen = 0
+                            bodypartchoosingtime = 0
 
                         # Help
                         if (event.key == keybindings['help'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][0][1])) or (event.key == keybindings['help'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][1][1])):
@@ -1674,28 +1720,66 @@ def game():
                             logback = 0
                             gamestate = 'free'
 
-                    elif gamestate == 'choosetorso':
-                        torsolist = [part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]
+                    elif gamestate == 'choosebodypartconnection':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
-                            if chosen == len(torsolist) - logback - (logheight - 1) - 1:
+                            if chosen == len(connectioncandidates) - logback - (logheight - 1) - 1:
                                 logback += 1
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(torsolist)-1, chosen+1)
-                            if chosen == len(torsolist) - logback:
+                            chosen = min(len(connectioncandidates)-1, chosen+1)
+                            if chosen == len(connectioncandidates) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            selected = torsolist[chosen]
-                            bodypartcandidates = listwithowner([selected], player)
-                            connectioncandidates = []
-                            connectionname = list(selected.childconnections.keys())[0]
-                            connection = selected.childconnections[connectionname]
-                            partslist = [part for part in player.bodyparts if np.any([category in part.categories for category in connection.categories]) and not part.destroyed() and not part in bodypartcandidates] + [it for it in player.inventory if it.bodypart and np.any([category in it.categories for category in connection.categories]) and not it.destroyed() and not it in bodypartcandidates]
-                            if not connection.vital:
-                                partslist.append(None)
-                            gamestate = 'choosebodypart'
-                            logback = len(partslist) - logheight + 1
-                            chosen = 0
+                            if connectioncandidates[chosen] != None:
+                                connection = connectioncandidates[chosen][0]
+                                connectedpart = connectioncandidates[chosen][1]
+                            else:
+                                connection = None
+                                connectedpart = [part for part in bodypartcandidates if 'torso' in part.categories][0]  # I think this could be just bodypartcandidates[0], but just in case...
+                            if chosen < len(connectioncandidates)-1:
+                                if connection != None:
+                                    connectionname = list(connection.parent.childconnections.keys())[list(connection.parent.childconnections.values()).index(connection)]
+                                    partslist = [part for part in player.bodyparts if np.any([category in part.categories for category in connection.categories]) and not part.destroyed() and (part == connectedpart or not part in bodypartcandidates)] + [it for it in player.inventory if it.bodypart and np.any([category in it.categories for category in connection.categories]) and not it.destroyed() and (it == connectedpart or not it in bodypartcandidates)]
+                                    if not connection.vital:
+                                        partslist.append(None)
+                                else:
+                                    connectionname = 'torso'
+                                    partslist = [part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]
+                                gamestate = 'choosebodypart'
+                                logback = len(partslist) - logheight + 1
+                                chosen = 0
+                            elif len([connection for connection in connectioncandidates if connection != None and connection[0].vital and connection[0].child == None]) == 0:
+                                updatetime(bodypartchoosingtime * (1 + player.slowed()))
+                                if not player.dying():
+                                    for it in [it[0] for part in player.bodyparts for it in part.worn.values() if not part in bodypartcandidates and len(it) > 0]:
+                                        it.owner.remove(it)
+                                        player.inventory.append(it)
+                                        it.owner = player.inventory
+                                    for part in player.bodyparts:
+                                        if not part.destroyed():
+                                            part.owner = player.inventory
+                                            player.inventory.append(part)
+                                        part.parentalconnection = None
+                                        for con in part.childconnections:
+                                            part.childconnections[con].child = None
+                                        if part.capableofwielding and not part in bodypartcandidates:
+                                            for it in part.wielded:
+                                                it.owner = player.inventory
+                                                player.inventory.append(it)
+                                                part.wielded.remove(it)
+                                    player.bodyparts = bodypartcandidates
+                                    player.torso = player.bodyparts[0]
+                                    for part in player.bodyparts:
+                                        player.inventory.remove(part)
+                                        part.owner = player.bodyparts
+                                    for connection, part in connectioncandidates[1:-1]:
+                                        if part != None:
+                                            connection.connect(part)
+                                    player.log().append('You have selected your bodyparts.')
+                                    detecthiddenitems()
+                                    player.previousaction = ('choosebody',)
+                                    logback = 0
+                                    gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1711,54 +1795,32 @@ def game():
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selected = partslist[chosen]
-                            if selected != None:
-                                bodypartcandidates.append(selected)
-                            connectioncandidates.append((connection, selected))
-                            connectionlist = [connection for part in bodypartcandidates for connection in [(name, part.childconnections[name]) for name in list(part.childconnections.keys())] if not connection[1] in [cn[0] for cn in connectioncandidates]]
-                            if len(connectionlist) > 0:
-                                connectionname = connectionlist[0][0]
-                                connection = connectionlist[0][1]
-                                partslist = [part for part in player.bodyparts if np.any([category in part.categories for category in connection.categories]) and not part.destroyed() and not part in bodypartcandidates] + [it for it in player.inventory if it.bodypart and np.any([category in it.categories for category in connection.categories]) and not it.destroyed() and not it in bodypartcandidates]
-                                if not connection.vital:
-                                    partslist.append(None)
-                                gamestate = 'choosebodypart'
-                                logback = len(partslist) - logheight + 1
-                                chosen = 0
-                            else:
-                                updatetime(5 * (1 + player.slowed()))
-                                if not player.dying():
-                                    for it in [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]:
-                                        it.owner.remove(it)
-                                        player.inventory.append(it)
-                                        it.owner = player.inventory
-                                    for part in player.bodyparts:
-                                        if not part.destroyed():
-                                            part.owner = player.inventory
-                                            player.inventory.append(part)
-                                        part.parentalconnection = None
-                                        for con in part.childconnections:
-                                            part.childconnections[con].child = None
-                                        if part.capableofwielding:
-                                            for it in part.wielded:
-                                                it.owner = player.inventory
-                                                player.inventory.append(it)
-                                                part.wielded.remove(it)
-                                    player.bodyparts = bodypartcandidates
-                                    player.torso = player.bodyparts[0]
-                                    for part in player.bodyparts:
-                                        player.inventory.remove(part)
-                                        part.owner = player.bodyparts
-                                    for connection, part in connectioncandidates:
-                                        if part != None:
-                                            connection.connect(part)
-                                    player.log().append('You have selected your bodyparts.')
-                                    detecthiddenitems()
-                                    player.previousaction = ('choosebody',)
-                                    logback = 0
-                                    gamestate = 'free'
+                            if selected != connectedpart:
+                                connectioncandidates = connectioncandidates[:-1]
+                                connectioncandidates.remove((connection, connectedpart))
+                                if connectedpart != None:
+                                    bodypartcandidates.remove(connectedpart)
+                                    connectionstoremove = [cn for cn in connectioncandidates if cn != None and cn[0].parent == connectedpart]
+                                    while len(connectionstoremove) > 0:
+                                        cnn = connectionstoremove[0]
+                                        connectioncandidates.remove(cnn)
+                                        bodypartcandidates.remove(cnn[1])
+                                        connectionstoremove.remove(cnn)
+                                        connectionstoremove += [cn for cn in connectioncandidates if cn != None and cn[0].parent == cnn[1]]
+                                if selected != None:
+                                    bodypartcandidates.append(selected)
+                                    for cn in selected.childconnections:
+                                        connectioncandidates.append((selected.childconnections[cn], None))
+                                connectioncandidates.append((connection, selected))
+                                connectioncandidates.append(None)
+                                bodypartchoosingtime += 1
+                            logback = len(connectioncandidates) - logheight + 1
+                            chosen = 0
+                            gamestate = 'choosebodypartconnection'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
-                            logback = 0
-                            gamestate = 'free'
+                            logback = len(connectioncandidates) - logheight + 1
+                            chosen = 0
+                            gamestate = 'choosebodypartconnection'
 
                     elif gamestate == 'choosestance':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):

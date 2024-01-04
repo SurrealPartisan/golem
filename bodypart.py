@@ -22,7 +22,7 @@ class BodyPartConnection():
         self.armorapplies = armorapplies
     
     def connect(self, child):
-        if np.any([category in child.categories for category in self.categories]):
+        if np.any([category in child.categories for category in self.categories]) and self.child == None:
             self.child = child
             child.parentalconnection = self
             return True
