@@ -448,14 +448,16 @@ class Creature():
         self.dead = True
 
     def attackslist(self):
-        return [attack for part in self.bodyparts for attack in part.attackslist()]
-    
+        return sorted([attack for part in self.bodyparts for attack in part.attackslist()], key=lambda x: x.maxdamage * x.hitprobability / x.time, reverse=True)
+
     def fight(self, target, targetbodypart, attack):
         if attack.weapon in self.bodyparts:
             attackingpart = attack.weapon
-        else:
+        elif attack.weapon.owner != self.world.items:
             attackingpart = attack.weapon.owner.owner
-        if not attackingpart.destroyed():
+        else:
+            attackingpart = None
+        if attackingpart != None and not attackingpart.destroyed():
             if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
                 if self.stance == 'aggressive':
                     attackerstancecoefficient = 1.25
@@ -599,13 +601,16 @@ class Creature():
             else:
                 self.log().append('The ' + target.name + ' evaded your ' + attack.name + ' by being too far away!')
                 target.log().append("You evaded the " + self.name + "'s " + attack.name + " by being too far away!")
-        else:
-            if targetbodypart.parentalconnection != None:
-                attackingpartname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
-            elif targetbodypart == target.torso:
+        elif attackingpart != None:
+            if attackingpart.parentalconnection != None:
+                attackingpartname = list(attackingpart.parentalconnection.parent.childconnections.keys())[list(attackingpart.parentalconnection.parent.childconnections.values()).index(attackingpart.parentalconnection)]
+            elif attackingpart == self.torso:
                 attackingpartname = 'torso'
-            self.log().append('Your ' + attackingpartname + 'was destroyed before you could finish the attack!')
+            self.log().append('Your ' + attackingpartname + ' was destroyed before you could finish the attack!')
             target.log().append('The ' + self.name + '\'s ' + attackingpartname + 'was destroyed before it could finish its attack!')
+        else:
+            self.log().append('You dropped your weapon before you could finish the attack!')
+            target.log().append('The ' + self.name + ' dropped its weapon before it could finish its attack!')
 
     def ai(self):
         # Return something to put in self.nextaction. It should be a list,

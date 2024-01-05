@@ -755,7 +755,7 @@ def game():
                     fgcolorunchosen = (255,255,255)
                 elif j == len(connectioncandidates) - 1:
                     connectiondescription = 'Ready!'
-                    if len([cn for cn in connectioncandidates if cn != None and cn[0].vital and cn[0].child == None]) == 0:
+                    if len([cn for cn in connectioncandidates if cn != None and cn[0].vital and cn[1] == None]) == 0:
                         fgcolorchosen = (0,0,0)
                         fgcolorunchosen = (255,255,255)
                     else:
@@ -1748,7 +1748,7 @@ def game():
                                 gamestate = 'choosebodypart'
                                 logback = len(partslist) - logheight + 1
                                 chosen = 0
-                            elif len([connection for connection in connectioncandidates if connection != None and connection[0].vital and connection[0].child == None]) == 0:
+                            elif len([connection for connection in connectioncandidates if connection != None and connection[0].vital and connection[1] == None]) == 0:
                                 updatetime(bodypartchoosingtime * (1 + player.slowed()))
                                 if not player.dying():
                                     for it in [it[0] for part in player.bodyparts for it in part.worn.values() if not part in bodypartcandidates and len(it) > 0]:
@@ -1797,7 +1797,8 @@ def game():
                             selected = partslist[chosen]
                             if selected != connectedpart:
                                 connectioncandidates = connectioncandidates[:-1]
-                                connectioncandidates.remove((connection, connectedpart))
+                                if connection != None:
+                                    connectioncandidates.remove((connection, connectedpart))
                                 if connectedpart != None:
                                     bodypartcandidates.remove(connectedpart)
                                     connectionstoremove = [cn for cn in connectioncandidates if cn != None and cn[0].parent == connectedpart]
@@ -1811,7 +1812,8 @@ def game():
                                     bodypartcandidates.append(selected)
                                     for cn in selected.childconnections:
                                         connectioncandidates.append((selected.childconnections[cn], None))
-                                connectioncandidates.append((connection, selected))
+                                if connection != None:
+                                    connectioncandidates.append((connection, selected))
                                 connectioncandidates.append(None)
                                 bodypartchoosingtime += 1
                             logback = len(connectioncandidates) - logheight + 1
@@ -1895,15 +1897,15 @@ def game():
                             gamegoeson = False
 
                         # log scrolling
-                        if event.key == pygame.locals.K_PAGEUP:
+                        if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
                             if len(player.log()) >= logheight:
                                 logback = min(logback+1, len(player.log())-logheight)
-                        if event.key == pygame.locals.K_PAGEDOWN:
+                        if (event.key == keybindings['log down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log down'][0][1])) or (event.key == keybindings['log down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log down'][1][1])):
                             logback = max(logback-1, 0)
-                        if event.key == pygame.locals.K_HOME:
+                        if (event.key == keybindings['log start'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log start'][0][1])) or (event.key == keybindings['log start'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log start'][1][1])):
                             if len(player.log()) >= logheight:
                                 logback = len(player.log())-logheight
-                        if event.key == pygame.locals.K_END:
+                        if (event.key == keybindings['log end'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log end'][0][1])) or (event.key == keybindings['log end'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log end'][1][1])):
                             logback = 0
 
                     # Update window after any command or keypress

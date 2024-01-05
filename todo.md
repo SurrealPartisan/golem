@@ -3,7 +3,6 @@
 Minor
 * Solve the multiple brains problem
 * Different blessings and smites to different gods
-* Fix crash on Creature line 457 when a weapon has been dropped from a destroyed body part before finishing an attack
 
 Major
 * Sense of smell for mole people and others
