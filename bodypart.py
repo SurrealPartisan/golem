@@ -2622,7 +2622,7 @@ class JobgoblinHeart(BodyPart):
         self.weight = 250
         self._info = 'A heart consisting of living flesh.'
 
-class JobGoblinLung(BodyPart):
+class JobgoblinLung(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'jobgoblin lung', '*', (255, 0, 0))
         self.categories = ['lung']
