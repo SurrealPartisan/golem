@@ -148,6 +148,7 @@ class Food(Item):
         self.basename = name
         self.consumable = True
         self.edible = True
+        self._info = 'Food consisting of ' + material + '.'
 
     def consume(self, user, efficiency):
         if user.stance == 'fasting':
@@ -199,9 +200,11 @@ class Cure(Item):
         if curetype.curedmaterial == 'living flesh':
             color = (255, 0, 0)
             name = 'dose of medication labeled "' + curetype.name + ', ' + repr(curetype.dosage*level) + ' mg"'
+            info = 'A cure for living flesh.'
         elif curetype.curedmaterial == 'undead flesh':
             color = (0, 255, 0)
             name = 'vial of ectoplasmic infusion labeled "' + curetype.name + ', ' + repr(curetype.dosage*level) + ' mmol/l"'
+            info = 'A cure for undead flesh.'
         super().__init__(owner, x, y, name, '!', color)
         self.consumable = True
         self.material = 'chemical'
@@ -210,6 +213,7 @@ class Cure(Item):
         self.curedmaterial = curetype.curedmaterial
         self._hpgiven = curetype.hpgiven_base * level
         self.weight = 100
+        self._info = info
     
     def hpgiven(self):
         return self._hpgiven
@@ -243,6 +247,7 @@ class Dagger(Item):
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
         self.weight = 6*density
+        self._info = 'A one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time).'
 
     def attackslist(self):
         return[Attack(self.name, 'stabbed', 'stabbed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('bleed', 0.2)], self)]
@@ -276,6 +281,7 @@ class Spear(Item):
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
         self.weight = 6*density + 2000
+        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -312,6 +318,7 @@ class Mace(Item):
         self.maxdamage = int(materials[material].damage*1.2) + enchantment
         density = materials[material].density
         self.weight = 50*density
+        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can knock enemies back.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -348,6 +355,7 @@ class Sword(Item):
         self.maxdamage = int(materials[material].damage*1.25) + enchantment
         density = materials[material].density
         self.weight = 50*density
+        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding).'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -385,6 +393,7 @@ class PickAxe(Item):
         self._minespeed = materials[material].minespeed
         density = materials[material].density
         self.weight = 12*density + 1500
+        self._info = 'A weapon and a tool, made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can be used for mining.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -429,6 +438,7 @@ class Caltrops(Item):
         self.maxdamage = int(materials[material].damage) + enchantment
         density = materials[material].density
         self.weight = 12*density
+        self._info = 'A trap made of ' + material + '.'
 
     def entrap(self, creat, part):
         if creat.faction in self.bane:
@@ -491,6 +501,7 @@ class LooseRoundPebbles(Item):
         self.hidden = True
         self.trap = True
         self.weight = 10000
+        self._info = 'A natural trap, can make you fall prone.'
 
     def entrap(self, creat, part):
         part = np.random.choice(creat.bodyparts)
@@ -566,6 +577,8 @@ class PieceOfArmor(Item):
         if wearcategory == 'tentacle armor':
             self.weight = 20*density
 
+        self._info = 'A piece of armor, made of ' + material + '.'
+
 def randomarmor(owner, x, y, level):
     enchantment = 0
     while np.random.rand() < 0.5 + level/100:
@@ -579,6 +592,7 @@ class SchoolkidBackpack(Item):
         self.wearcategory = 'back'
         self.carryingcapacity = 10000
         self.weight = 500
+        self._info = 'A backpack that can carry up to 10 kg of items.'
 
 class TouristBackpack(Item):
     def __init__(self, owner, x, y):
@@ -587,6 +601,7 @@ class TouristBackpack(Item):
         self.wearcategory = 'back'
         self.carryingcapacity = 20000
         self.weight = 1000
+        self._info = 'A backpack that can carry up to 20 kg of items.'
 
 class HikerBackpack(Item):
     def __init__(self, owner, x, y):
@@ -595,6 +610,7 @@ class HikerBackpack(Item):
         self.wearcategory = 'back'
         self.carryingcapacity = 40000
         self.weight = 2000
+        self._info = 'A backpack that can carry up to 40 kg of items.'
 
 class MilitaryBackpack(Item):
     def __init__(self, owner, x, y):
@@ -603,6 +619,7 @@ class MilitaryBackpack(Item):
         self.wearcategory = 'back'
         self.carryingcapacity = 80000
         self.weight = 4000
+        self._info = 'A backpack that can carry up to 80 kg of items.'
 
 class BackpackOfHolding(Item):
     def __init__(self, owner, x, y):
@@ -611,6 +628,7 @@ class BackpackOfHolding(Item):
         self.wearcategory = 'back'
         self.carryingcapacity = 160000
         self.weight = 1000
+        self._info = 'A magical backpack that can carry up to 160 kg of items.'
 
 class GreaterBackpackOfHolding(Item):
     def __init__(self, owner, x, y):
@@ -619,6 +637,7 @@ class GreaterBackpackOfHolding(Item):
         self.wearcategory = 'back'
         self.carryingcapacity = 320000
         self.weight = 1000
+        self._info = 'A magical backpack that can carry up to 320 kg of items.'
 
 class CapeOfFlying(Item):
     def __init__(self, owner, x, y):
@@ -627,6 +646,7 @@ class CapeOfFlying(Item):
         self.wearcategory = 'back'
         self.weight = 500
         self.stances = ['flying']
+        self._info = 'A magical cape. When worn, enables the flying stance.'
 
 def randomBackItem(owner, x, y):
     return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying])(owner, x, y)
@@ -638,6 +658,7 @@ class RingOfCarrying(Item):
         self.wearcategory = 'ring'
         self.carryingcapacity = 20000
         self.weight = 5
+        self._info = 'A magical ring. When worn, increases your carrying capacity by 20 kg.'
 
 class RingOfVision(Item):
     def __init__(self, owner, x, y):
@@ -645,6 +666,7 @@ class RingOfVision(Item):
         self.wearable = True
         self.wearcategory = 'ring'
         self.weight = 5
+        self._info = 'A magical ring. When worn, increases your range of vision, regardless of whether you have eyes.'
 
     def sight(self):
         return 1
@@ -656,6 +678,7 @@ class RingOfSustenance(Item):
         self.wearcategory = 'ring'
         self.weight = 5
         self.hungermultiplier = 0.5
+        self._info = 'A magical ring. When worn, halves you hunger gaining rate.'
 
 def randomRing(owner, x, y):
     return np.random.choice([RingOfCarrying, RingOfVision, RingOfSustenance])(owner, x, y)
@@ -666,6 +689,7 @@ class Eyeglasses(Item):
         self.wearable = True
         self.wearcategory = 'face'
         self.weight = 9
+        self._info = 'A face slot item. When worn, increases your range of vision, as long as you have eyes.'
 
     def sight(self):
         if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not part.destroyed()]) > 0:
@@ -680,6 +704,7 @@ class GasMask(Item):
         self.wearcategory = 'face'
         self.weight = 900
         self.breathepoisonresistance = 1
+        self._info = 'A face slot item. When worn, completely protects you from poison gas.'
 
 class BerserkerMask(Item):
     def __init__(self, owner, x, y):
@@ -688,6 +713,7 @@ class BerserkerMask(Item):
         self.wearcategory = 'face'
         self.weight = 200
         self.stances = ['berserk']
+        self._info = 'A face slot item. When worn, enables the berserk stance.'
 
 def randomFaceItem(owner, x, y):
     return np.random.choice([Eyeglasses, GasMask, BerserkerMask])(owner, x, y)

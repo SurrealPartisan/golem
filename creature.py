@@ -1836,6 +1836,97 @@ class Jobgoblin(Creature):
 
 
 
+class Ghast(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'undead'
+        self.char = 'g'
+        self.color = (191, 255, 255)
+        self.name = np.random.choice(['ghast', 'headless ghast', 'one-armed ghast', 'crawler ghast'], p=[0.7, 0.1, 0.1, 0.1])
+        self.x = x
+        self.y = y
+        self.torso = bodypart.GhastTorso(self.bodyparts, 0, 0)
+        if self.name != 'one-armed ghast':
+            self.bodyparts[0].connect('left arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect('right arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+        else:
+            if np.random.choice(2):
+                self.bodyparts[0].connect('left arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+            else:
+                self.bodyparts[0].connect('right arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+        if self.name != 'crawler ghast':
+            self.bodyparts[0].connect('left leg', bodypart.GhastLeg(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect('right leg', bodypart.GhastLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.GhastHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.GhastLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.GhastLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.GhastStomach(self.bodyparts, 0, 0))
+        if self.name != 'headless ghast':
+            self.bodyparts[0].connect('head', bodypart.GhastHead(self.bodyparts, 0, 0))
+            self.bodyparts[-1].connect('brain', bodypart.GhastBrain(self.bodyparts, 0, 0))
+            self.bodyparts[-2].connect('left eye', bodypart.GhastEye(self.bodyparts, 0, 0))
+            self.bodyparts[-3].connect('right eye', bodypart.GhastEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        disoriented = False
+        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+            disoriented = True
+            self.log().append('You stumble around.')
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0 and not disoriented:
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            elif not disoriented:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0):
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    if not self.world.walls[self.x+dx, self.y+dy]:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['bump', time/2])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+
+
 enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy type and a propability weight for its presence.
     [(Zombie, 10), (MolePerson, 10), (Goblin, 10)],
     [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (CaveOctopus, 15), (Dog, 15)],
@@ -1845,5 +1936,6 @@ enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy ty
     [(Drillbot, 10), (Ghoul, 10)],
     [(Ghoul, 10), (SmallFireElemental, 10)],
     [(SmallFireElemental, 10), (DireWolf, 10)],
-    [(DireWolf, 10), (Jobgoblin, 10)]
+    [(DireWolf, 10), (Jobgoblin, 10)],
+    [(Jobgoblin, 10), (Ghast, 10)]
     ]

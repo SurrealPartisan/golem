@@ -47,6 +47,7 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'pick up': ((pygame.locals.K_COMMA, False, True), (None, False, True)),
                        'drop': ((pygame.locals.K_d, False, True), (None, False, True)),
                        'inventory': ((pygame.locals.K_i, False, True), (None, False, True)),
+                       'information': ((pygame.locals.K_i, True, True), (None, False, True)),
                        'consume': ((pygame.locals.K_c, False, True), (None, False, True)),
                        'cook': ((pygame.locals.K_c, True, True), (None, False, True)),
                        'wield': ((pygame.locals.K_w, False, True), (None, False, True)),
@@ -237,7 +238,7 @@ def game():
         player.y = cave.stairsupcoords[1]
         cave.creatures.append(player)
 
-        player.log().append('Welcome to the cave!')
+        player.log().append('You are a golem, a Frankensteinian creature. The humans saw you as a monster and exiled you into these caves. Now your short-term goal is to survive, and the long-term goal is to gather power for revenge. Your ability to change your bodyparts should become useful.')
         player.log().append("Press 'h' for help.")
 
         for i in range(mapwidth + hpbarwidth + hpmargin):
@@ -547,6 +548,24 @@ def game():
                     itname = player.inventory[j].name + ' (wt: ' + repr(player.inventory[j].weight) + ' g,' + ' hp: ' + repr(player.inventory[j].hp()) + '/' + repr(player.inventory[j].maxhp) + ')'
                 else:
                     itname = player.inventory[j].name + ' (wt: ' + repr(player.inventory[j].weight) + ' g)'
+                if j != chosen:
+                    win.write(itname, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                if j == chosen:
+                    win.write(itname, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+        elif gamestate == 'information':
+            infomessage = 'Choose the item to get information about:'
+            win.write(infomessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1,len(itemlist))
+            for i in range(logrows):
+                if len(itemlist) <= logheight-1:
+                    j = i
+                else:
+                    j = len(itemlist)+i-logrows-logback
+                if itemlist[j].maxhp < np.inf:
+                    itname = itemlist[j].name + ' (wt: ' + repr(itemlist[j].weight) + ' g,' + ' hp: ' + repr(itemlist[j].hp()) + '/' + repr(itemlist[j].maxhp) + ')'
+                else:
+                    itname = itemlist[j].name + ' (wt: ' + repr(itemlist[j].weight) + ' g)'
                 if j != chosen:
                     win.write(itname, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
@@ -1204,6 +1223,12 @@ def game():
                             else:
                                 logback = 0
 
+                        if (event.key == keybindings['information'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['information'][0][1])) or (event.key == keybindings['information'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['information'][1][1])):
+                            itemlist = player.inventory + [part.wielded[0] for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0] + [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0] + player.bodyparts
+                            gamestate = 'information'
+                            logback = len(itemlist) - logheight + 1
+                            chosen = 0
+
                         if (event.key == keybindings['consume'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['consume'][0][1])) or (event.key == keybindings['consume'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['consume'][1][1])):
                             if len([item for item in player.inventory if item.consumable]) > 0:
                                 gamestate = 'consume'
@@ -1312,6 +1337,7 @@ def game():
                             player.log().append('  - comma: pick up an item')
                             player.log().append('  - d: drop an item')
                             player.log().append('  - i: check your inventory')
+                            player.log().append('  - I: information on your items and bodyparts')
                             player.log().append('  - b: list your body parts')
                             player.log().append('  - B: choose your body parts')
                             player.log().append('  - c: consume')
@@ -1324,7 +1350,7 @@ def game():
                             player.log().append('  - p: pray')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 13 # Increase when adding commands
+                                logback = 14 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
@@ -1446,6 +1472,24 @@ def game():
                                 detecthiddenitems()
                                 player.previousaction = ('drop',)
                                 logback = 0
+                            gamestate = 'free'
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+
+                    elif gamestate == 'information':
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                            chosen = max(0, chosen-1)
+                            if chosen == len(itemlist) - logback - (logheight - 1) - 1:
+                                logback += 1
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                            chosen = min(len(itemlist)-1, chosen+1)
+                            if chosen == len(itemlist) - logback:
+                                logback -= 1
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            selected = itemlist[chosen]
+                            player.log().append('Information about the ' + selected.name + ': ' + selected.info())
+                            logback = 0
                             gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
@@ -2236,7 +2280,7 @@ def credits():
         win.write(' ', x=x0+24+4, y=y0+4, bgcolor='red')
         
         win.write('A Self-Made Person!', x=x0+5, y=y0+6, fgcolor='red')
-        win.write('Alpha 1.1', x=x0+10, y=y0+8, fgcolor='red')
+        win.write('Alpha 2', x=x0+11, y=y0+8, fgcolor='red')
 
         credlist = ['Programmer and main innovator:',
                     'Mieli "SurrealPartisan" Luukinen',
@@ -2335,7 +2379,7 @@ def mainmenu():
         win.write(' ', x=x0+24+4, y=y0+4, bgcolor='red')
         
         win.write('A Self-Made Person!', x=x0+5, y=y0+6, fgcolor='red')
-        win.write('Alpha 1.1', x=x0+10, y=y0+8, fgcolor='red')
+        win.write('Alpha 2', x=x0+11, y=y0+8, fgcolor='red')
 
         for i in range(len(buttontexts)):
             y = 30+2*i
