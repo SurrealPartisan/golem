@@ -510,7 +510,7 @@ class Creature():
                             if self.world.walls[target.x+dx, target.y+dy]:
                                 knocked_to_obstacle = 'wall'
                                 totaldamage *= 2
-                            if self.world.largerocks[target.x+dx, target.y+dy]:
+                            elif self.world.largerocks[target.x+dx, target.y+dy]:
                                 knocked_to_obstacle = 'large rock'
                                 totaldamage *= 2
                             elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):

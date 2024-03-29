@@ -159,42 +159,42 @@ def game():
 
             for j in range(10):
                 x = y = 0
-                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.Cure(cave.items, x, y, drugtypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
 
             for j in range(5):
                 x = y = 0
-                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.Cure(cave.items, x, y, infusiontypes[np.random.randint(13)], np.random.randint(max(1, i), i+3))
 
             for j in range(np.random.randint(6,11)):
                 x = y = 0
-                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomfood(cave.items, x, y)
 
             for j in range(5):
                 x = y = 0
-                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomweapon(cave.items, x, y, i)
 
             for j in range(5):
                 x = y = 0
-                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomarmor(cave.items, x, y, i)
 
             for j in range(np.random.randint(1,4)):
                 x = y = 0
-                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0:
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.randomUtilityItem(cave.items, x, y)
@@ -1814,7 +1814,8 @@ def game():
                                     player.bodyparts = bodypartcandidates
                                     player.torso = player.bodyparts[0]
                                     for part in player.bodyparts:
-                                        player.inventory.remove(part)
+                                        if part in player.inventory:
+                                            player.inventory.remove(part)
                                         part.owner = player.bodyparts
                                     for connection, part in connectioncandidates[1:-1]:
                                         if part != None:
