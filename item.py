@@ -284,7 +284,7 @@ class Spear(Item):
         self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack.'
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('charge',)], self)]
         else:
             return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', self.bane, [('charge',)], self)]
@@ -321,7 +321,7 @@ class Mace(Item):
         self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can knock enemies back.'
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not p(part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', self.bane, [('knockback', 0.2)], self)]
         else:
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', self.bane, [('knockback', 0.1)], self)]
@@ -358,7 +358,7 @@ class Sword(Item):
         self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding).'
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [], self)]
         else:
             return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', self.bane, [], self)]
@@ -396,13 +396,13 @@ class PickAxe(Item):
         self._info = 'A weapon and a tool, made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can be used for mining.'
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.5, self.mindamage, self.maxdamage, 'rough', self.bane, [], self)]
         else:
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 2, self.mindamage, int(0.67*self.maxdamage), 'rough', self.bane, [], self)]
 
     def minespeed(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
             return self._minespeed
         else:
             return 0.75*self._minespeed
@@ -455,13 +455,22 @@ class Caltrops(Item):
             armor = None
             armordamage = 0
         damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
         if part.parentalconnection != None:
             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
         elif part == creat.torso:
             partname = 'torso'
         if not creat.dying():
-            if not part.destroyed():
+            if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                creat.log().append('You stepped on ' + self.name + '. They incapacitated your ' + partname + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was destroyed!')
+                        armor.owner.remove(armor)
+            elif not part.destroyed():
                 creat.log().append('You stepped on ' + self.name + '. They dealt ' + repr(damage) + ' damage to your ' + partname + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
@@ -515,13 +524,22 @@ class LooseRoundPebbles(Item):
             armor = None
             armordamage = 0
         damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
         if part.parentalconnection != None:
             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
         elif part == creat.torso:
             partname = 'torso'
         if not creat.dying():
-            if not part.destroyed():
+            if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                creat.log().append('You stepped on ' + self.name + ', falling prone. It incapacitated your ' + partname + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was destroyed!')
+                        armor.owner.remove(armor)
+            elif not part.destroyed():
                 creat.log().append('You stepped on ' + self.name + ', falling prone. It dealt ' + repr(damage) + ' damage to your ' + partname + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
@@ -692,7 +710,7 @@ class Eyeglasses(Item):
         self._info = 'A face slot item. When worn, increases your range of vision, as long as you have eyes.'
 
     def sight(self):
-        if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not part.destroyed()]) > 0:
+        if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not (part.destroyed() or part.incapacitated())]) > 0:
             return 1
         else:
             return 0

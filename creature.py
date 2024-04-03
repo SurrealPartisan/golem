@@ -50,7 +50,7 @@ class Creature():
         self.stance = 'neutral'
 
     def log(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].log
         else:
@@ -60,7 +60,7 @@ class Creature():
                 return ['You have no brain, so nothing is logged.', 'You are dead!', 'Press escape to end.']
 
     def seen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].seen
         else:
@@ -70,28 +70,28 @@ class Creature():
             return seenlist
 
     def godsknown(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].godsknown
         else:
             return []
 
     def curesknown(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].curesknown
         else:
             return []
 
     def creaturesseen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].creaturesseen
         else:
             return []
 
     def itemsseen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not part.destroyed()]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].itemsseen
         else:
@@ -114,7 +114,7 @@ class Creature():
     def carryingcapacity(self):
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         divider = 2 if self.weakened() else 1
-        return int((sum([part.carryingcapacity for part in self.bodyparts if not part.destroyed()]) + sum([it.carryingcapacity for it in wornlist])) / divider)
+        return int((sum([part.carryingcapacity for part in self.bodyparts if not (part.destroyed() or part.incapacitated())]) + sum([it.carryingcapacity for it in wornlist])) / divider)
 
     def weightcarried(self):
         wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
@@ -141,6 +141,7 @@ class Creature():
     def starve(self):
         if not self.dying():
             part = np.random.choice([part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()])
+            alreadyincapacitated = part.incapacitated()
             part.damagetaken += 1
             if part.damagetaken > part.maxhp:
                 part.damagetaken = part.maxhp
@@ -148,7 +149,9 @@ class Creature():
                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
-            if not part.destroyed():
+            if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                self.log().append('Your ' + partname + ' was incapacitated by starvation.')
+            elif not part.destroyed():
                 self.log().append('Your ' + partname + ' took 1 damage from starvation.')
             else:
                 self.log().append('Your ' + partname + ' was destroyed by starvation.')
@@ -159,18 +162,19 @@ class Creature():
                 self.causeofdeath = ('starvation',)
 
     def suffocating(self):
-        lungs = [part for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+        lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
         livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
         return len(lungs) == 0 and len(livingparts) > 0
 
     def suffocate(self, time):
         if not self.dying():
-            lungs = [part for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+            lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
             if len(lungs) == 0:
                 self.suffocationclock += time
                 for i in range(int(self.suffocationclock // 1)):
                     livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
                     for part in livingparts:
+                        alreadyincapacitated = part.incapacitated()
                         part.damagetaken += 1
                         if part.damagetaken > part.maxhp:
                             part.damagetaken = part.maxhp
@@ -178,7 +182,9 @@ class Creature():
                             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                         elif part == self.torso:
                             partname = 'torso'
-                        if not part.destroyed():
+                        if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                            self.log().append('Your ' + partname + ' was incapacitated by suffocation.')
+                        elif not part.destroyed():
                             self.log().append('Your ' + partname + ' took 1 damage from suffocation.')
                         else:
                             self.log().append('Your ' + partname + ' was destroyed by suffocation.')
@@ -203,13 +209,16 @@ class Creature():
                     totaldamage = np.random.randint(1, 21)
                     resistancemultiplier = 1 - part.resistance('fire')
                     damage = min(int(resistancemultiplier*totaldamage), part.hp())
+                    alreadyincapacitated = part.incapacitated()
                     part.damagetaken += damage
                     if damage > 0:
                         if part.parentalconnection != None:
                             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                         elif part == self.torso:
                             partname = 'torso'
-                        if not part.destroyed():
+                        if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                            self.log().append('The campfire burned and incapacitated your ' + partname + '.')
+                        elif not part.destroyed():
                             self.log().append('The campfire burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
                         else:
                             self.log().append('The campfire burned and destroyed your ' + partname + '.')
@@ -227,13 +236,16 @@ class Creature():
                         totaldamage = np.random.randint(1, 41)
                         resistancemultiplier = 1 - part.resistance('fire')
                         damage = min(int(resistancemultiplier*totaldamage), part.hp())
+                        alreadyincapacitated = part.incapacitated()
                         part.damagetaken += damage
                         if damage > 0:
                             if part.parentalconnection != None:
                                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                             elif part == self.torso:
                                 partname = 'torso'
-                            if not part.destroyed():
+                            if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                                self.log().append('The lava burned and incapacitated your ' + partname + '.')
+                            elif not part.destroyed():
                                 self.log().append('The lava burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
                             else:
                                 self.log().append('The lava burned and destroyed your ' + partname + '.')
@@ -251,10 +263,13 @@ class Creature():
                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
+            alreadyincapacitated = part.incapacitated()
             bled, causers = part.bleed(time)
             totalcausers += causers
             if bled > 0:
-                if part.destroyed():
+                if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                    self.log().append('The bleeding incapacitated your ' + partname + '.')
+                elif part.destroyed():
                     self.log().append('Your ' + partname + ' bled out.')
                     part.on_destruction(self.dying())
                 else:
@@ -269,7 +284,7 @@ class Creature():
             self.causeofdeath = ('bloodloss', np.unique(totalcausers))
 
     def breathepoisonresistance(self):
-        lungresistances = [part.breathepoisonresistance for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+        lungresistances = [part.breathepoisonresistance for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
         wornresistances = [it[0].breathepoisonresistance for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return min(1, np.mean(lungresistances) + sum(wornresistances))
 
@@ -389,6 +404,7 @@ class Creature():
 
     def heal(self, part, hpgiven):
         healed = min(hpgiven, part.damagetaken)
+        alreadyincapacitated = part.incapacitated()
         part.damagetaken -= healed
         if part.damagetaken > part.maxhp:
             part.damagetaken = part.maxhp
@@ -399,7 +415,9 @@ class Creature():
         if healed > 0:
             self.log().append('Your ' + partname + ' was healed by ' + repr(healed) + ' points.')
         elif healed < 0:
-            if not part.destroyed():
+            if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                self.log().append('Your ' + partname + ' was incapacitated.')
+            elif not part.destroyed():
                 self.log().append('Your ' + partname + ' was harmed by ' + repr(-healed) + ' points.')
             else:
                 self.log().append('Your ' + partname + ' was destroyed.')
@@ -411,7 +429,10 @@ class Creature():
             self.log().append('You were unaffected.')
 
     def dying(self):
-        return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= sum([part.maxhp for part in self.bodyparts])/2 or np.any([part.vital() and part.destroyed() for part in self.bodyparts])
+        maxtotalhp = sum([part.maxhp for part in self.bodyparts])/2
+        if self.faction != 'player':
+            maxtotalhp *= 0.5
+        return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= maxtotalhp or np.any([part.vital() and (part.destroyed() or part.incapacitated()) for part in self.bodyparts])
 
     def die(self):
         if self.lasthitter != None:
@@ -457,7 +478,7 @@ class Creature():
             attackingpart = attack.weapon.owner.owner
         else:
             attackingpart = None
-        if attackingpart != None and not attackingpart.destroyed():
+        if attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated()):
             if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
                 if self.stance == 'aggressive':
                     attackerstancecoefficient = 1.25
@@ -538,13 +559,30 @@ class Creature():
                             bleed = True
                             targetbodypart.bleedclocks.append((int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), 0, self))
                     damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), targetbodypart.hp())
+                    alreadyincapacitated = targetbodypart.incapacitated()
                     targetbodypart.damagetaken += damage
                     if targetbodypart.parentalconnection != None:
                         partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                     elif targetbodypart == target.torso:
                         partname = 'torso'
                     if not target.dying():
-                        if not targetbodypart.destroyed():
+                        if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
+                            if not knocked_back and not knocked_to_obstacle:
+                                self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + '!')
+                            elif knocked_back:
+                                self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you back!')
+                            elif knocked_to_obstacle:
+                                self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                            if armordamage > 0:
+                                if not armor.destroyed():
+                                    target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                else:
+                                    target.log().append('Your ' + armor.name + ' was destroyed!')
+                                    armor.owner.remove(armor)
+                        elif not targetbodypart.destroyed():
                             if not bleed and not knocked_back and not knocked_to_obstacle:
                                 self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
                                 target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
@@ -606,8 +644,12 @@ class Creature():
                 attackingpartname = list(attackingpart.parentalconnection.parent.childconnections.keys())[list(attackingpart.parentalconnection.parent.childconnections.values()).index(attackingpart.parentalconnection)]
             elif attackingpart == self.torso:
                 attackingpartname = 'torso'
-            self.log().append('Your ' + attackingpartname + ' was destroyed before you could finish the attack!')
-            target.log().append('The ' + self.name + '\'s ' + attackingpartname + 'was destroyed before it could finish its attack!')
+            if attackingpart.destroyed():
+                self.log().append('Your ' + attackingpartname + ' was destroyed before you could finish the attack!')
+                target.log().append('The ' + self.name + '\'s ' + attackingpartname + ' was destroyed before it could finish its attack!')
+            else:
+                self.log().append('Your ' + attackingpartname + ' was incapacitated before you could finish the attack!')
+                target.log().append('The ' + self.name + '\'s ' + attackingpartname + ' was incapacitated before it could finish its attack!')
         else:
             self.log().append('You dropped your weapon before you could finish the attack!')
             target.log().append('The ' + self.name + ' dropped its weapon before it could finish its attack!')
@@ -698,7 +740,7 @@ class Creature():
             self.suffocate(timetoact)
             if self.world.poisongas[self.x, self.y]:
                 livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
-                lungs = [part for part in self.bodyparts if 'lung' in part.categories and not part.destroyed()]
+                lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
                 if np.random.rand() > self.breathepoisonresistance() and len(livingparts) > 0 and len(lungs) > 0:
                     if self.poisonclock == 0:
                         self.log().append('You were poisoned by the gas.')

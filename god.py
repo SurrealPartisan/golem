@@ -42,7 +42,7 @@ class God(creature.Creature):
         creat.log().append(self.name + ' has blessed you with a ' + gift.name + '!')
 
     def smite(self, target):
-        targetbodypart = np.random.choice([part for part in target.bodyparts if not part.destroyed()])
+        targetbodypart = np.random.choice([part for part in target.bodyparts if not part.destroyed() and not part.incapacitated()])
         target.lasthitter = self
         if self.power == 'powerful':
             totaldamage = np.random.randint(1, 41)
@@ -55,9 +55,12 @@ class God(creature.Creature):
         elif targetbodypart == target.torso:
             partname = 'torso'
         if not target.dying():
-            if not targetbodypart.destroyed():
+            if not targetbodypart.destroyed() and not targetbodypart.incapacitated():
                 self.log().append('You smote the ' + target.name + ' in the ' + partname + ', dealing ' + repr(damage) + ' damage!')
                 target.log().append(self.name + ' smote you in the ' + partname + ', dealing ' + repr(damage) + ' damage!')
+            elif targetbodypart.incapacitated() and not targetbodypart.destroyed():
+                self.log().append('You smote and incapacitated the ' + partname + ' of the ' + target.name + '!')
+                target.log().append(self.name + ' smote and incapacitated your ' + partname + '!')
             else:
                 self.log().append('You smote and destroyed the ' + partname + ' of the ' + target.name + '!')
                 target.log().append(self.name + ' smote and destroyed your ' + partname + '!')

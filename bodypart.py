@@ -59,6 +59,12 @@ class BodyPart(item.Item):
         else:
             return self.parentalconnection.vital
 
+    def incapacitated(self):
+        if self.owner.owner.faction != 'player':
+            return self.damagetaken >= 0.5*self.maxhp
+        else:
+            return False
+
     def speed(self):
         return 0
 
@@ -187,8 +193,8 @@ class HumanArm(BodyPart):
         self._info = 'An arm consisting of living flesh.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -196,7 +202,7 @@ class HumanArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -205,7 +211,7 @@ class HumanArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [], self)]
             else:
@@ -227,8 +233,8 @@ class HumanLeg(BodyPart):
         self._info = 'A leg consisting of living flesh.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1
             else:
                 return 0.5
@@ -236,7 +242,7 @@ class HumanLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
         else:
             return []
@@ -257,7 +263,7 @@ class HumanHead(BodyPart):
         self._info = 'A head consisting of living flesh.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -274,7 +280,7 @@ class HumanEye(BodyPart):
         self._info = 'An eye consisting of living flesh.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -376,8 +382,8 @@ class ZombieArm(BodyPart):
         self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.1
             else:
                 return 0.05
@@ -385,7 +391,7 @@ class ZombieArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -394,7 +400,7 @@ class ZombieArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [], self)]
             else:
@@ -419,14 +425,14 @@ class ZombieLeg(BodyPart):
         self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
         else:
             return []
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.5
             else:
                 return 0.25
@@ -452,7 +458,7 @@ class ZombieHead(BodyPart):
         self._info = 'A head consisting of undead flesh. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -472,7 +478,7 @@ class ZombieEye(BodyPart):
         self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -580,8 +586,8 @@ class MolePersonArm(BodyPart):
         self._info = 'An arm consisting of living flesh. Can be used for mining.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -589,7 +595,7 @@ class MolePersonArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0.33
             else:
@@ -598,7 +604,7 @@ class MolePersonArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'rough', [], [], self)]
             else:
@@ -620,8 +626,8 @@ class MolePersonLeg(BodyPart):
         self._info = 'A leg consisting of living flesh. Somewhat weak at carrying.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1
             else:
                 return 0.5
@@ -629,7 +635,7 @@ class MolePersonLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
         else:
             return []
@@ -650,7 +656,7 @@ class MolePersonHead(BodyPart):
         self._info = 'A head consisting of living flesh.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -667,7 +673,7 @@ class MolePersonEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Very short-sighted.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 1
         else:
             return 0
@@ -767,8 +773,8 @@ class GoblinArm(BodyPart):
         self._info = 'An arm consisting of living flesh. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -776,7 +782,7 @@ class GoblinArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -785,7 +791,7 @@ class GoblinArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'sharp', [], [('bleed', 0.2)], self)]
             else:
@@ -809,8 +815,8 @@ class GoblinLeg(BodyPart):
         self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1
             else:
                 return 0.5
@@ -818,7 +824,7 @@ class GoblinLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
         else:
             return []
@@ -841,7 +847,7 @@ class GoblinHead(BodyPart):
         self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 15, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -858,7 +864,7 @@ class GoblinEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Good at detecting traps.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -948,7 +954,7 @@ class OctopusHead(BodyPart):
         self._info = 'A torso (despite being called head!) consisting of living flesh.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -969,18 +975,18 @@ class OctopusTentacle(BodyPart):
         self._info = 'A tentacle consisting of living flesh. Works both as an arm and as a leg. Slow at moving, but faster if there are more of them. Also faster at attacking if there are more of them.'
 
     def speed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if 'leg' in self.parentalconnection.categories:
-                return 0.1*len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()])
+                return 0.1*len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())])
             elif 'arm' in self.parentalconnection.categories:
-                return 0.1*len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()])
+                return 0.1*len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())])
             else:
-                return 0.1*len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
+                return 0.1*len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
         else:
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -989,9 +995,9 @@ class OctopusTentacle(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
+                timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
                 return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10, 'blunt', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
@@ -1010,7 +1016,7 @@ class OctopusEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Can detect traps from farther away than most.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -1106,10 +1112,10 @@ class DogLeg(BodyPart):
         self._info = 'A leg consisting of living flesh. On its own very weak at carrying. Quite fast if there are at least four legs.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 3:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 3:
                 return 1.5
-            elif len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+            elif len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1
             else:
                 return 0.5
@@ -1117,7 +1123,7 @@ class DogLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 5, 'sharp', [], [], self)]
         else:
             return []
@@ -1138,7 +1144,7 @@ class DogHead(BodyPart):
         self._info = 'A head consisting of living flesh.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.80, 1, 1, 25, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -1155,7 +1161,7 @@ class DogEye(BodyPart):
         self._info = 'An eye consisting of living flesh.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -1264,8 +1270,8 @@ class HobgoblinArm(BodyPart):
         self._info = 'An arm consisting of living flesh. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -1273,7 +1279,7 @@ class HobgoblinArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -1282,7 +1288,7 @@ class HobgoblinArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'sharp', [], [('bleed', 0.2)], self)]
             else:
@@ -1306,8 +1312,8 @@ class HobgoblinLeg(BodyPart):
         self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1.5
             else:
                 return 0.75
@@ -1315,7 +1321,7 @@ class HobgoblinLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', [], [], self)]
         else:
             return []
@@ -1338,7 +1344,7 @@ class HobgoblinHead(BodyPart):
         self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -1355,7 +1361,7 @@ class HobgoblinEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Good at detecting traps.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -1451,8 +1457,8 @@ class MoleMonkArm(BodyPart):
         self._info = 'An arm consisting of living flesh. Can be used for mining.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -1460,7 +1466,7 @@ class MoleMonkArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0.5
             else:
@@ -1469,7 +1475,7 @@ class MoleMonkArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'rough', [], [], self)]
             else:
@@ -1491,8 +1497,8 @@ class MoleMonkLeg(BodyPart):
         self._info = 'A leg consisting of living flesh.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1.5
             else:
                 return 0.75
@@ -1500,7 +1506,7 @@ class MoleMonkLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', [], [], self)]
         else:
             return []
@@ -1521,7 +1527,7 @@ class MoleMonkHead(BodyPart):
         self._info = 'A head consisting of living flesh.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 45, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -1538,7 +1544,7 @@ class MoleMonkEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Very short-sighted.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 1
         else:
             return 0
@@ -1634,10 +1640,10 @@ class WolfLeg(BodyPart):
         self._info = 'A leg consisting of living flesh. On its own rather weak at carrying. Very fast if there are at least four legs, and quite fast even when there are two.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 3:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 3:
                 return 2
-            elif len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+            elif len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1.5
             else:
                 return 0.5
@@ -1645,7 +1651,7 @@ class WolfLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 10, 'sharp', [], [], self)]
         else:
             return []
@@ -1666,7 +1672,7 @@ class WolfHead(BodyPart):
         self._info = 'A head consisting of living flesh.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 40, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -1683,7 +1689,7 @@ class WolfEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Sees farther than most.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 4
         else:
             return 0
@@ -1800,10 +1806,10 @@ class DrillbotWheel(BodyPart):
         self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Very weak against sharp and rough attacks. Very fast if there are at least four legs or wheels, and quite fast even when there are two.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 3:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 3:
                 return 2
-            elif len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+            elif len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1.5
             else:
                 return 0.5
@@ -1828,7 +1834,7 @@ class DrillArm(BodyPart):
         return 0.5
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, 'rough', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -1850,7 +1856,7 @@ class DrillbotCamera(BodyPart):
         self._info = 'An eye consisting of electronics. Good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 4
         else:
             return 0
@@ -1969,8 +1975,8 @@ class GhoulArm(BodyPart):
         self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -1978,7 +1984,7 @@ class GhoulArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -1987,7 +1993,7 @@ class GhoulArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 50, 'blunt', [], [], self)]
             else:
@@ -2012,14 +2018,14 @@ class GhoulLeg(BodyPart):
         self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 75, 'blunt', [], [], self)]
         else:
             return []
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1
             else:
                 return 0.5
@@ -2045,7 +2051,7 @@ class GhoulHead(BodyPart):
         self._info = 'A head consisting of undead flesh. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 50, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -2065,7 +2071,7 @@ class GhoulEye(BodyPart):
         self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -2198,7 +2204,7 @@ class SmallFireElementalEye(BodyPart):
         self._info = 'An eye consisting of elemental fire. Sees much farther than most, and is rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 5
         else:
             return 0
@@ -2273,18 +2279,18 @@ class SmallFireElementalTentacle(BodyPart):
         self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Faster at moving and attacking if there are more of them.'
 
     def speed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if 'leg' in self.parentalconnection.categories:
-                return 0.5*len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()])
+                return 0.5*len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())])
             elif 'arm' in self.parentalconnection.categories:
-                return 0.5*len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()])
+                return 0.5*len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())])
             else:
-                return 0.5*len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
+                return 0.5*len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
         else:
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -2293,9 +2299,9 @@ class SmallFireElementalTentacle(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not part.destroyed()])
+                timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
                 return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.8, timetaken, 1, 30, 'fire', [], [], self)]
             else:
                 return self.wielded[0].attackslist()
@@ -2341,10 +2347,10 @@ class DireWolfLeg(BodyPart):
         self._info = 'A leg consisting of living flesh. On its own somewhat weak at carrying. Very fast if there are at least four legs, and quite fast even when there are two.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 3:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 3:
                 return 2
-            elif len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+            elif len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1.5
             else:
                 return 0.5
@@ -2352,7 +2358,7 @@ class DireWolfLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 20, 'sharp', [], [], self)]
         else:
             return []
@@ -2373,7 +2379,7 @@ class DireWolfHead(BodyPart):
         self._info = 'A head consisting of living flesh.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 60, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -2390,7 +2396,7 @@ class DireWolfEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Sees farther than most.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 4
         else:
             return 0
@@ -2499,8 +2505,8 @@ class JobgoblinArm(BodyPart):
         self._info = 'An arm consisting of living flesh. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -2508,7 +2514,7 @@ class JobgoblinArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -2517,7 +2523,7 @@ class JobgoblinArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 65, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 65, 'sharp', [], [('bleed', 0.2)], self)]
             else:
@@ -2541,8 +2547,8 @@ class JobgoblinLeg(BodyPart):
         self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 2
             else:
                 return 1
@@ -2550,7 +2556,7 @@ class JobgoblinLeg(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 90, 'blunt', [], [], self)]
         else:
             return []
@@ -2573,7 +2579,7 @@ class JobgoblinHead(BodyPart):
         self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 90, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -2590,7 +2596,7 @@ class JobgoblinEye(BodyPart):
         self._info = 'An eye consisting of living flesh. Good at detecting traps.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -2692,8 +2698,8 @@ class GhastArm(BodyPart):
         self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'arm' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 0.2
             else:
                 return 0.1
@@ -2701,7 +2707,7 @@ class GhastArm(BodyPart):
             return 0
 
     def minespeed(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return 0
             else:
@@ -2710,7 +2716,7 @@ class GhastArm(BodyPart):
             return 0
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 70, 'blunt', [], [], self)]
             else:
@@ -2735,14 +2741,14 @@ class GhastLeg(BodyPart):
         self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 105, 'blunt', [], [], self)]
         else:
             return []
 
     def speed(self):
-        if not self.destroyed():
-            if len([part for part in self.owner if 'leg' in part.categories and not part.destroyed()]) > 1:
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
                 return 1
             else:
                 return 0.5
@@ -2768,7 +2774,7 @@ class GhastHead(BodyPart):
         self._info = 'A head consisting of undead flesh. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 70, 'sharp', [], [('bleed', 0.1)], self)]
         else:
             return []
@@ -2788,7 +2794,7 @@ class GhastEye(BodyPart):
         self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def sight(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return 3
         else:
             return 0
@@ -2883,7 +2889,7 @@ class VelociraptorSkull(BodyPart):
         
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 0.9, 1, 1, 50, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -2913,7 +2919,7 @@ class DeinonychusSkull(BodyPart):
         
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 75, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -2943,7 +2949,7 @@ class CeratosaurusSkull(BodyPart):
         
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 100, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -2973,7 +2979,7 @@ class AllosaurusSkull(BodyPart):
         
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 125, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []
@@ -3003,7 +3009,7 @@ class TyrannosaurusSkull(BodyPart):
         
 
     def attackslist(self):
-        if not self.destroyed():
+        if not (self.destroyed() or self.incapacitated()):
             return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 150, 'sharp', [], [('bleed', 0.2)], self)]
         else:
             return []

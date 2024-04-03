@@ -259,7 +259,10 @@ def game():
     gamestate = 'free'
 
     def draw():
-        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+        if not player.dead:
+            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+        else:
+            fovmap = np.ones((mapwidth, mapheight))
         # Background
         # win.setscreencolors(None, (0,0,0), clear=True)
         win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight))
@@ -738,6 +741,8 @@ def game():
                     targetdescription = partname + ' (' + repr(int(targetbodypart.defensecoefficient() * 100)) + '%, time x1.5)'
                 else:
                     targetdescription = partname + ' (' + repr(int(targetbodypart.defensecoefficient() * 100)) + '%)'
+                if targetbodypart.incapacitated():
+                    targetdescription += ' [INCAPACITATED]'
                 if j != chosen:
                     win.write(targetdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
@@ -790,6 +795,9 @@ def game():
                     if connectioncandidates[j][0].vital and connectioncandidates[j][1] == None:
                         fgcolorchosen = (255,0,0)
                         fgcolorunchosen = (255,0,0)
+                    elif connectioncandidates[j][1] == None or connectioncandidates[j][1].hp() == 0:
+                        fgcolorchosen = (255,255,0)
+                        fgcolorunchosen = (255,255,0)
                     else:
                         fgcolorchosen = (0,0,0)
                         fgcolorunchosen = (255,255,255)
