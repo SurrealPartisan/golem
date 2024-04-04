@@ -321,7 +321,7 @@ class Mace(Item):
         self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can knock enemies back.'
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not p(part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', self.bane, [('knockback', 0.2)], self)]
         else:
             return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', self.bane, [('knockback', 0.1)], self)]

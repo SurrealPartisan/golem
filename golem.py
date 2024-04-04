@@ -269,7 +269,12 @@ def game():
         for i in range(mapwidth + hpbarwidth + hpmargin):
             for j in range(mapheight + statuslines + logheight):
                 win.putchars(' ', x=i, y=j, bgcolor='black')  # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
-        seen = player.seen() # This should prevent at least some of the lag when the player has no brain.
+        if not player.dead:
+            seen = player.seen() # This should prevent at least some of the lag when the player has no brain.
+        else:
+            seen = []
+            for i in range(numlevels):
+                seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
         for i in range(mapwidth):
             for j in range(mapheight):
                 if fovmap[i,j]:
@@ -313,11 +318,11 @@ def game():
         # Items
         for it in cave.items:
             if fovmap[it.x, it.y]:
-                if not it in player.itemsseen() and not it.hidden:
+                if not player.dead and not it in player.itemsseen() and not it.hidden:
                     brains = [part for part in player.bodyparts if 'brain' in part.categories and not part.destroyed()]
                     if len(brains) > 0:
                         player.itemsseen().append(it)
-                if it in player.itemsseen() or not it.hidden:
+                if player.dead or it in player.itemsseen() or not it.hidden:
                     if cave.lavapits[it.x,it.y]:
                         visiblebgcolor = (255, 0, 0)
                         nonvisiblebgcolor = (128, 0, 0)
@@ -337,7 +342,7 @@ def game():
                     bgcolor = (64, 64, 64)
                 win.putchars(npc.char, npc.x, npc.y, bgcolor=bgcolor,
                              fgcolor=npc.color)
-                if not npc in player.creaturesseen():
+                if not player.dead and not npc in player.creaturesseen():
                     player.creaturesseen().append(npc)
                     if player in npc.creaturesseen():
                             player.log().append('You see a ' + npc.name +'. It has noticed you.')
@@ -1995,7 +2000,7 @@ def halloffame():
         else:
             highscores = []
         highscores_sorted = sorted(highscores, reverse=True)
-        if highscores_sorted.index(highscores[-1]) >=  mapheight + statuslines + logheight - 1:
+        if len(highscores_sorted) > 0 and highscores_sorted.index(highscores[-1]) >=  mapheight + statuslines + logheight - 1:
             listlength = mapheight + statuslines + logheight - 3
             latestoutoftop = True
         else:

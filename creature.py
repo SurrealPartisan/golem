@@ -792,8 +792,11 @@ class Creature():
                                 creat.log().append('The ' + self.name + ' noticed you!')
                         else:
                             self.log().append('You see a ' + creat.name +'. It hasn\'t noticed you.')
-    
-                self.nextaction = self.ai()
+
+                if not self.dead:
+                    self.nextaction = self.ai()
+                else:
+                    self.nextaction = ['wait', 1]
                 if self.nextaction[0] == 'fight' and self.previousaction[0] == 'fight' and self.nextaction[3].weapon == self.previousaction[1] and self.nextaction[2] == self.previousaction[2]:
                     self.nextaction[-1] = self.nextaction[-1]*1.5
                 self.update(timeleft)
