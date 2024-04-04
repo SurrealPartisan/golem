@@ -402,43 +402,43 @@ def game():
         win.putchars('Score: ' + repr(player.xp), x=30, y=mapheight, fgcolor='white', bgcolor=(128,128,128))
         win.putchars('Dungeon level ' + repr(cave_i + 1), x=50, y=mapheight, fgcolor='white', bgcolor=(128,128,128))
 
-        statuseffects = []
-        if player.stance != 'neutral':
-            statuseffects.append((player.stance.capitalize(), (0, 255, 0)))
-        if player.overloaded():
-            statuseffects.append(('Overloaded', (255, 0, 0)))
-        elif player.burdened():
-            statuseffects.append(('Burdened', (255, 255, 0)))
-        if player.suffocating():
-            statuseffects.append(('Suffocating', (255, 0, 0)))
-        bleed = False
-        for part in player.bodyparts:
-            if len(part.bleedclocks) > 0 and not part.destroyed():
-                bleed = True
-        if bleed:
-            statuseffects.append(('Bleeding', (255, 0, 0)))
-        if player.starving():
-            statuseffects.append(('Starving', (255, 0, 0)))
-        elif player.hungry():
-            statuseffects.append(('Hungry', (255, 255, 0)))
-        if player.poisonclock > 0:
-            if len([part for part in player.bodyparts if part.material == 'living flesh']) > 0:
-                statuseffects.append(('Poisoned', (255, 0, 0)))
-            else:
-                statuseffects.append(('Poisoned', (0, 0, 0)))
-        if player.slowed() == 1:
-            statuseffects.append(('Slowed', (255, 255, 0)))
-        if player.slowed() > 1:
-            statuseffects.append(('Slowed', (255, 0, 0)))
-        if player.weakened():
-            statuseffects.append(('Weakened', (255, 255, 0)))
-        if player.vomitclock > 0:
-            statuseffects.append(('Vomiting', (255, 255, 0)))
-        if player.disorientedclock > 0:
-            statuseffects.append(('Disoriented', (255, 255, 0)))
         textx = 0
         texty = mapheight + 1
         if not player.dying():
+            statuseffects = []
+            if player.stance != 'neutral':
+                statuseffects.append((player.stance.capitalize(), (0, 255, 0)))
+            if player.overloaded():
+                statuseffects.append(('Overloaded', (255, 0, 0)))
+            elif player.burdened():
+                statuseffects.append(('Burdened', (255, 255, 0)))
+            if player.suffocating():
+                statuseffects.append(('Suffocating', (255, 0, 0)))
+            bleed = False
+            for part in player.bodyparts:
+                if len(part.bleedclocks) > 0 and not part.destroyed():
+                    bleed = True
+            if bleed:
+                statuseffects.append(('Bleeding', (255, 0, 0)))
+            if player.starving():
+                statuseffects.append(('Starving', (255, 0, 0)))
+            elif player.hungry():
+                statuseffects.append(('Hungry', (255, 255, 0)))
+            if player.poisonclock > 0:
+                if len([part for part in player.bodyparts if part.material == 'living flesh']) > 0:
+                    statuseffects.append(('Poisoned', (255, 0, 0)))
+                else:
+                    statuseffects.append(('Poisoned', (0, 0, 0)))
+            if player.slowed() == 1:
+                statuseffects.append(('Slowed', (255, 255, 0)))
+            if player.slowed() > 1:
+                statuseffects.append(('Slowed', (255, 0, 0)))
+            if player.weakened():
+                statuseffects.append(('Weakened', (255, 255, 0)))
+            if player.vomitclock > 0:
+                statuseffects.append(('Vomiting', (255, 255, 0)))
+            if player.disorientedclock > 0:
+                statuseffects.append(('Disoriented', (255, 255, 0)))
             for effect in statuseffects:
                 if textx + len(effect[0]) > mapwidth:
                     textx = 0
@@ -940,7 +940,10 @@ def game():
         _updatetime(time)
 
     def detecthiddenitems():
-        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+        if not player.dead:
+            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+        else:
+            fovmap = np.ones((mapwidth, mapheight))
         for it in cave.items:
             if fovmap[it.x, it.y]:
                 if not it in player.itemsseen() and it.hidden:

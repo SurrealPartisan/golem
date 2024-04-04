@@ -60,7 +60,7 @@ class BodyPart(item.Item):
             return self.parentalconnection.vital
 
     def incapacitated(self):
-        if self.owner.owner.faction != 'player':
+        if hasattr(self.owner, 'owner') and self.owner.owner.faction != 'player':
             return self.damagetaken >= 0.5*self.maxhp
         else:
             return False
