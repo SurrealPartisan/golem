@@ -34,6 +34,14 @@ def infusionname():
 def unpronounceablename(length):
     return ''.join(np.random.choice(list(letters), length)).capitalize()
 
+godlynicknames = {'pride': ['Majestic', 'August', 'Self-Important', 'Self-Righteous'],
+                  'greed': ['Rich', 'Plentiful', 'Luxurious', 'Opulent'],
+                  'wrath': ['Hateful', 'Hellish', 'Raving', 'Zealous', 'Furious'],
+                  'envy': ['Green', 'Spiteful', 'Jealous', 'Coveter'],
+                  'lust': ['Perverse', 'Sensual', 'Fetishized', 'Carnal', 'Fleshly'],
+                  'gluttony': ['Hungry', 'Never-Satiated', 'Corpulent', 'Bloated'],
+                  'sloth': ['Sleepy', 'Hibernating', 'Faineant', 'Indolent']}
+
 def fov(walls, x, y, sight):
     fovmap = np.zeros((mapwidth, mapheight))
     fovmap[x,y] = 1

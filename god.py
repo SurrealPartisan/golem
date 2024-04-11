@@ -17,7 +17,9 @@ class God(creature.Creature):
         super().__init__(world, world_i)
         self.sin = sin
         self.faction = np.random.choice(utils.enemyfactions)
-        self.name = utils.unpronounceablename(np.random.randint(2,11))
+        self.firstname = utils.unpronounceablename(np.random.randint(2,11))
+        self.nickname = 'The ' + np.random.choice(utils.godlynicknames[self.sin])
+        self.name = self.firstname + ' ' + self.nickname
         self.power = np.random.choice(['weak', 'powerful'])
         self.attitude = np.random.choice(['mellow', 'irritable'])
         self.pronoun = np.random.choice(['he', 'she', 'they', 'it'])
