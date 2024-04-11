@@ -11,6 +11,7 @@ import pygame.locals as lc
 
 mapwidth, mapheight = 100, 40
 numlevels = 10
+difficulty = 0.75
 
 enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot', 'elemental']
 sins = ['pride', 'greed', 'wrath', 'envy', 'lust', 'gluttony', 'sloth']

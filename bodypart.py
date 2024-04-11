@@ -9,7 +9,7 @@ Created on Thu Jun 15 21:26:04 2023
 import numpy as np
 import item
 from item import Attack
-from utils import listwithowner, loglist, mapwidth, mapheight, numlevels
+from utils import listwithowner, loglist, mapwidth, mapheight, numlevels, difficulty
 
 class BodyPartConnection():
     def __init__(self, parent, categories, vital, prefix, defensecoefficient=1, armorapplies=False):
@@ -61,7 +61,7 @@ class BodyPart(item.Item):
 
     def incapacitated(self):
         if hasattr(self.owner, 'owner') and self.owner.owner.faction != 'player':
-            return self.damagetaken >= 0.5*self.maxhp
+            return self.damagetaken >= difficulty*self.maxhp
         else:
             return False
 
