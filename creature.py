@@ -8,7 +8,7 @@ Created on Mon Sep 12 21:16:44 2022
 import numpy as np
 import bodypart
 import item
-from utils import fov, listwithowner, numlevels, mapwidth, mapheight
+from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty
 
 def checkitems(creat, cave, x,y):
     for it in cave.items:
@@ -431,7 +431,7 @@ class Creature():
     def dying(self):
         maxtotalhp = sum([part.maxhp for part in self.bodyparts])/2
         if self.faction != 'player':
-            maxtotalhp *= 0.5
+            maxtotalhp *= difficulty
         return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= maxtotalhp or np.any([part.vital() and (part.destroyed() or part.incapacitated()) for part in self.bodyparts])
 
     def die(self):
