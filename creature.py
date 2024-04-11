@@ -456,6 +456,9 @@ class Creature():
                 self.world.items.append(part)
                 part.x = self.x
                 part.y = self.y
+                if np.random.rand() > 0.25 + 0.5*part.hp()/part.maxhp:
+                    part.usable = False
+                    part.name += ' [UNUSABLE]'
             part.parentalconnection = None
             for con in part.childconnections:
                 part.childconnections[con].child = None

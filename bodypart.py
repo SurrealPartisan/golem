@@ -49,6 +49,7 @@ class BodyPart(item.Item):
         self.detectiondistance = 0
         self.detectionprobability = 0
         self.carefulness = 0
+        self.usable = True
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)

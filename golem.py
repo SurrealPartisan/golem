@@ -756,7 +756,7 @@ def game():
         elif gamestate == 'choosetorso':
             choosemessage = 'Choose your torso:'
             win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            torsolist = [part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]
+            torsolist = [part for part in player.bodyparts if 'torso' in part.categories and part.usable and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and it.usable and not it.destroyed()]
             logrows = min(logheight-1,len(torsolist))
             for i in range(logrows):
                 if len(torsolist) <= logheight-1:
@@ -1799,12 +1799,12 @@ def game():
                             if chosen < len(connectioncandidates)-1:
                                 if connection != None:
                                     connectionname = list(connection.parent.childconnections.keys())[list(connection.parent.childconnections.values()).index(connection)]
-                                    partslist = [part for part in player.bodyparts if np.any([category in part.categories for category in connection.categories]) and not part.destroyed() and (part == connectedpart or not part in bodypartcandidates)] + [it for it in player.inventory if it.bodypart and np.any([category in it.categories for category in connection.categories]) and not it.destroyed() and (it == connectedpart or not it in bodypartcandidates)]
+                                    partslist = [part for part in player.bodyparts if np.any([category in part.categories for category in connection.categories]) and part.usable and not part.destroyed() and (part == connectedpart or not part in bodypartcandidates)] + [it for it in player.inventory if it.bodypart and np.any([category in it.categories for category in connection.categories]) and it.usable and not it.destroyed() and (it == connectedpart or not it in bodypartcandidates)]
                                     if not connection.vital:
                                         partslist.append(None)
                                 else:
                                     connectionname = 'torso'
-                                    partslist = [part for part in player.bodyparts if 'torso' in part.categories and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and not it.destroyed()]
+                                    partslist = [part for part in player.bodyparts if 'torso' in part.categories and part.usable and not part.destroyed()] + [it for it in player.inventory if it.bodypart and 'torso' in it.categories and it.usable and not it.destroyed()]
                                 gamestate = 'choosebodypart'
                                 logback = len(partslist) - logheight + 1
                                 chosen = 0
