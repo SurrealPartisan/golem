@@ -513,7 +513,7 @@ class LooseRoundPebbles(Item):
         self._info = 'A natural trap, can make you fall prone.'
 
     def entrap(self, creat, part):
-        part = np.random.choice(creat.bodyparts)
+        part = np.random.choice([part for part in creat.bodyparts if not part.destroyed()])
         resistancemultiplier = 1 - part.resistance('blunt')
         totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
         if part.armor() != None:

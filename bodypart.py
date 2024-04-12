@@ -50,6 +50,8 @@ class BodyPart(item.Item):
         self.detectionprobability = 0
         self.carefulness = 0
         self.usable = True
+        self.maxrunstamina = 0
+        self.runstaminarecoveryspeed = 0
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -231,6 +233,7 @@ class HumanLeg(BodyPart):
         self.weight = 17000
         self.carryingcapacity = 20000
         self.carefulness = 0.5
+        self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh.'
 
     def speed(self):
@@ -321,6 +324,7 @@ class HumanLung(BodyPart):
         self.maxhp = 10
         self.weight = 600
         self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
 class HumanStomach(BodyPart):
@@ -423,7 +427,8 @@ class ZombieLeg(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
-        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self.maxrunstamina = 20
+        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -525,10 +530,11 @@ class ZombieLung(BodyPart):
         self.maxhp = 10
         self.material = 'undead flesh'
         self.weight = 500
+        self.runstaminarecoveryspeed = 0.25
         self.breathepoisonresistance = 0.5
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A lung consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Weak against sharp attacks.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class ZombieStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -624,7 +630,8 @@ class MolePersonLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 15000
         self.carefulness = 0.5
-        self._info = 'A leg consisting of living flesh. Somewhat weak at carrying.'
+        self.maxrunstamina = 5
+        self._info = 'A leg consisting of living flesh. Somewhat weak at carrying. Low running stamina.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -714,7 +721,8 @@ class MolePersonLung(BodyPart):
         self.maxhp = 10
         self.weight = 600
         self.breathepoisonresistance = 0
-        self._info = 'A lung consisting of living flesh.'
+        self.runstaminarecoveryspeed = 1
+        self._info = 'A lung consisting of living flesh. Recovers running stamina quickly.'
 
 class MolePersonStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -813,6 +821,7 @@ class GoblinLeg(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
+        self.maxrunstamina = 10
         self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
@@ -905,6 +914,7 @@ class GoblinLung(BodyPart):
         self.maxhp = 10
         self.weight = 600
         self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
 
 class GoblinStomach(BodyPart):
@@ -973,7 +983,8 @@ class OctopusTentacle(BodyPart):
         self.weight = 10000
         self.carryingcapacity = 10000
         self.carefulness = 0.4
-        self._info = 'A tentacle consisting of living flesh. Works both as an arm and as a leg. Slow at moving, but faster if there are more of them. Also faster at attacking if there are more of them.'
+        self.maxrunstamina = 2.5
+        self._info = 'A tentacle consisting of living flesh. Works both as an arm and as a leg. Slow at moving, but faster if there are more of them. Also faster at attacking if there are more of them. Individually very low running stamina, collectively average. Slightly clumsy.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1057,6 +1068,7 @@ class OctopusGills(BodyPart):
         self.maxhp = 20
         self.weight = 500
         self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung-like organ consisting of living flesh.'
 
 class OctopusStomach(BodyPart):
@@ -1110,6 +1122,7 @@ class DogLeg(BodyPart):
         self.weight = 3000
         self.carryingcapacity = 6000
         self.carefulness = 0.5
+        self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh. On its own very weak at carrying. Quite fast if there are at least four legs.'
 
     def speed(self):
@@ -1202,6 +1215,7 @@ class DogLung(BodyPart):
         self.maxhp = 15
         self.weight = 450
         self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
 class DogStomach(BodyPart):
@@ -1310,6 +1324,7 @@ class HobgoblinLeg(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
+        self.maxrunstamina = 10
         self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
@@ -1402,6 +1417,7 @@ class HobgoblinLung(BodyPart):
         self.maxhp = 20
         self.weight = 600
         self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
 
 class HobgoblinStomach(BodyPart):
@@ -1495,7 +1511,8 @@ class MoleMonkLeg(BodyPart):
         self.weight = 17000
         self.carryingcapacity = 20000
         self.carefulness = 0.5
-        self._info = 'A leg consisting of living flesh.'
+        self.maxrunstamina = 5
+        self._info = 'A leg consisting of living flesh. Low running stamina.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1585,7 +1602,8 @@ class MoleMonkLung(BodyPart):
         self.maxhp = 20
         self.weight = 600
         self.breathepoisonresistance = 0
-        self._info = 'A lung consisting of living flesh.'
+        self.runstaminarecoveryspeed = 1
+        self._info = 'A lung consisting of living flesh. Recovers running stamina quickly.'
 
 class MoleMonkStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -1638,6 +1656,7 @@ class WolfLeg(BodyPart):
         self.weight = 4000
         self.carryingcapacity = 7500
         self.carefulness = 0.5
+        self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh. On its own rather weak at carrying. Very fast if there are at least four legs, and quite fast even when there are two.'
 
     def speed(self):
@@ -1730,6 +1749,7 @@ class WolfLung(BodyPart):
         self.maxhp = 20
         self.weight = 600
         self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
 class WolfStomach(BodyPart):
@@ -1804,7 +1824,8 @@ class DrillbotWheel(BodyPart):
         self._resistances['sharp'] = -0.5
         self._resistances['rough'] = -0.5
         self.carefulness = 0.5
-        self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Very weak against sharp and rough attacks. Very fast if there are at least four legs or wheels, and quite fast even when there are two.'
+        self.maxrunstamina = 20
+        self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Very weak against sharp and rough attacks. Very fast if there are at least four legs or wheels, and quite fast even when there are two. High "running" stamina.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1885,8 +1906,9 @@ class DrillbotAerator(BodyPart):
         self.weight = 600
         self.material = 'electronics'
         self.breathepoisonresistance = 0.5
+        self.runstaminarecoveryspeed = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A lung consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Resistant against sharp attacks.'
+        self._info = 'A lung consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Recovers running stamina quickly. Resistant against sharp attacks.'
 
 class DrillbotProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -2016,7 +2038,8 @@ class GhoulLeg(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self.maxrunstamina = 20
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2119,8 +2142,10 @@ class GhoulLung(BodyPart):
         self.material = 'undead flesh'
         self.weight = 600
         self.breathepoisonresistance = 0.5
+        self.runstaminarecoveryspeed = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A lung consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Weak against sharp attacks.'
+        self._attackpoisonresistance = 1
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class GhoulStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -2249,13 +2274,14 @@ class SmallFireElementalHeart(BodyPart):
 
 class SmallFireElementalBellows(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'small fire elemental lung', '*', (255, 0, 0))
+        super().__init__(owner, x, y, 'small fire elemental bellows', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
         self.maxhp = 30
         self.material = 'elemental'
         self.weight = 600
         self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
         self._resistances['fire'] = 1
         self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire attacks.'
 
@@ -2277,7 +2303,8 @@ class SmallFireElementalTentacle(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
         self.carefulness = 0.5
-        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Faster at moving and attacking if there are more of them.'
+        self.maxrunstamina = 10
+        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Faster at moving and attacking if there are more of them. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2345,6 +2372,7 @@ class DireWolfLeg(BodyPart):
         self.weight = 6000
         self.carryingcapacity = 10000
         self.carefulness = 0.5
+        self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh. On its own somewhat weak at carrying. Very fast if there are at least four legs, and quite fast even when there are two.'
 
     def speed(self):
@@ -2437,6 +2465,7 @@ class DireWolfLung(BodyPart):
         self.maxhp = 35
         self.weight = 800
         self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
 class DireWolfStomach(BodyPart):
@@ -2545,6 +2574,7 @@ class JobgoblinLeg(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
+        self.maxrunstamina = 10
         self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def speed(self):
@@ -2637,6 +2667,7 @@ class JobgoblinLung(BodyPart):
         self.maxhp = 40
         self.weight = 500
         self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
 
 class JobgoblinStomach(BodyPart):
@@ -2739,7 +2770,8 @@ class GhastLeg(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self.maxrunstamina = 20
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2842,8 +2874,10 @@ class GhastLung(BodyPart):
         self.material = 'undead flesh'
         self.weight = 600
         self.breathepoisonresistance = 0.5
+        self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A lung consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Weak against sharp attacks.'
+        self.runstaminarecoveryspeed = 0.25
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class GhastStomach(BodyPart):
     def __init__(self, owner, x, y):

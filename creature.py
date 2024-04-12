@@ -47,6 +47,7 @@ class Creature():
         self.slowedclock = 0
         self.poisonclock = 0
         self.burnclock = 0
+        self.runstaminaused = 0
         self.stance = 'neutral'
 
     def log(self):
@@ -97,8 +98,16 @@ class Creature():
         else:
             return []
 
+    def maxrunstamina(self):
+        return sum([part.maxrunstamina for part in self.bodyparts])
+
+    def runstaminarecoveryspeed(self):
+        return sum([part.runstaminarecoveryspeed for part in self.bodyparts])
+
     def stancesknown(self):
         known = ['neutral', 'aggressive', 'defensive']
+        if self.stance == 'running' or self.runstaminaused < 0.5*self.maxrunstamina():
+            known.append('running')
         for part in self.bodyparts:
             if hasattr(part, 'stances'):
                 known += part.stances
@@ -325,12 +334,15 @@ class Creature():
         return self.world.spiderwebs[self.x, self.y] + (self.slowedclock > 0)
     
     def speed(self):
+        basespeed = max([part.speed() for part in self.bodyparts])
+        if self.stance == 'running':
+            basespeed *= 2
         if self.overloaded():
             return 0
         elif self.burdened():
-            return max([part.speed() for part in self.bodyparts]) / 2
+            return basespeed / 2
         else:
-            return max([part.speed() for part in self.bodyparts])
+            return basespeed
 
     def approxfastestpart(self):
         return max(self.bodyparts, key=lambda x: x.speed() + np.random.rand()*0.1)
@@ -482,166 +494,177 @@ class Creature():
         else:
             attackingpart = None
         if attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated()):
-            if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
-                if self.stance == 'aggressive':
-                    attackerstancecoefficient = 1.25
-                elif self.stance == 'defensive':
-                    attackerstancecoefficient = 0.9
-                elif self.stance == 'berserk':
-                    attackerstancecoefficient = 1.5
-                else:
-                    attackerstancecoefficient = 1
-                if target.stance == 'aggressive':
-                    defenderstancecoefficient = 1.111
-                elif target.stance == 'defensive':
-                    defenderstancecoefficient = 0.80
-                elif target.stance == 'berserk':
-                    defenderstancecoefficient = 1.222
-                else:
-                    defenderstancecoefficient = 1
-                if (self.stance == 'flying' or self.world.largerocks[self.x, self.y]) and target.stance != 'flying' and not target.world.largerocks[target.x, target.y]:
-                    highgroundcoefficient = 1.05
-                elif self.stance != 'flying' and not self.world.largerocks[self.x, self.y] and (target.stance == 'flying' or target.world.largerocks[target.x, target.y]):
-                    highgroundcoefficient = 0.95
-                else:
-                    highgroundcoefficient = 1
-                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
-                    hit = True
-                else:
-                    adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
-                    if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
-                        adjacentparts.append(targetbodypart.parentalconnection.parent)
-                    if len(adjacentparts) > 0:
-                        targetbodypart = np.random.choice(adjacentparts)
-                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
-                            hit = True
+            if targetbodypart in target.bodyparts and not targetbodypart.destroyed():
+                if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
+                    if self.stance == 'aggressive':
+                        attackerstancecoefficient = 1.25
+                    elif self.stance == 'defensive':
+                        attackerstancecoefficient = 0.9
+                    elif self.stance == 'berserk':
+                        attackerstancecoefficient = 1.5
+                    else:
+                        attackerstancecoefficient = 1
+                    if target.stance == 'aggressive':
+                        defenderstancecoefficient = 1.111
+                    elif target.stance == 'defensive':
+                        defenderstancecoefficient = 0.80
+                    elif target.stance == 'berserk':
+                        defenderstancecoefficient = 1.222
+                    else:
+                        defenderstancecoefficient = 1
+                    if (self.stance == 'flying' or self.world.largerocks[self.x, self.y]) and target.stance != 'flying' and not target.world.largerocks[target.x, target.y]:
+                        highgroundcoefficient = 1.05
+                    elif self.stance != 'flying' and not self.world.largerocks[self.x, self.y] and (target.stance == 'flying' or target.world.largerocks[target.x, target.y]):
+                        highgroundcoefficient = 0.95
+                    else:
+                        highgroundcoefficient = 1
+                    if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
+                        hit = True
+                    else:
+                        adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
+                        if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
+                            adjacentparts.append(targetbodypart.parentalconnection.parent)
+                        if len(adjacentparts) > 0:
+                            targetbodypart = np.random.choice(adjacentparts)
+                            if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
+                                hit = True
+                            else:
+                                hit = False
                         else:
                             hit = False
-                    else:
-                        hit = False
-                if hit:
-                    target.lasthitter = self
-                    totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
-                    knocked_back = False
-                    knocked_to_obstacle = ''
-                    for special in attack.special:
-                        if special[0] == 'charge' and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
+                    if hit:
+                        target.lasthitter = self
+                        totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
+                        knocked_back = False
+                        knocked_to_obstacle = ''
+                        for special in attack.special:
+                            if special[0] == 'charge' and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
+                                if self.stance == 'running':
+                                    totaldamage = 2*totaldamage
+                                else:
+                                    totaldamage = int(1.5*totaldamage)
+                                attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
+                            if special[0] == 'knockback' and np.random.rand() < special[1]:
+                                dx = target.x - self.x
+                                dy = target.y - self.y
+                                if self.world.walls[target.x+dx, target.y+dy]:
+                                    knocked_to_obstacle = 'wall'
+                                    totaldamage *= 2
+                                elif self.world.largerocks[target.x+dx, target.y+dy]:
+                                    knocked_to_obstacle = 'large rock'
+                                    totaldamage *= 2
+                                elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):
+                                    knocked_back = True
+                                    target.move(dx, dy)
+                        if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special]:
                             totaldamage = int(1.5*totaldamage)
                             attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
-                        if special[0] == 'knockback' and np.random.rand() < special[1]:
-                            dx = target.x - self.x
-                            dy = target.y - self.y
-                            if self.world.walls[target.x+dx, target.y+dy]:
-                                knocked_to_obstacle = 'wall'
-                                totaldamage *= 2
-                            elif self.world.largerocks[target.x+dx, target.y+dy]:
-                                knocked_to_obstacle = 'large rock'
-                                totaldamage *= 2
-                            elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):
-                                knocked_back = True
-                                target.move(dx, dy)
-                    if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
-                        totaldamage *= 3
-                    elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
-                        totaldamage *= 2
-                    if targetbodypart.armor() != None:
-                        armor = targetbodypart.armor()
-                        armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
-                        armor.damagetaken += armordamage
-                    else:
-                        armor = None
-                        armordamage = 0
-                    if target.faction in attack.bane:
-                        banemultiplier = 2
-                    else:
-                        banemultiplier = 1
-                    resistancemultiplier = 1 - targetbodypart.resistance(attack.damagetype)
-                    bleed = False
-                    for special in attack.special:
-                        if special[0] == 'bleed' and np.random.rand() < special[1]:
-                            bleed = True
-                            targetbodypart.bleedclocks.append((int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), 0, self))
-                    damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), targetbodypart.hp())
-                    alreadyincapacitated = targetbodypart.incapacitated()
-                    targetbodypart.damagetaken += damage
-                    if targetbodypart.parentalconnection != None:
-                        partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
-                    elif targetbodypart == target.torso:
-                        partname = 'torso'
-                    if not target.dying():
-                        if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
-                            if not knocked_back and not knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + '!')
-                            elif knocked_back:
-                                self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you back!')
-                            elif knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
-                            if armordamage > 0:
-                                if not armor.destroyed():
-                                    target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
-                                else:
-                                    target.log().append('Your ' + armor.name + ' was destroyed!')
-                                    armor.owner.remove(armor)
-                        elif not targetbodypart.destroyed():
-                            if not bleed and not knocked_back and not knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
-                            elif bleed:
-                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
-                            elif knocked_back:
-                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
-                            elif knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
-                            if armordamage > 0:
-                                if not armor.destroyed():
-                                    target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
-                                else:
-                                    target.log().append('Your ' + armor.name + ' was destroyed!')
-                                    armor.owner.remove(armor)
+                        if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
+                            totaldamage *= 3
+                        elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
+                            totaldamage *= 2
+                        if targetbodypart.armor() != None:
+                            armor = targetbodypart.armor()
+                            armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+                            armor.damagetaken += armordamage
+                        else:
+                            armor = None
+                            armordamage = 0
+                        if target.faction in attack.bane:
+                            banemultiplier = 2
+                        else:
+                            banemultiplier = 1
+                        resistancemultiplier = 1 - targetbodypart.resistance(attack.damagetype)
+                        bleed = False
+                        for special in attack.special:
+                            if special[0] == 'bleed' and np.random.rand() < special[1]:
+                                bleed = True
+                                targetbodypart.bleedclocks.append((int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), 0, self))
+                        damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), targetbodypart.hp())
+                        alreadyincapacitated = targetbodypart.incapacitated()
+                        targetbodypart.damagetaken += damage
+                        if targetbodypart.parentalconnection != None:
+                            partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
+                        elif targetbodypart == target.torso:
+                            partname = 'torso'
+                        if not target.dying():
+                            if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
+                                if not knocked_back and not knocked_to_obstacle:
+                                    self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + '!')
+                                elif knocked_back:
+                                    self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you back!')
+                                elif knocked_to_obstacle:
+                                    self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                if armordamage > 0:
+                                    if not armor.destroyed():
+                                        target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                    else:
+                                        target.log().append('Your ' + armor.name + ' was destroyed!')
+                                        armor.owner.remove(armor)
+                            elif not targetbodypart.destroyed():
+                                if not bleed and not knocked_back and not knocked_to_obstacle:
+                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                                elif bleed:
+                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
+                                elif knocked_back:
+                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
+                                elif knocked_to_obstacle:
+                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
+                                if armordamage > 0:
+                                    if not armor.destroyed():
+                                        target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                    else:
+                                        target.log().append('Your ' + armor.name + ' was destroyed!')
+                                        armor.owner.remove(armor)
+                            else:
+                                if not knocked_back and not knocked_to_obstacle:
+                                    self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                                elif knocked_back:
+                                    self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you back!')
+                                elif knocked_to_obstacle:
+                                    self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                if armordamage > 0:
+                                    if not armor.destroyed():
+                                        target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                    else:
+                                        target.log().append('Your ' + armor.name + ' was also destroyed!')
+                                        armor.owner.remove(armor)
+                                targetbodypart.on_destruction(False)
                         else:
                             if not knocked_back and not knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
+                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
                             elif knocked_back:
-                                self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you back!')
+                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
+                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
                             elif knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
-                            if armordamage > 0:
-                                if not armor.destroyed():
-                                    target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
-                                else:
-                                    target.log().append('Your ' + armor.name + ' was also destroyed!')
-                                    armor.owner.remove(armor)
-                            targetbodypart.on_destruction(False)
+                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
+                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                            target.log().append('You are dead!')
+                            if targetbodypart.destroyed():
+                                targetbodypart.on_destruction(True)
+                            target.die()
+                            target.causeofdeath = ('attack', self)
                     else:
-                        if not knocked_back and not knocked_to_obstacle:
-                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
-                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
-                        elif knocked_back:
-                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
-                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
-                        elif knocked_to_obstacle:
-                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
-                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
-                        target.log().append('You are dead!')
-                        if targetbodypart.destroyed():
-                            targetbodypart.on_destruction(True)
-                        target.die()
-                        target.causeofdeath = ('attack', self)
+                        self.log().append('The ' + target.name + ' evaded your ' + attack.name +'!')
+                        target.log().append("You evaded the " + self.name + "'s " + attack.name +"!")
                 else:
-                    self.log().append('The ' + target.name + ' evaded your ' + attack.name +'!')
-                    target.log().append("You evaded the " + self.name + "'s " + attack.name +"!")
+                    self.log().append('The ' + target.name + ' evaded your ' + attack.name + ' by being too far away!')
+                    target.log().append("You evaded the " + self.name + "'s " + attack.name + " by being too far away!")
+            elif targetbodypart.destroyed():
+                self.log().append('The target body part is already destroyed!')
             else:
-                self.log().append('The ' + target.name + ' evaded your ' + attack.name + ' by being too far away!')
-                target.log().append("You evaded the " + self.name + "'s " + attack.name + " by being too far away!")
+                self.log().append('The ' + target.name + ' no longer has that part!')
         elif attackingpart != None:
             if attackingpart.parentalconnection != None:
                 attackingpartname = list(attackingpart.parentalconnection.parent.childconnections.keys())[list(attackingpart.parentalconnection.parent.childconnections.values()).index(attackingpart.parentalconnection)]
@@ -681,7 +704,7 @@ class Creature():
                 self.previousaction = ('fight', self.nextaction[3].weapon, self.nextaction[2])
 
     def update(self, time):
-        if not self.stance in self.stancesknown():
+        if not self.stance in self.stancesknown() or (self.stance == 'running' and self.runstaminaused >= self.maxrunstamina()):
             oldstance = self.stance
             self.stance = 'neutral'
             if oldstance == 'flying':
@@ -719,6 +742,10 @@ class Creature():
                     self.starve()
                 self.starvationclock = self.starvationclock % 1
             self.suffocate(time)
+            if self.stance != 'running' and not self.hungry():
+                self.runstaminaused = max(0, self.runstaminaused - time*self.runstaminarecoveryspeed())
+            elif self.stance != 'running' and not self.starving():
+                self.runstaminaused = max(0, self.runstaminaused - time*0.5*self.runstaminarecoveryspeed())
         else:
             timeleft = time - timetoact
             self.bleed(timetoact)
@@ -741,6 +768,10 @@ class Creature():
                     self.starve()
                 self.starvationclock = self.starvationclock % 1
             self.suffocate(timetoact)
+            if self.stance != 'running' and not self.hungry():
+                self.runstaminaused = max(0, self.runstaminaused - time*self.runstaminarecoveryspeed())
+            elif self.stance != 'running' and not self.starving():
+                self.runstaminaused = max(0, self.runstaminaused - time*0.5*self.runstaminarecoveryspeed())
             if self.world.poisongas[self.x, self.y]:
                 livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
                 lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]

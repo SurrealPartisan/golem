@@ -844,6 +844,8 @@ def game():
                     stancetext = 'Aggressive (+25% to hit, +11.1% to get hit)'
                 elif player.stancesknown()[j] == 'defensive':
                     stancetext = 'Defensive (-20% to get hit, -10% to hit)'
+                elif player.stancesknown()[j] == 'running':
+                    stancetext = 'Running (move twice as fast, charge with any attack (proper charging attacks deal even more damage))'
                 elif player.stancesknown()[j] == 'berserk':
                     stancetext = 'Berserk (+50% to hit, +22.2% to get hit)'
                 elif player.stancesknown()[j] == 'fasting':
@@ -880,7 +882,7 @@ def game():
         win.update()
 
     def _updatetime(time):
-        if not player.stance in player.stancesknown():
+        if not player.stance in player.stancesknown() or (player.stance == 'running' and player.runstaminaused >= player.maxrunstamina()):
             oldstance = player.stance
             player.stance = 'neutral'
             if oldstance == 'flying':
@@ -915,6 +917,10 @@ def game():
                 player.starve()
             player.starvationclock = player.starvationclock % 1
         player.suffocate(time)
+        if player.stance != 'running' and not player.hungry():
+            player.runstaminaused = max(0, player.runstaminaused - time*player.runstaminarecoveryspeed())
+        elif player.stance != 'running' and not player.starving():
+            player.runstaminaused = max(0, player.runstaminaused - time*0.5*player.runstaminarecoveryspeed())
         if cave.poisongas[player.x, player.y]:
             livingparts = [part for part in player.bodyparts if part.material == 'living flesh' and not part.destroyed()]
             lungs = [part for part in player.bodyparts if 'lung' in part.categories and not part.destroyed()]
@@ -979,7 +985,53 @@ def game():
         elif cave.walls[player.x+dx, player.y+dy]:
             updatetime((np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')))/2)
             if not player.dying():
-                player.log().append("You bumped into a wall.")
+                if player.stance == 'running':
+                    player.runstaminaused += np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')) * (1 + player.burdened()) / 2
+                if player.stance != 'running':
+                    player.log().append("You bumped into a wall.")
+                else:
+                    part = np.random.choice([part for part in player.bodyparts if not part.destroyed()])
+                    resistancemultiplier = 1 - part.resistance('blunt')
+                    totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
+                    if part.armor() != None:
+                        armor = part.armor()
+                        armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+                        armor.damagetaken += armordamage
+                    else:
+                        armor = None
+                        armordamage = 0
+                    damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+                    part.damagetaken += damage
+                    if part.parentalconnection != None:
+                        partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                    elif part == player.torso:
+                        partname = 'torso'
+                    if not player.dying():
+                        if not part.destroyed():
+                            player.log().append('You ran into wall. It dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                            if armordamage > 0:
+                                if not armor.destroyed():
+                                    player.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                else:
+                                    player.log().append('Your ' + armor.name + ' was destroyed!')
+                                    armor.owner.remove(armor)
+                        else:
+                            player.log().append('You ran into wall. It destroyed your ' + partname + '.')
+                            if armordamage > 0:
+                                if not armor.destroyed():
+                                    player.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                else:
+                                    player.log().append('Your ' + armor.name + ' was also destroyed!')
+                                    armor.owner.remove(armor)
+                            part.on_destruction(False)
+                    else:
+                        player.log().append('You ran into wall ' + partname + ' first. It killed you.')
+                        player.log().append('You are dead!')
+                        if part.destroyed():
+                            part.on_destruction(True)
+                        player.die()
+                        player.causeofdeath = ('ranintowall', partname)
+            if not player.dying():
                 player.previousaction = ('wait',)
                 detecthiddenitems()
             logback = 0
@@ -988,6 +1040,8 @@ def game():
         else:
             updatetime(np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')))
             if not player.dying():
+                if player.stance == 'running':
+                    player.runstaminaused += np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')) * (1 + player.burdened())
                 creaturesintheway = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
                 if len(creaturesintheway) == 0:
                     player.move(dx, dy)
@@ -1066,6 +1120,8 @@ def game():
                             deathmessage = 'burned to death ' + player.causeofdeath[1]
                         elif player.causeofdeath[0] == 'step':
                             deathmessage = 'died from stepping on ' + player.causeofdeath[1].name
+                        elif player.causeofdeath[0] == 'ranintowall':
+                            deathmessage = 'died from running into wall ' + player.causeofdeath[1] + ' first'
                         else:
                             deathmessage = 'died from unknown causes'
                         deathmessage += (' on dungeon level ' + repr(player.world_i+1) + '.')
@@ -1578,7 +1634,10 @@ def game():
                             if not player.dying():
                                 selected = [item for item in player.inventory if item.material == 'living flesh'][chosen]
                                 player.inventory.remove(selected)
-                                item.Food(player.inventory, 0, 0, 'roast ' + selected.name, selected.char, ((97+selected.color[0])//2, (23+selected.color[1])//2, (23+selected.color[2])//2), selected.maxhp, 'cooked meat', selected.weight)
+                                newname = 'roast ' + selected.name
+                                if newname[-11:] == ' [UNUSABLE]':
+                                    newname = newname[:-11]
+                                item.Food(player.inventory, 0, 0, newname, selected.char, ((97+selected.color[0])//2, (23+selected.color[1])//2, (23+selected.color[2])//2), selected.maxhp, 'cooked meat', selected.weight)
                                 player.log().append('You roasted the ' + selected.name + '.')
                                 logback = 0
                                 detecthiddenitems()
