@@ -556,7 +556,7 @@ class Creature():
                                 elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):
                                     knocked_back = True
                                     target.move(dx, dy)
-                        if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special]:
+                        if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
                             totaldamage = int(1.5*totaldamage)
                             attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
                         if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():

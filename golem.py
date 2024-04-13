@@ -108,7 +108,7 @@ def game():
                 infusionnames.append(infusionname())
         infusiontypes = []
         for i in range(13):
-            ct = item.CureType('undead flesh', infusionnames[i], i-2, np.random.randint(500))
+            ct = item.CureType('undead flesh', infusionnames[i], i-2, np.random.randint(1,500))
             curetypes.append(ct)
             infusiontypes.append(ct)
         caves = []
