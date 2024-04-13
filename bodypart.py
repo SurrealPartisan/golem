@@ -52,6 +52,8 @@ class BodyPart(item.Item):
         self.usable = True
         self.maxrunstamina = 0
         self.runstaminarecoveryspeed = 0
+        self.bravery = 0
+        self.scariness = 0
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -305,6 +307,7 @@ class HumanBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class HumanHeart(BodyPart):
@@ -314,7 +317,8 @@ class HumanHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 300
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
 
 class HumanLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -459,9 +463,10 @@ class ZombieHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
+        self.scariness = 5
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A head consisting of undead flesh. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -506,6 +511,7 @@ class ZombieBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
         self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
@@ -518,9 +524,10 @@ class ZombieHeart(BodyPart):
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 250
+        self.bravery = 0.5
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class ZombieLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -702,6 +709,7 @@ class MolePersonBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class MolePersonHeart(BodyPart):
@@ -711,7 +719,8 @@ class MolePersonHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 300
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.25
+        self._info = 'A heart consisting of living flesh. Easily scared.'
 
 class MolePersonLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -895,6 +904,7 @@ class GoblinBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class GoblinHeart(BodyPart):
@@ -904,7 +914,8 @@ class GoblinHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 10
         self.weight = 250
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
 
 class GoblinLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -1049,6 +1060,7 @@ class OctopusBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class OctopusHeart(BodyPart):
@@ -1058,7 +1070,8 @@ class OctopusHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 500
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.25
+        self._info = 'A heart consisting of living flesh. Individually easily scared (luckily the octopus has three of them).'
 
 class OctopusGills(BodyPart):
     def __init__(self, owner, x, y):
@@ -1196,6 +1209,7 @@ class DogBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class DogHeart(BodyPart):
@@ -1205,7 +1219,8 @@ class DogHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 15
         self.weight = 400
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
 
 class DogLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -1398,6 +1413,7 @@ class HobgoblinBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class HobgoblinHeart(BodyPart):
@@ -1407,7 +1423,8 @@ class HobgoblinHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 250
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
 
 class HobgoblinLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -1583,6 +1600,7 @@ class MoleMonkBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = ['fasting']
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh. Enables the fasting stance.'
 
 class MoleMonkHeart(BodyPart):
@@ -1592,7 +1610,8 @@ class MoleMonkHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 300
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.25
+        self._info = 'A heart consisting of living flesh. Easily scared.'
 
 class MoleMonkLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -1730,6 +1749,7 @@ class WolfBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class WolfHeart(BodyPart):
@@ -1739,7 +1759,8 @@ class WolfHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 20
         self.weight = 500
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.75
+        self._info = 'A heart consisting of living flesh. Very brave.'
 
 class WolfLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -1895,7 +1916,8 @@ class DrillbotPump(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A heart consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
+        self.bravery = 0.5
+        self._info = 'A heart consisting of electronics. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
 
 class DrillbotAerator(BodyPart):
     def __init__(self, owner, x, y):
@@ -1926,6 +1948,7 @@ class DrillbotProcessor(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
@@ -2070,9 +2093,10 @@ class GhoulHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
+        self.scariness = 10
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A head consisting of undead flesh. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 10 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2117,6 +2141,7 @@ class GhoulBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
         self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
@@ -2131,7 +2156,8 @@ class GhoulHeart(BodyPart):
         self.weight = 250
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self.bravery = 0.5
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class GhoulLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -2254,6 +2280,7 @@ class SmallFireElementalBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
         self._info = 'A brain consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
@@ -2268,9 +2295,10 @@ class SmallFireElementalHeart(BodyPart):
         self.consumable = False
         self.edible = False
         self.weight = 10
+        self.bravery = 0.5
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A heart consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
+        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
 
 class SmallFireElementalBellows(BodyPart):
     def __init__(self, owner, x, y):
@@ -2446,6 +2474,7 @@ class DireWolfBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class DireWolfHeart(BodyPart):
@@ -2455,7 +2484,8 @@ class DireWolfHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 35
         self.weight = 700
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.75
+        self._info = 'A heart consisting of living flesh. Very brave.'
 
 class DireWolfLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -2648,6 +2678,7 @@ class JobgoblinBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._info = 'A brain consisting of living flesh.'
 
 class JobgoblinHeart(BodyPart):
@@ -2657,7 +2688,8 @@ class JobgoblinHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 40
         self.weight = 250
-        self._info = 'A heart consisting of living flesh.'
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
 
 class JobgoblinLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -2802,9 +2834,10 @@ class GhastHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
+        self.scariness = 15
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A head consisting of undead flesh. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 15 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2849,6 +2882,7 @@ class GhastBrain(BodyPart):
         self.godsknown = []
         self.curesknown = []
         self.stances = []
+        self.frightenedby = []
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
         self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
@@ -2861,9 +2895,10 @@ class GhastHeart(BodyPart):
         self.maxhp = 45
         self.material = "undead flesh"
         self.weight = 250
+        self.bravery = 0.5
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class GhastLung(BodyPart):
     def __init__(self, owner, x, y):

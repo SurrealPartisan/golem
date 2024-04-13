@@ -47,6 +47,8 @@ class Creature():
         self.slowedclock = 0
         self.poisonclock = 0
         self.burnclock = 0
+        self.scaredclock = 0
+        self.panickedclock = 0
         self.runstaminaused = 0
         self.stance = 'neutral'
 
@@ -91,6 +93,13 @@ class Creature():
         else:
             return []
 
+    def frightenedby(self):
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        if len(brains) > 0:
+            return brains[0].frightenedby
+        else:
+            return []
+
     def itemsseen(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
@@ -108,17 +117,37 @@ class Creature():
         known = ['neutral', 'aggressive', 'defensive']
         if self.stance == 'running' or self.runstaminaused < 0.5*self.maxrunstamina():
             known.append('running')
+        if self.panicked():
+            if 'running' in known:
+                known = ['running']
+            else:
+                known = ['defensive']
+        elif self.scared():
+            if 'running' in known:
+                known = ['defensive', 'running']
+            else:
+                known = ['defensive']
         for part in self.bodyparts:
             if hasattr(part, 'stances'):
-                known += part.stances
+                for stance in part.stances:
+                    if (not self.panicked() and not self.scared()) or stance == 'flying':
+                        known.append(stance)
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         for it in wornlist:
             if hasattr(it, 'stances'):
-                known += it.stances
+                for stance in it.stances:
+                    if (not self.panicked() and not self.scared()) or stance == 'flying':
+                        known.append(stance)
         return known
 
     def weakened(self):
         return self.weakenedclock > 0
+
+    def scared(self):
+        return self.scaredclock > 0
+
+    def panicked(self):
+        return self.panickedclock > 0
 
     def carryingcapacity(self):
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
@@ -483,6 +512,47 @@ class Creature():
                     it.y = self.y
         self.dead = True
 
+    def scariness(self):
+        return sum([part.scariness for part in self.bodyparts if not part.destroyed() and not part.incapacitated()])
+
+    def frighten(self):
+        if self.scariness() > 0:
+            targets = []
+            for creat in self.world.creatures:
+                if creat != self and not self in creat.frightenedby() and (creat.faction == 'player' or self.faction == 'player'):
+                    fovmap = fov(creat.world.walls, creat.x, creat.y, creat.sight())
+                    if fovmap[self.x, self.y]:
+                        targets.append(creat)
+            logtext = 'You made a scary face.'
+            if len(targets) == 0:
+                logtext += ' No one new saw it.'
+            for target in targets:
+                target.frightenedby().append(self)
+                braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
+                panic = True
+                for bravery in braveries:
+                    if np.random.rand() < bravery:
+                        panic = False
+                if panic:
+                    target.panickedclock += 1 + np.random.rand()*(self.scariness() - 1)
+                    logtext += ' The ' + target.name + ' got panicked.'
+                    target.log().append('The ' + self.name + ' made a scary face. You got panicked.')
+                else:
+                    scared = True
+                    for bravery in braveries:
+                        if np.random.rand() < bravery:
+                            scared = False
+                    if scared:
+                        target.scaredclock += 1 + np.random.rand()*(self.scariness() - 1)
+                        logtext += ' The ' + target.name + ' got scared.'
+                        target.log().append('The ' + self.name + ' made a scary face. You got scared.')
+                    else:
+                        logtext += ' The ' + target.name + ' remained calm.'
+                        target.log().append('The ' + self.name + ' made a scary face. You remained calm.')
+            self.log().append(logtext)
+        else:
+            self.log().append('You attempted to make a scary face, but failed.')
+
     def attackslist(self):
         return sorted([attack for part in self.bodyparts for attack in part.attackslist()], key=lambda x: x.maxdamage * x.hitprobability / x.time, reverse=True)
 
@@ -496,168 +566,204 @@ class Creature():
         if attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated()):
             if targetbodypart in target.bodyparts and not targetbodypart.destroyed():
                 if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
-                    if self.stance == 'aggressive':
-                        attackerstancecoefficient = 1.25
-                    elif self.stance == 'defensive':
-                        attackerstancecoefficient = 0.9
-                    elif self.stance == 'berserk':
-                        attackerstancecoefficient = 1.5
-                    else:
-                        attackerstancecoefficient = 1
-                    if target.stance == 'aggressive':
-                        defenderstancecoefficient = 1.111
-                    elif target.stance == 'defensive':
-                        defenderstancecoefficient = 0.80
-                    elif target.stance == 'berserk':
-                        defenderstancecoefficient = 1.222
-                    else:
-                        defenderstancecoefficient = 1
-                    if (self.stance == 'flying' or self.world.largerocks[self.x, self.y]) and target.stance != 'flying' and not target.world.largerocks[target.x, target.y]:
-                        highgroundcoefficient = 1.05
-                    elif self.stance != 'flying' and not self.world.largerocks[self.x, self.y] and (target.stance == 'flying' or target.world.largerocks[target.x, target.y]):
-                        highgroundcoefficient = 0.95
-                    else:
-                        highgroundcoefficient = 1
-                    if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
-                        hit = True
-                    else:
-                        adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
-                        if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
-                            adjacentparts.append(targetbodypart.parentalconnection.parent)
-                        if len(adjacentparts) > 0:
-                            targetbodypart = np.random.choice(adjacentparts)
-                            if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
-                                hit = True
+                    if (not self.scared() or np.random.rand() < 0.5) and not self.panicked():
+                        if self.stance == 'aggressive':
+                            attackerstancecoefficient = 1.25
+                        elif self.stance == 'defensive':
+                            attackerstancecoefficient = 0.9
+                        elif self.stance == 'berserk':
+                            attackerstancecoefficient = 1.5
+                        else:
+                            attackerstancecoefficient = 1
+                        if target.stance == 'aggressive':
+                            defenderstancecoefficient = 1.111
+                        elif target.stance == 'defensive':
+                            defenderstancecoefficient = 0.80
+                        elif target.stance == 'berserk':
+                            defenderstancecoefficient = 1.222
+                        else:
+                            defenderstancecoefficient = 1
+                        if (self.stance == 'flying' or self.world.largerocks[self.x, self.y]) and target.stance != 'flying' and not target.world.largerocks[target.x, target.y]:
+                            highgroundcoefficient = 1.05
+                        elif self.stance != 'flying' and not self.world.largerocks[self.x, self.y] and (target.stance == 'flying' or target.world.largerocks[target.x, target.y]):
+                            highgroundcoefficient = 0.95
+                        else:
+                            highgroundcoefficient = 1
+                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
+                            hit = True
+                        else:
+                            adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
+                            if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
+                                adjacentparts.append(targetbodypart.parentalconnection.parent)
+                            if len(adjacentparts) > 0:
+                                targetbodypart = np.random.choice(adjacentparts)
+                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
+                                    hit = True
+                                else:
+                                    hit = False
                             else:
                                 hit = False
-                        else:
-                            hit = False
-                    if hit:
-                        target.lasthitter = self
-                        totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
-                        knocked_back = False
-                        knocked_to_obstacle = ''
-                        for special in attack.special:
-                            if special[0] == 'charge' and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
-                                if self.stance == 'running':
-                                    totaldamage = 2*totaldamage
-                                else:
-                                    totaldamage = int(1.5*totaldamage)
+                        if hit:
+                            target.lasthitter = self
+                            totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
+                            knocked_back = False
+                            knocked_to_obstacle = ''
+                            for special in attack.special:
+                                if special[0] == 'charge' and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
+                                    if self.stance == 'running':
+                                        totaldamage = 2*totaldamage
+                                    else:
+                                        totaldamage = int(1.5*totaldamage)
+                                    attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
+                                if special[0] == 'knockback' and np.random.rand() < special[1]:
+                                    dx = target.x - self.x
+                                    dy = target.y - self.y
+                                    if self.world.walls[target.x+dx, target.y+dy]:
+                                        knocked_to_obstacle = 'wall'
+                                        totaldamage *= 2
+                                    elif self.world.largerocks[target.x+dx, target.y+dy]:
+                                        knocked_to_obstacle = 'large rock'
+                                        totaldamage *= 2
+                                    elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):
+                                        knocked_back = True
+                                        target.move(dx, dy)
+                            if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
+                                totaldamage = int(1.5*totaldamage)
                                 attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
-                            if special[0] == 'knockback' and np.random.rand() < special[1]:
-                                dx = target.x - self.x
-                                dy = target.y - self.y
-                                if self.world.walls[target.x+dx, target.y+dy]:
-                                    knocked_to_obstacle = 'wall'
-                                    totaldamage *= 2
-                                elif self.world.largerocks[target.x+dx, target.y+dy]:
-                                    knocked_to_obstacle = 'large rock'
-                                    totaldamage *= 2
-                                elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):
-                                    knocked_back = True
-                                    target.move(dx, dy)
-                        if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
-                            totaldamage = int(1.5*totaldamage)
-                            attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
-                        if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
-                            totaldamage *= 3
-                        elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
-                            totaldamage *= 2
-                        if targetbodypart.armor() != None:
-                            armor = targetbodypart.armor()
-                            armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
-                            armor.damagetaken += armordamage
-                        else:
-                            armor = None
-                            armordamage = 0
-                        if target.faction in attack.bane:
-                            banemultiplier = 2
-                        else:
-                            banemultiplier = 1
-                        resistancemultiplier = 1 - targetbodypart.resistance(attack.damagetype)
-                        bleed = False
-                        for special in attack.special:
-                            if special[0] == 'bleed' and np.random.rand() < special[1]:
-                                bleed = True
-                                targetbodypart.bleedclocks.append((int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), 0, self))
-                        damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), targetbodypart.hp())
-                        alreadyincapacitated = targetbodypart.incapacitated()
-                        targetbodypart.damagetaken += damage
-                        if targetbodypart.parentalconnection != None:
-                            partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
-                        elif targetbodypart == target.torso:
-                            partname = 'torso'
-                        if not target.dying():
-                            if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
-                                if not knocked_back and not knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + '!')
-                                elif knocked_back:
-                                    self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you back!')
-                                elif knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
-                                if armordamage > 0:
-                                    if not armor.destroyed():
-                                        target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
-                                    else:
-                                        target.log().append('Your ' + armor.name + ' was destroyed!')
-                                        armor.owner.remove(armor)
-                            elif not targetbodypart.destroyed():
-                                if not bleed and not knocked_back and not knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
-                                elif bleed:
-                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
-                                elif knocked_back:
-                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
-                                elif knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
-                                if armordamage > 0:
-                                    if not armor.destroyed():
-                                        target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
-                                    else:
-                                        target.log().append('Your ' + armor.name + ' was destroyed!')
-                                        armor.owner.remove(armor)
+                            if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
+                                totaldamage *= 3
+                            elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
+                                totaldamage *= 2
+                            if targetbodypart.armor() != None:
+                                armor = targetbodypart.armor()
+                                armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+                                armor.damagetaken += armordamage
+                            else:
+                                armor = None
+                                armordamage = 0
+                            if target.faction in attack.bane:
+                                banemultiplier = 2
+                            else:
+                                banemultiplier = 1
+                            resistancemultiplier = 1 - targetbodypart.resistance(attack.damagetype)
+                            bleed = False
+                            for special in attack.special:
+                                if special[0] == 'bleed' and np.random.rand() < special[1]:
+                                    bleed = True
+                                    targetbodypart.bleedclocks.append((int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), 0, self))
+                            damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), targetbodypart.hp())
+                            alreadyincapacitated = targetbodypart.incapacitated()
+                            if target.faction == 'player':
+                                targetparthalfhp = targetbodypart.maxhp / 2
+                                totalthreequartershp = sum([part.maxhp for part in target.bodyparts])/2*3/4
+                            else:
+                                targetparthalfhp = targetbodypart.maxhp * difficulty / 2
+                                totalthreequartershp = sum([part.maxhp for part in target.bodyparts])/2*3/4*difficulty
+                            vitalalreadyunderhalf = targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp
+                            totalalreadyunderquarter = sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp
+                            targetbodypart.damagetaken += damage
+                            reasontopanic = (not vitalalreadyunderhalf and targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (not totalalreadyunderquarter and sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp)
+                            panic = False
+                            scared = False
+                            if reasontopanic:
+                                braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
+                                panic = True
+                                scared = True
+                                for bravery in braveries:
+                                    if np.random.rand() < bravery:
+                                        panic = False
+                                if panic:
+                                    target.panickedclock += damage
+                                else:
+                                    for bravery in braveries:
+                                        if np.random.rand() < bravery:
+                                            scared = False
+                                    if scared:
+                                        target.scaredclock += damage
+                            if targetbodypart.parentalconnection != None:
+                                partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
+                            elif targetbodypart == target.torso:
+                                partname = 'torso'
+                            if not target.dying():
+                                if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + '!')
+                                    elif knocked_back:
+                                        self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you back!')
+                                    elif knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                    if armordamage > 0:
+                                        if not armor.destroyed():
+                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                        else:
+                                            target.log().append('Your ' + armor.name + ' was destroyed!')
+                                            armor.owner.remove(armor)
+                                elif not targetbodypart.destroyed():
+                                    if not bleed and not knocked_back and not knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                                    elif bleed:
+                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
+                                    elif knocked_back:
+                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
+                                    elif knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
+                                    if armordamage > 0:
+                                        if not armor.destroyed():
+                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                        else:
+                                            target.log().append('Your ' + armor.name + ' was destroyed!')
+                                            armor.owner.remove(armor)
+                                else:
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                                    elif knocked_back:
+                                        self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you back!')
+                                    elif knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                    if armordamage > 0:
+                                        if not armor.destroyed():
+                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                        else:
+                                            target.log().append('Your ' + armor.name + ' was also destroyed!')
+                                            armor.owner.remove(armor)
+                                    targetbodypart.on_destruction(False)
+                                if panic:
+                                    self.log().append('The ' + target.name + ' got panicked.')
+                                    target.log().append('You got panicked.')
+                                elif scared:
+                                    self.log().append('The ' + target.name + ' got scared.')
+                                    target.log().append('You got scared.')
                             else:
                                 if not knocked_back and not knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
                                 elif knocked_back:
-                                    self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you back!')
+                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
                                 elif knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
-                                if armordamage > 0:
-                                    if not armor.destroyed():
-                                        target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
-                                    else:
-                                        target.log().append('Your ' + armor.name + ' was also destroyed!')
-                                        armor.owner.remove(armor)
-                                targetbodypart.on_destruction(False)
+                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
+                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                                target.log().append('You are dead!')
+                                if targetbodypart.destroyed():
+                                    targetbodypart.on_destruction(True)
+                                target.die()
+                                target.causeofdeath = ('attack', self)
                         else:
-                            if not knocked_back and not knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
-                            elif knocked_back:
-                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
-                            elif knocked_to_obstacle:
-                                self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
-                                target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
-                            target.log().append('You are dead!')
-                            if targetbodypart.destroyed():
-                                targetbodypart.on_destruction(True)
-                            target.die()
-                            target.causeofdeath = ('attack', self)
+                            self.log().append('The ' + target.name + ' evaded your ' + attack.name +'!')
+                            target.log().append("You evaded the " + self.name + "'s " + attack.name +"!")
                     else:
-                        self.log().append('The ' + target.name + ' evaded your ' + attack.name +'!')
-                        target.log().append("You evaded the " + self.name + "'s " + attack.name +"!")
+                        self.log().append('Your attack missed due to fear!')
+                        target.log().append("The " + self.name + "'s attack missed due to fear!")
                 else:
                     self.log().append('The ' + target.name + ' evaded your ' + attack.name + ' by being too far away!')
                     target.log().append("You evaded the " + self.name + "'s " + attack.name + " by being too far away!")
@@ -688,6 +794,8 @@ class Creature():
 
     def resolveaction(self):
         if self.nextaction[0] == 'move':
+            if self.stance == 'running':
+                self.runstaminaused += self.nextaction[-1]*(1 + self.slowed())
             creaturesintheway = [creature for creature in self.world.creatures if creature.x == self.x+self.nextaction[1] and creature.y == self.y+self.nextaction[2]]
             if len(creaturesintheway) == 0:
                 self.move(self.nextaction[1], self.nextaction[2])
@@ -696,8 +804,55 @@ class Creature():
                 self.log().append("There's a " + creaturesintheway[0].name + " in your way.")
                 self.previousaction = ('wait',)
         elif self.nextaction[0] == 'bump':
-            self.log().append("You bumped into a wall.")
+            if self.stance == 'running':
+                self.runstaminaused += self.nextaction[-1]*(1 + self.slowed())
+                part = np.random.choice([part for part in self.bodyparts if not part.destroyed()])
+                resistancemultiplier = 1 - part.resistance('blunt')
+                totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
+                if part.armor() != None:
+                    armor = part.armor()
+                    armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+                    armor.damagetaken += armordamage
+                else:
+                    armor = None
+                    armordamage = 0
+                damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+                part.damagetaken += damage
+                if part.parentalconnection != None:
+                    partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                elif part == self.torso:
+                    partname = 'torso'
+                if not self.dying():
+                    if not part.destroyed():
+                        self.log().append('You ran into wall. It dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                        if armordamage > 0:
+                            if not armor.destroyed():
+                                self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                            else:
+                                self.log().append('Your ' + armor.name + ' was destroyed!')
+                                armor.owner.remove(armor)
+                    else:
+                        self.log().append('You ran into wall. It destroyed your ' + partname + '.')
+                        if armordamage > 0:
+                            if not armor.destroyed():
+                                self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                            else:
+                                self.log().append('Your ' + armor.name + ' was also destroyed!')
+                                armor.owner.remove(armor)
+                        part.on_destruction(False)
+                else:
+                    self.log().append('You ran into wall ' + partname + ' first. It killed you.')
+                    self.log().append('You are dead!')
+                    if part.destroyed():
+                        part.on_destruction(True)
+                    self.die()
+                    self.causeofdeath = ('ranintowall', partname)
+            else:
+                self.log().append("You bumped into a wall.")
             self.previousaction = ('wait',)
+        elif self.nextaction[0] == 'frighten':
+            self.frighten()
+            self.previousaction = ('frighten',)
         elif self.nextaction[0] == 'fight':
             if not self.nextaction[1].dead:  # prevent a crash
                 self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
@@ -706,7 +861,14 @@ class Creature():
     def update(self, time):
         if not self.stance in self.stancesknown() or (self.stance == 'running' and self.runstaminaused >= self.maxrunstamina()):
             oldstance = self.stance
-            self.stance = 'neutral'
+            if 'neutral' in self.stancesknown():
+                self.stance = 'neutral'
+            elif 'defensive' in self.stancesknown():
+                self.stance = 'defensive'
+            elif 'running' in self.stancesknown():
+                self.stance = 'running'
+            else: # Shouldn't happen, but just in case
+                self.stance = 'neutral'
             if oldstance == 'flying':
                 for it in self.world.items:
                     if (it.x, it.y) == (self.x, self.y) and it.trap:
@@ -746,6 +908,10 @@ class Creature():
                 self.runstaminaused = max(0, self.runstaminaused - time*self.runstaminarecoveryspeed())
             elif self.stance != 'running' and not self.starving():
                 self.runstaminaused = max(0, self.runstaminaused - time*0.5*self.runstaminarecoveryspeed())
+            if self.panicked():
+                self.panickedclock = max(0, self.panickedclock - time)
+            elif self.scared():
+                self.scaredclock = max(0, self.scaredclock - time)
         else:
             timeleft = time - timetoact
             self.bleed(timetoact)
@@ -769,9 +935,13 @@ class Creature():
                 self.starvationclock = self.starvationclock % 1
             self.suffocate(timetoact)
             if self.stance != 'running' and not self.hungry():
-                self.runstaminaused = max(0, self.runstaminaused - time*self.runstaminarecoveryspeed())
+                self.runstaminaused = max(0, self.runstaminaused - timetoact*self.runstaminarecoveryspeed())
             elif self.stance != 'running' and not self.starving():
-                self.runstaminaused = max(0, self.runstaminaused - time*0.5*self.runstaminarecoveryspeed())
+                self.runstaminaused = max(0, self.runstaminaused - timetoact*0.5*self.runstaminarecoveryspeed())
+            if self.panicked():
+                self.panickedclock = max(0, self.panickedclock - timetoact)
+            elif self.scared():
+                self.scaredclock = max(0, self.scaredclock - timetoact)
             if self.world.poisongas[self.x, self.y]:
                 livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
                 lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
@@ -875,52 +1045,59 @@ class Zombie(Creature):
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            target = None
-            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
-                target = player
-            elif fovmap[player.x, player.y]:
-                self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
-                i = np.random.choice(range(len(self.attackslist())))
-                atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
-                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
-                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
-                if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                    return(['move', dx, dy, time])
-                else:
-                    return(['wait', 1])
-            elif not disoriented:
-                self.targetcoords = None
-                dx = 0
-                dy = 0
-                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
-                    return(['move', dx, dy, time])
-                else:
-                    return(['wait', 1])
+            fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
+            if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and not self in player.frightenedby():
+                return(['frighten', 0.75])
             else:
-                self.targetcoords = None
-                dx = 0
-                dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
-                    if not self.world.walls[self.x+dx, self.y+dy]:
+                target = None
+                if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                    target = player
+                elif fovmap[player.x, player.y]:
+                    self.targetcoords = (player.x, player.y)
+                if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                    i = np.random.choice(range(len(self.attackslist())))
+                    atk = self.attackslist()[i]
+                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                    # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                    # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    if len(dxdylist) > 0:
+                        if not self.panicked():
+                            dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        else:
+                            dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                         return(['move', dx, dy, time])
                     else:
-                        return(['bump', time/2])
+                        return(['wait', 1])
+                elif not disoriented:
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1,0,1])
+                        dy = np.random.choice([-1,0,1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['wait', 1])
                 else:
-                    return(['wait', 1])
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    while (dx,dy) == (0,0):
+                        dx = np.random.choice([-1,0,1])
+                        dy = np.random.choice([-1,0,1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        if not self.world.walls[self.x+dx, self.y+dy]:
+                            return(['move', dx, dy, time])
+                        else:
+                            return(['bump', time/2])
+                    else:
+                        return(['wait', 1])
         else:
             return(['wait', 1])
 
@@ -961,7 +1138,7 @@ class MolePerson(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -970,7 +1147,10 @@ class MolePerson(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1042,7 +1222,7 @@ class Goblin(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -1051,7 +1231,10 @@ class Goblin(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1128,7 +1311,7 @@ class CaveOctopus(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -1137,7 +1320,10 @@ class CaveOctopus(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1210,7 +1396,7 @@ class Dog(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
@@ -1220,7 +1406,10 @@ class Dog(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1292,7 +1481,7 @@ class Hobgoblin(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -1301,7 +1490,10 @@ class Hobgoblin(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1374,7 +1566,7 @@ class MoleMonk(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -1383,7 +1575,10 @@ class MoleMonk(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1456,7 +1651,7 @@ class Wolf(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
@@ -1466,7 +1661,10 @@ class Wolf(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1537,7 +1735,7 @@ class Drillbot(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -1546,7 +1744,10 @@ class Drillbot(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1621,52 +1822,59 @@ class Ghoul(Creature):
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            target = None
-            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
-                target = player
-            elif fovmap[player.x, player.y]:
-                self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
-                i = np.random.choice(range(len(self.attackslist())))
-                atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
-                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
-                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
-                if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                    return(['move', dx, dy, time])
-                else:
-                    return(['wait', 1])
-            elif not disoriented:
-                self.targetcoords = None
-                dx = 0
-                dy = 0
-                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
-                    return(['move', dx, dy, time])
-                else:
-                    return(['wait', 1])
+            fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
+            if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and not self in player.frightenedby():
+                return(['frighten', 0.75])
             else:
-                self.targetcoords = None
-                dx = 0
-                dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
-                    if not self.world.walls[self.x+dx, self.y+dy]:
+                target = None
+                if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                    target = player
+                elif fovmap[player.x, player.y]:
+                    self.targetcoords = (player.x, player.y)
+                if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                    i = np.random.choice(range(len(self.attackslist())))
+                    atk = self.attackslist()[i]
+                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                    # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                    # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    if len(dxdylist) > 0:
+                        if not self.panicked():
+                            dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        else:
+                            dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                         return(['move', dx, dy, time])
                     else:
-                        return(['bump', time/2])
+                        return(['wait', 1])
+                elif not disoriented:
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1,0,1])
+                        dy = np.random.choice([-1,0,1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['wait', 1])
                 else:
-                    return(['wait', 1])
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    while (dx,dy) == (0,0):
+                        dx = np.random.choice([-1,0,1])
+                        dy = np.random.choice([-1,0,1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        if not self.world.walls[self.x+dx, self.y+dy]:
+                            return(['move', dx, dy, time])
+                        else:
+                            return(['bump', time/2])
+                    else:
+                        return(['wait', 1])
         else:
             return(['wait', 1])
 
@@ -1705,7 +1913,7 @@ class SmallFireElemental(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -1714,7 +1922,10 @@ class SmallFireElemental(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1787,7 +1998,7 @@ class DireWolf(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
@@ -1797,7 +2008,10 @@ class DireWolf(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1869,7 +2083,7 @@ class Jobgoblin(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
@@ -1878,7 +2092,10 @@ class Jobgoblin(Creature):
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
@@ -1955,52 +2172,59 @@ class Ghast(Creature):
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            target = None
-            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
-                target = player
-            elif fovmap[player.x, player.y]:
-                self.targetcoords = (player.x, player.y)
-            if target != None and len(self.attackslist()) > 0 and not disoriented:
-                i = np.random.choice(range(len(self.attackslist())))
-                atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
-            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
-                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
-                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
-                if len(dxdylist) > 0:
-                    dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                    return(['move', dx, dy, time])
-                else:
-                    return(['wait', 1])
-            elif not disoriented:
-                self.targetcoords = None
-                dx = 0
-                dy = 0
-                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
-                    return(['move', dx, dy, time])
-                else:
-                    return(['wait', 1])
+            fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
+            if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and not self in player.frightenedby():
+                return(['frighten', 0.75])
             else:
-                self.targetcoords = None
-                dx = 0
-                dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
-                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
-                    if not self.world.walls[self.x+dx, self.y+dy]:
+                target = None
+                if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                    target = player
+                elif fovmap[player.x, player.y]:
+                    self.targetcoords = (player.x, player.y)
+                if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                    i = np.random.choice(range(len(self.attackslist())))
+                    atk = self.attackslist()[i]
+                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                    # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                    # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    if len(dxdylist) > 0:
+                        if not self.panicked():
+                            dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        else:
+                            dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                         return(['move', dx, dy, time])
                     else:
-                        return(['bump', time/2])
+                        return(['wait', 1])
+                elif not disoriented:
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1,0,1])
+                        dy = np.random.choice([-1,0,1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['wait', 1])
                 else:
-                    return(['wait', 1])
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    while (dx,dy) == (0,0):
+                        dx = np.random.choice([-1,0,1])
+                        dy = np.random.choice([-1,0,1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        if not self.world.walls[self.x+dx, self.y+dy]:
+                            return(['move', dx, dy, time])
+                        else:
+                            return(['bump', time/2])
+                    else:
+                        return(['wait', 1])
         else:
             return(['wait', 1])
 

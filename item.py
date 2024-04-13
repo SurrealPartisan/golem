@@ -698,8 +698,17 @@ class RingOfSustenance(Item):
         self.hungermultiplier = 0.5
         self._info = 'A magical ring. When worn, halves you hunger gaining rate.'
 
+class RingOfBravery(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ring of bravery', '=', (255, 255, 0))
+        self.wearable = True
+        self.wearcategory = 'ring'
+        self.weight = 5
+        self.bravery = 0.5
+        self._info = 'A magical ring. When worn, gives extra protection against fear.'
+
 def randomRing(owner, x, y):
-    return np.random.choice([RingOfCarrying, RingOfVision, RingOfSustenance])(owner, x, y)
+    return np.random.choice([RingOfCarrying, RingOfVision, RingOfSustenance, RingOfBravery])(owner, x, y)
 
 class Eyeglasses(Item):
     def __init__(self, owner, x, y):

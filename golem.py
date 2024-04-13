@@ -56,6 +56,7 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'undress': ((pygame.locals.K_u, True, True), (None, False, True)),
                        'choose stance': ((pygame.locals.K_s, False, True), (None, False, True)),
                        'pray': ((pygame.locals.K_p, False, True), (None, False, True)),
+                       'frighten': ((pygame.locals.K_f, False, True), (None, False, True)),
                        'list bodyparts': ((pygame.locals.K_b, False, True), (None, False, True)),
                        'choose bodyparts': ((pygame.locals.K_b, True, True), (None, False, True)),
                        'help': ((pygame.locals.K_h, False, True), (None, False, True)),
@@ -408,6 +409,10 @@ def game():
             statuseffects = []
             if player.stance != 'neutral':
                 statuseffects.append((player.stance.capitalize(), (0, 255, 0)))
+            if player.panicked():
+                statuseffects.append(('Panicked', (255, 0, 0)))
+            elif player.scared():
+                statuseffects.append(('Scared', (255, 255, 0)))
             if player.overloaded():
                 statuseffects.append(('Overloaded', (255, 0, 0)))
             elif player.burdened():
@@ -884,7 +889,14 @@ def game():
     def _updatetime(time):
         if not player.stance in player.stancesknown() or (player.stance == 'running' and player.runstaminaused >= player.maxrunstamina()):
             oldstance = player.stance
-            player.stance = 'neutral'
+            if 'neutral' in player.stancesknown():
+                player.stance = 'neutral'
+            elif 'defensive' in player.stancesknown():
+                player.stance = 'defensive'
+            elif 'running' in player.stancesknown():
+                player.stance = 'running'
+            else: # Shouldn't happen, but just in case
+                player.stance = 'neutral'
             if oldstance == 'flying':
                 for it in cave.items:
                     if (it.x, it.y) == (player.x, player.y) and it.trap:
@@ -921,6 +933,10 @@ def game():
             player.runstaminaused = max(0, player.runstaminaused - time*player.runstaminarecoveryspeed())
         elif player.stance != 'running' and not player.starving():
             player.runstaminaused = max(0, player.runstaminaused - time*0.5*player.runstaminarecoveryspeed())
+        if player.panicked():
+            player.panickedclock = max(0, player.panickedclock - time)
+        elif player.scared():
+            player.scaredclock = max(0, player.scaredclock - time)
         if cave.poisongas[player.x, player.y]:
             livingparts = [part for part in player.bodyparts if part.material == 'living flesh' and not part.destroyed()]
             lungs = [part for part in player.bodyparts if 'lung' in part.categories and not part.destroyed()]
@@ -969,9 +985,15 @@ def game():
                 dy = np.random.choice([-1,0,1])
         targets = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
         if len(targets) > 0 and not disoriented:
-            target = targets[0]
-            gamestate = 'chooseattack'
-            logback = len(player.attackslist()) - logheight + 1
+            if not player.panicked():
+                target = targets[0]
+                gamestate = 'chooseattack'
+                logback = len(player.attackslist()) - logheight + 1
+            else:
+                player.log().append('You cannot attack while panicked!')
+                logback = 0
+                gamestate = 'free'
+                target = None
         elif player.speed() == 0:
             player.log().append('You are unable to move!')
             logback = 0
@@ -1376,6 +1398,19 @@ def game():
                             logback = min(7, len(player.godsknown()) + 1) - logheight + 1
                             chosen = 0
 
+                        # Frightening:
+                        if (event.key == keybindings['frighten'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['frighten'][0][1])) or (event.key == keybindings['frighten'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['frighten'][1][1])):
+                            if player.scariness() == 0:
+                                player.log().append('You are not scary enough to frighten anything.')
+                                logback = 0
+                            else:
+                                updatetime(0.75)
+                                if not player.dying():
+                                    player.frighten()
+                                    detecthiddenitems()
+                                    player.previousaction = ('frighten',)
+                                    logback = 0
+
                         # Bodyparts:
                         if (event.key == keybindings['list bodyparts'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][0][1])) or (event.key == keybindings['list bodyparts'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][1][1])):
                             player.log().append('The parts of your body:')
@@ -1420,9 +1455,10 @@ def game():
                             player.log().append('  - U: undress an item')
                             player.log().append('  - s: choose stance')
                             player.log().append('  - p: pray')
+                            player.log().append('  - f: frighten')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 14 # Increase when adding commands
+                                logback = 15 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
