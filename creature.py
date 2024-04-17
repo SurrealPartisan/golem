@@ -529,26 +529,26 @@ class Creature():
             for target in targets:
                 target.frightenedby().append(self)
                 braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
-                panic = True
+                scared = True
                 for bravery in braveries:
                     if np.random.rand() < bravery:
-                        panic = False
-                if panic:
-                    target.panickedclock += 1 + np.random.rand()*(self.scariness() - 1)
-                    logtext += ' The ' + target.name + ' got panicked.'
-                    target.log().append('The ' + self.name + ' made a scary face. You got panicked.')
-                else:
-                    scared = True
+                        scared = False
+                if scared:
+                    panic = True
                     for bravery in braveries:
                         if np.random.rand() < bravery:
-                            scared = False
-                    if scared:
+                            panic = False
+                    if panic:
+                        target.panickedclock += 1 + np.random.rand()*(self.scariness() - 1)
+                        logtext += ' The ' + target.name + ' got panicked.'
+                        target.log().append('The ' + self.name + ' made a scary face. You got panicked.')
+                    else:
                         target.scaredclock += 1 + np.random.rand()*(self.scariness() - 1)
                         logtext += ' The ' + target.name + ' got scared.'
                         target.log().append('The ' + self.name + ' made a scary face. You got scared.')
-                    else:
-                        logtext += ' The ' + target.name + ' remained calm.'
-                        target.log().append('The ' + self.name + ' made a scary face. You remained calm.')
+                else:
+                    logtext += ' The ' + target.name + ' remained calm.'
+                    target.log().append('The ' + self.name + ' made a scary face. You remained calm.')
             self.log().append(logtext)
         else:
             self.log().append('You attempted to make a scary face, but failed.')
@@ -667,18 +667,18 @@ class Creature():
                             scared = False
                             if reasontopanic:
                                 braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
-                                panic = True
                                 scared = True
                                 for bravery in braveries:
                                     if np.random.rand() < bravery:
-                                        panic = False
-                                if panic:
-                                    target.panickedclock += damage
-                                else:
+                                        scared = False
+                                if scared:
+                                    panic = True
                                     for bravery in braveries:
                                         if np.random.rand() < bravery:
-                                            scared = False
-                                    if scared:
+                                            panic = False
+                                    if panic:
+                                        target.panickedclock += damage
+                                    else:
                                         target.scaredclock += damage
                             if targetbodypart.parentalconnection != None:
                                 partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]

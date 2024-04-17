@@ -35,13 +35,13 @@ def infusionname():
 def unpronounceablename(length):
     return ''.join(np.random.choice(list(letters), length)).capitalize()
 
-godlynicknames = {'pride': ['Majestic', 'August', 'Self-Important', 'Self-Righteous'],
-                  'greed': ['Rich', 'Plentiful', 'Luxurious', 'Opulent'],
-                  'wrath': ['Hateful', 'Hellish', 'Raving', 'Zealous', 'Furious'],
-                  'envy': ['Green', 'Spiteful', 'Jealous', 'Coveter'],
-                  'lust': ['Perverse', 'Sensual', 'Fetishized', 'Carnal', 'Fleshly'],
-                  'gluttony': ['Hungry', 'Never-Satiated', 'Corpulent', 'Bloated'],
-                  'sloth': ['Sleepy', 'Hibernating', 'Faineant', 'Indolent']}
+godlynicknames = {'pride': ['Majestic', 'August', 'Self-Important', 'Self-Righteous', 'Vain', 'Pompous', 'Magnificent'],
+                  'greed': ['Rich', 'Plentiful', 'Luxurious', 'Opulent', 'Selfish', 'Scrooge', 'Possessive'],
+                  'wrath': ['Hateful', 'Hellish', 'Raving', 'Zealous', 'Furious', 'Warrior', 'Irascible'],
+                  'envy': ['Green', 'Spiteful', 'Jealous', 'Coveter', 'Vizier', 'Disinherited', 'Jaundiced'],
+                  'lust': ['Perverse', 'Sensual', 'Fetishized', 'Carnal', 'Fleshly', 'Horny', 'Sodomite'],
+                  'gluttony': ['Hungry', 'Never-Satiated', 'Corpulent', 'Bloated', 'Black Hole', 'All-Eater', 'Ravenous'],
+                  'sloth': ['Sleepy', 'Hibernating', 'Faineant', 'Indolent', 'Lazy', 'Napper', 'Restful']}
 
 def fov(walls, x, y, sight):
     fovmap = np.zeros((mapwidth, mapheight))
