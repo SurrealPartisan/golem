@@ -387,9 +387,9 @@ class PickAxe(Item):
         self.wieldable = True
         self.weapon = True
         self.bane = bane
-        self.hitpropability = 0.6 + materials[material].hitbonus + 0.01*enchantment
+        self.hitpropability = 0.7 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
-        self.maxdamage = int(materials[material].damage*1.5) + enchantment
+        self.maxdamage = int(materials[material].damage*1.75) + enchantment
         self._minespeed = materials[material].minespeed
         density = materials[material].density
         self.weight = 12*density + 1500
@@ -397,9 +397,9 @@ class PickAxe(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.5, self.mindamage, self.maxdamage, 'rough', self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.25, self.mindamage, self.maxdamage, 'rough', self.bane, [], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 2, self.mindamage, int(0.67*self.maxdamage), 'rough', self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 1.5, self.mindamage, int(0.67*self.maxdamage), 'rough', self.bane, [], self)]
 
     def minespeed(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
