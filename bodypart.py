@@ -54,6 +54,7 @@ class BodyPart(item.Item):
         self.runstaminarecoveryspeed = 0
         self.bravery = 0
         self.scariness = 0
+        self.endotoxicity = 0
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -174,6 +175,8 @@ class HumanTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
@@ -331,6 +334,16 @@ class HumanLung(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
+class HumanKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'human kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
 class HumanStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'human stomach', '*', (255, 0, 0))
@@ -361,6 +374,8 @@ class ZombieTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
@@ -370,8 +385,9 @@ class ZombieTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class ZombieArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -386,9 +402,10 @@ class ZombieArm(BodyPart):
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
-        self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -429,10 +446,11 @@ class ZombieLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.maxrunstamina = 20
-        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -465,8 +483,9 @@ class ZombieHead(BodyPart):
         self.weight = 7000
         self.scariness = 5
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -483,10 +502,11 @@ class ZombieEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -513,8 +533,9 @@ class ZombieBrain(BodyPart):
         self.stances = []
         self.frightenedby = []
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -526,8 +547,9 @@ class ZombieHeart(BodyPart):
         self.weight = 250
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class ZombieLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -540,8 +562,22 @@ class ZombieLung(BodyPart):
         self.runstaminarecoveryspeed = 0.25
         self.breathepoisonresistance = 0.5
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+
+class ZombieKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie kidney', '*', (150, 178, 82))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.material = 'undead flesh'
+        self.weight = 100
+        self._attackpoisonresistance = 1
+        self.endotoxicity = -0.5
+        self._resistances['sharp'] = -0.2
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class ZombieStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -558,8 +594,9 @@ class ZombieStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
             }
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 
 
@@ -576,6 +613,8 @@ class MolePersonTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
@@ -733,6 +772,16 @@ class MolePersonLung(BodyPart):
         self.runstaminarecoveryspeed = 1
         self._info = 'A lung consisting of living flesh. Recovers running stamina quickly.'
 
+class MolePersonKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole person kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
 class MolePersonStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole person stomach', '*', (255, 0, 0))
@@ -763,6 +812,8 @@ class GoblinTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 50
@@ -928,6 +979,16 @@ class GoblinLung(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
 
+class GoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'goblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 10
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
 class GoblinStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'goblin stomach', '*', (255, 0, 0))
@@ -958,6 +1019,8 @@ class OctopusHead(BodyPart):
             'right heart': BodyPartConnection(self, ['heart'], True, 'right ', defensecoefficient=0.8, armorapplies=True),
             'left gills': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
             'right gills': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
+            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
             'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left '),
@@ -1084,6 +1147,16 @@ class OctopusGills(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung-like organ consisting of living flesh.'
 
+class OctopusMetanephridium(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cave octopus metanephridium', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 100
+        self.endotoxicity = -1
+        self._info = 'A kidney-like organ consisting of living flesh. Filters toxins at average speed.'
+
 class OctopusStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'cave octopus stomach', '*', (255, 0, 0))
@@ -1114,6 +1187,8 @@ class DogTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
@@ -1233,6 +1308,16 @@ class DogLung(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
+class DogKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dog kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 15
+        self.weight = 100
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
 class DogStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'dog stomach', '*', (255, 0, 0))
@@ -1272,6 +1357,8 @@ class HobgoblinTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 100
@@ -1437,6 +1524,16 @@ class HobgoblinLung(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
 
+class HobgoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'hobgoblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
 class HobgoblinStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'hobgoblin stomach', '*', (255, 0, 0))
@@ -1467,6 +1564,8 @@ class MoleMonkTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 100
@@ -1624,6 +1723,16 @@ class MoleMonkLung(BodyPart):
         self.runstaminarecoveryspeed = 1
         self._info = 'A lung consisting of living flesh. Recovers running stamina quickly.'
 
+class MoleMonkKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mole monk kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
 class MoleMonkStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole monk stomach', '*', (255, 0, 0))
@@ -1654,6 +1763,8 @@ class WolfTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
@@ -1773,6 +1884,16 @@ class WolfLung(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
+class WolfKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wolf kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 20
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
 class WolfStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'wolf stomach', '*', (255, 0, 0))
@@ -1811,6 +1932,7 @@ class DrillbotChassis(BodyPart):
             'arm': BodyPartConnection(self, ['arm'], False, ''),
             'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'coolant aerator system': BodyPartConnection(self, ['lung'], False, '', defensecoefficient=0.5, armorapplies=True),
+            'coolant filtering system': BodyPartConnection(self, ['kidney'], False, '', defensecoefficient=0.5, armorapplies=True),
             'biomass processor': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.5, armorapplies=True),
             'left camera': BodyPartConnection(self, ['eye'], False, 'left '),
             'right camera': BodyPartConnection(self, ['eye'], False, 'right '),
@@ -1927,10 +2049,24 @@ class DrillbotAerator(BodyPart):
         self.maxhp = 30
         self.weight = 600
         self.material = 'electronics'
+        self._attackpoisonresistance = 1
         self.breathepoisonresistance = 0.5
         self.runstaminarecoveryspeed = 1
         self._resistances['sharp'] = 0.2
         self._info = 'A lung consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Recovers running stamina quickly. Resistant against sharp attacks.'
+
+class DrillbotFilter(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'coolant filter, model DB-100', '*', (0, 0, 255))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 30
+        self.weight = 600
+        self.material = 'electronics'
+        self._attackpoisonresistance = 1
+        self.endotoxicity = -1
+        self._resistances['sharp'] = 0.2
+        self._info = 'A kidney consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Filters toxins at an average speed. Resistant against sharp attacks.'
 
 class DrillbotProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -1991,6 +2127,8 @@ class GhoulTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 175
@@ -2000,8 +2138,9 @@ class GhoulTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 60000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class GhoulArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -2016,9 +2155,10 @@ class GhoulArm(BodyPart):
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
-        self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2059,10 +2199,11 @@ class GhoulLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.maxrunstamina = 20
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2095,8 +2236,9 @@ class GhoulHead(BodyPart):
         self.weight = 7000
         self.scariness = 10
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 10 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 10 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2113,10 +2255,11 @@ class GhoulEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2143,8 +2286,9 @@ class GhoulBrain(BodyPart):
         self.stances = []
         self.frightenedby = []
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class GhoulHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -2155,13 +2299,14 @@ class GhoulHeart(BodyPart):
         self.material = "undead flesh"
         self.weight = 250
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.bravery = 0.5
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class GhoulLung(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'ghoul lung', '*', (255, 0, 0))
+        super().__init__(owner, x, y, 'ghoul lung', '*', (150, 178, 82))
         self.categories = ['lung']
         self.childconnections = {}
         self.maxhp = 25
@@ -2171,7 +2316,21 @@ class GhoulLung(BodyPart):
         self.runstaminarecoveryspeed = 0.25
         self._resistances['sharp'] = -0.2
         self._attackpoisonresistance = 1
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self.endotoxicity = 0.25
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+
+class GhoulKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie kidney', '*', (150, 178, 82))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 25
+        self.material = 'undead flesh'
+        self.weight = 120
+        self._attackpoisonresistance = 1
+        self.endotoxicity = -0.5
+        self._resistances['sharp'] = -0.2
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class GhoulStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -2188,8 +2347,9 @@ class GhoulStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
             }
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 
 
@@ -2202,6 +2362,8 @@ class SmallFireElementalTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.8, armorapplies=True),
             'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
             'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
             'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left '),
@@ -2379,6 +2541,8 @@ class DireWolfTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
             'tail': BodyPartConnection(self, ['tail'], False, '')
             }
@@ -2498,6 +2662,16 @@ class DireWolfLung(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh.'
 
+class DireWolfKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dire wolf kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 35
+        self.weight = 160
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
 class DireWolfStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'dire wolf stomach', '*', (255, 0, 0))
@@ -2537,6 +2711,8 @@ class JobgoblinTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 250
@@ -2702,6 +2878,16 @@ class JobgoblinLung(BodyPart):
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
 
+class JobgoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'jobgoblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 40
+        self.weight = 100
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
 class JobgoblinStomach(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'jobgoblin stomach', '*', (255, 0, 0))
@@ -2732,6 +2918,8 @@ class GhastTorso(BodyPart):
             'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
             }
         self.maxhp = 275
@@ -2741,8 +2929,9 @@ class GhastTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 60000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class GhastArm(BodyPart):
     def __init__(self, owner, x, y):
@@ -2757,9 +2946,10 @@ class GhastArm(BodyPart):
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
-        self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'An arm consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2800,10 +2990,11 @@ class GhastLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.maxrunstamina = 20
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2836,8 +3027,9 @@ class GhastHead(BodyPart):
         self.weight = 7000
         self.scariness = 15
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 15 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 15 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2854,10 +3046,11 @@ class GhastEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2884,8 +3077,9 @@ class GhastBrain(BodyPart):
         self.stances = []
         self.frightenedby = []
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class GhastHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -2897,12 +3091,13 @@ class GhastHeart(BodyPart):
         self.weight = 250
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 class GhastLung(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'ghast lung', '*', (255, 0, 0))
+        super().__init__(owner, x, y, 'ghast lung', '*', (150, 178, 82))
         self.categories = ['lung']
         self.childconnections = {}
         self.maxhp = 45
@@ -2910,9 +3105,23 @@ class GhastLung(BodyPart):
         self.weight = 600
         self.breathepoisonresistance = 0.5
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.runstaminarecoveryspeed = 0.25
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+
+class GhastKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ghast kidney', '*', (150, 178, 82))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self.maxhp = 45
+        self.material = 'undead flesh'
+        self.weight = 120
+        self._attackpoisonresistance = 1
+        self.endotoxicity = -0.5
+        self._resistances['sharp'] = -0.2
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
 
 class GhastStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -2929,8 +3138,9 @@ class GhastStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
             }
         self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
 
 

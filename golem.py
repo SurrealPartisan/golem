@@ -228,6 +228,8 @@ def game():
         player.bodyparts[0].connect('heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('left lung', bodypart.HumanLung(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('right lung', bodypart.HumanLung(player.bodyparts, 0, 0))
+        player.bodyparts[0].connect('left kidney', bodypart.HumanKidney(player.bodyparts, 0, 0))
+        player.bodyparts[0].connect('right kidney', bodypart.HumanKidney(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('stomach', bodypart.HumanStomach(player.bodyparts, 0, 0))
         player.bodyparts[0].connect('head', bodypart.HumanHead(player.bodyparts, 0, 0))
         player.bodyparts[-1].connect('brain', bodypart.HumanBrain(player.bodyparts, 0, 0))
@@ -429,7 +431,7 @@ def game():
                 statuseffects.append(('Starving', (255, 0, 0)))
             elif player.hungry():
                 statuseffects.append(('Hungry', (255, 255, 0)))
-            if player.poisonclock > 0:
+            if player.accumulatedpoison > 5:
                 if len([part for part in player.bodyparts if part.material == 'living flesh']) > 0:
                     statuseffects.append(('Poisoned', (255, 0, 0)))
                 else:
@@ -887,6 +889,8 @@ def game():
         win.update()
 
     def _updatetime(time):
+        if player.preferredstance in player.stancesknown():
+            player.stance = player.preferredstance
         if not player.stance in player.stancesknown() or (player.stance == 'running' and player.runstaminaused >= player.maxrunstamina()):
             oldstance = player.stance
             if 'neutral' in player.stancesknown():
@@ -941,9 +945,10 @@ def game():
             livingparts = [part for part in player.bodyparts if part.material == 'living flesh' and not part.destroyed()]
             lungs = [part for part in player.bodyparts if 'lung' in part.categories and not part.destroyed()]
             if np.random.rand() > player.breathepoisonresistance() and len(livingparts) > 0 and len(lungs) > 0:
-                if player.poisonclock == 0:
+                oldaccumulation = player.accumulatedpoison
+                player.accumulatedpoison = min(50, player.accumulatedpoison + np.random.rand()*40)
+                if player.accumulatedpoison > 5 and oldaccumulation <= 5:
                     player.log().append('You were poisoned by the gas.')
-                player.poisonclock = max(player.poisonclock, np.random.rand()*20)
         for gd in gods:
             for creat in gd.prayerclocks:
                 gd.prayerclocks[creat] += time
@@ -1005,6 +1010,8 @@ def game():
             gamestate = 'free'
             target = None
         elif cave.walls[player.x+dx, player.y+dy]:
+            logback = 0
+            gamestate = 'free'
             updatetime((np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')))/2)
             if not player.dying():
                 if player.stance == 'running':
@@ -1056,10 +1063,10 @@ def game():
             if not player.dying():
                 player.previousaction = ('wait',)
                 detecthiddenitems()
-            logback = 0
-            gamestate = 'free'
             target = None
         else:
+            logback = 0
+            gamestate = 'free'
             updatetime(np.sqrt(dx**2 + dy**2) * player.steptime() * (1 + player.slowed()) * (1 + (cave.largerocks[player.x+dx, player.y+dy] and player.stance != 'flying')))
             if not player.dying():
                 if player.stance == 'running':
@@ -1072,8 +1079,6 @@ def game():
                     player.log().append("There's a " + creaturesintheway[0].name + " in your way.")
                     player.previousaction = ('wait',)
                 detecthiddenitems()
-            logback = 0
-            gamestate = 'free'
             target = None
         chosen = 0
         return(gamestate, logback, target, chosen)
@@ -1543,6 +1548,8 @@ def game():
                             if chosen == len(picklist) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(0.5 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = picklist[chosen]
@@ -1552,8 +1559,6 @@ def game():
                                 player.log().append('You picked up the ' + selected.name + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('pick',)
-                                logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1568,6 +1573,8 @@ def game():
                             if chosen == len(player.inventory) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(0.5 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = player.inventory[chosen]
@@ -1579,8 +1586,6 @@ def game():
                                 player.log().append('You dropped the ' + selected.name + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('drop',)
-                                logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1613,6 +1618,8 @@ def game():
                             if chosen == len([item for item in player.inventory if item.consumable]) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = [item for item in player.inventory if item.consumable][chosen]
@@ -1651,7 +1658,6 @@ def game():
                                         player.log().append('You have no stomach, so you cannot eat!')
                                     logback = 0
                                 detecthiddenitems()
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1666,6 +1672,8 @@ def game():
                             if chosen == len([item for item in player.inventory if item.material == 'living flesh']) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(5 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = [item for item in player.inventory if item.material == 'living flesh'][chosen]
@@ -1675,10 +1683,8 @@ def game():
                                     newname = newname[:-11]
                                 item.Food(player.inventory, 0, 0, newname, selected.char, ((97+selected.color[0])//2, (23+selected.color[1])//2, (23+selected.color[2])//2), selected.maxhp, 'cooked meat', selected.weight)
                                 player.log().append('You roasted the ' + selected.name + '.')
-                                logback = 0
                                 detecthiddenitems()
                                 player.previousaction = ('cook',)
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1711,6 +1717,8 @@ def game():
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()][chosen]
@@ -1720,8 +1728,6 @@ def game():
                                 player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('wield',)
-                            logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1736,6 +1742,8 @@ def game():
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
@@ -1746,8 +1754,6 @@ def game():
                                 player.log().append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('unwield',)
-                                logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1786,6 +1792,8 @@ def game():
                             if chosen == len(partlist) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = partlist[chosen]
@@ -1795,8 +1803,6 @@ def game():
                                 player.log().append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('wear',)
-                                logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1811,6 +1817,8 @@ def game():
                             if chosen == len(wornlist) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
                                 selected = wornlist[chosen]
@@ -1821,8 +1829,6 @@ def game():
                                 player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('undress',)
-                                logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1860,6 +1866,8 @@ def game():
                                 repetitionmultiplier = 1.5
                             else:
                                 repetitionmultiplier = 1
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(selectedattack[6] * repetitionmultiplier * (1 + player.slowed()))
                             if not player.dying():
                                 if not target.dead:
@@ -1870,7 +1878,6 @@ def game():
                                     player.previousaction = ('wait',)
                                 detecthiddenitems()
                             logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1904,6 +1911,8 @@ def game():
                                 logback = len(partslist) - logheight + 1
                                 chosen = 0
                             elif len([connection for connection in connectioncandidates if connection != None and connection[0].vital and connection[1] == None]) == 0:
+                                logback = 0
+                                gamestate = 'free'
                                 updatetime(bodypartchoosingtime * (1 + player.slowed()))
                                 if not player.dying():
                                     for it in [it[0] for part in player.bodyparts for it in part.worn.values() if not part in bodypartcandidates and len(it) > 0]:
@@ -1934,8 +1943,6 @@ def game():
                                     player.log().append('You have selected your bodyparts.')
                                     detecthiddenitems()
                                     player.previousaction = ('choosebody',)
-                                    logback = 0
-                                    gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -1990,11 +1997,14 @@ def game():
                             if chosen == len(player.stancesknown()) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(0.5)
                             if not player.dying():
                                 selected = player.stancesknown()[chosen]
                                 oldstance = player.stance
                                 player.stance = selected
+                                player.preferredstance = selected
                                 if oldstance == 'flying' and player.stance != 'flying':
                                     for it in cave.items:
                                         if (it.x, it.y) == (player.x, player.y) and it.trap:
@@ -2009,8 +2019,6 @@ def game():
                                                 player.itemsseen().append(it)
                                 detecthiddenitems()
                                 player.previousaction = ('choosestance',)
-                            logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'
@@ -2025,6 +2033,8 @@ def game():
                             if chosen == min(7, len(player.godsknown()) + 1) - logback:
                                 logback -= 1
                         if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
                             updatetime(1)
                             if not player.dying():
                                 if chosen < len(player.godsknown()):
@@ -2042,8 +2052,6 @@ def game():
                                         player.log().append('You prayed, but no one answered.')
                                 detecthiddenitems()
                                 player.previousaction = ('pray',)
-                                logback = 0
-                            gamestate = 'free'
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
                             gamestate = 'free'

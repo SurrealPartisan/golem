@@ -125,7 +125,12 @@ bodypartshortnames = {'torso': 'torso',
                       'central processor': 'c proc',
                       'left bellows': 'l bell',
                       'right bellows': 'r bell',
-                      'eye': 'eye'
+                      'eye': 'eye',
+                      'left kidney': 'l kidn',
+                      'right kidney': 'r kidn',
+                      'left metanephridium': 'l metaneph',
+                      'right metanephridium': 'r metaneph',
+                      'coolant filtering system': 'cool filt'
                       }
 
 keynames = {lc.K_BACKSPACE: 'backspace',

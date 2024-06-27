@@ -46,11 +46,13 @@ class Creature():
         self.disorientedclock = 0
         self.slowedclock = 0
         self.poisonclock = 0
+        self.accumulatedpoison = 0
         self.burnclock = 0
         self.scaredclock = 0
         self.panickedclock = 0
         self.runstaminaused = 0
         self.stance = 'neutral'
+        self.preferredstance = 'neutral'
 
     def log(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
@@ -321,15 +323,27 @@ class Creature():
             self.die()
             self.causeofdeath = ('bloodloss', np.unique(totalcausers))
 
+    def endotoxicity(self):
+        return 0.1 + sum([part.endotoxicity for part in self.bodyparts if not (part.destroyed() or part.incapacitated())])
+
     def breathepoisonresistance(self):
         lungresistances = [part.breathepoisonresistance for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
         wornresistances = [it[0].breathepoisonresistance for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return min(1, np.mean(lungresistances) + sum(wornresistances))
 
     def applypoison(self, time):
-        oldclock = self.poisonclock
-        self.poisonclock = max(0, self.poisonclock - time)
-        ticks = int(oldclock) - int(self.poisonclock)
+        oldaccumulation = self.accumulatedpoison
+        self.accumulatedpoison = min(50, max(0, self.accumulatedpoison + self.endotoxicity()*time))
+        if self.accumulatedpoison > 5 and oldaccumulation > 5:
+            self.poisonclock = self.poisonclock + time
+        elif self.accumulatedpoison > 5:
+            self.poisonclock = self.poisonclock + (self.accumulatedpoison - 5)/self.endotoxicity()
+        elif oldaccumulation > 5:
+            self.poisonclock = self.poisonclock + (oldaccumulation - 5)/self.endotoxicity()
+        else:
+            self.poisonclock = 0
+        ticks = int(self.poisonclock)
+        self.poisonclock -= ticks
         if len([part for part in self.bodyparts if part.material == 'living flesh']) > 0:
             for i in range(ticks):
                 if np.random.rand() < 0.5:
@@ -350,8 +364,10 @@ class Creature():
                         if self.slowedclock == 0:
                             self.log().append('The poison made you slowed!')
                         self.slowedclock += np.random.rand()*10
-        if oldclock > 0 and self.poisonclock == 0:
+        if oldaccumulation > 5 and self.accumulatedpoison <= 5:
             self.log().append('You are no longer poisoned, but some aftereffects may linger.')
+        if oldaccumulation <= 5 and self.accumulatedpoison > 5:
+            self.log().append('The endotoxins of your body poisoned you!')
 
     def burdened(self):
         return self.weightcarried() > self.carryingcapacity()/2
@@ -859,6 +875,8 @@ class Creature():
                 self.previousaction = ('fight', self.nextaction[3].weapon, self.nextaction[2])
 
     def update(self, time):
+        if self.preferredstance in self.stancesknown():
+            self.stance = self.preferredstance
         if not self.stance in self.stancesknown() or (self.stance == 'running' and self.runstaminaused >= self.maxrunstamina()):
             oldstance = self.stance
             if 'neutral' in self.stancesknown():
@@ -946,9 +964,10 @@ class Creature():
                 livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
                 lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
                 if np.random.rand() > self.breathepoisonresistance() and len(livingparts) > 0 and len(lungs) > 0:
-                    if self.poisonclock == 0:
+                    oldaccumulation = self.accumulatedpoison
+                    self.accumulatedpoison = min(50, self.accumulatedpoison + np.random.rand()*40)
+                    if self.accumulatedpoison > 5 and oldaccumulation <= 5:
                         self.log().append('You were poisoned by the gas.')
-                    self.poisonclock = max(self.poisonclock, np.random.rand()*20)
             if not self.dead:
                 self.resolveaction()
     
@@ -1029,6 +1048,8 @@ class Zombie(Creature):
         self.bodyparts[0].connect('heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.ZombieKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.ZombieKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.ZombieStomach(self.bodyparts, 0, 0))
         if self.name != 'headless zombie':
             self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
@@ -1118,6 +1139,8 @@ class MolePerson(Creature):
         self.bodyparts[0].connect('heart', bodypart.MolePersonHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.MolePersonKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.MolePersonKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.MolePersonStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.MolePersonHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.MolePersonBrain(self.bodyparts, 0, 0))
@@ -1202,6 +1225,8 @@ class Goblin(Creature):
         self.bodyparts[0].connect('heart', bodypart.GoblinHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.GoblinLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.GoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.GoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.GoblinKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.GoblinStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.GoblinHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.GoblinBrain(self.bodyparts, 0, 0))
@@ -1292,6 +1317,8 @@ class CaveOctopus(Creature):
         self.bodyparts[0].connect('right heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left metanephridium', bodypart.OctopusMetanephridium(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right metanephridium', bodypart.OctopusMetanephridium(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.OctopusStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('brain', bodypart.OctopusBrain(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
@@ -1375,6 +1402,8 @@ class Dog(Creature):
         self.bodyparts[0].connect('heart', bodypart.DogHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.DogLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.DogLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.DogKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.DogKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.DogStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('tail', bodypart.DogTail(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.DogHead(self.bodyparts, 0, 0))
@@ -1461,6 +1490,8 @@ class Hobgoblin(Creature):
         self.bodyparts[0].connect('heart', bodypart.HobgoblinHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.HobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.HobgoblinKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.HobgoblinStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.HobgoblinHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.HobgoblinBrain(self.bodyparts, 0, 0))
@@ -1545,6 +1576,8 @@ class MoleMonk(Creature):
         self.bodyparts[0].connect('heart', bodypart.MoleMonkHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.MoleMonkLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.MoleMonkLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.MoleMonkKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.MoleMonkKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.MoleMonkStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.MoleMonkHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.MoleMonkBrain(self.bodyparts, 0, 0))
@@ -1630,6 +1663,8 @@ class Wolf(Creature):
         self.bodyparts[0].connect('heart', bodypart.WolfHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.WolfLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.WolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.WolfKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.WolfKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.WolfStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('tail', bodypart.WolfTail(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.WolfHead(self.bodyparts, 0, 0))
@@ -1716,6 +1751,7 @@ class Drillbot(Creature):
         self.bodyparts[0].connect('arm', bodypart.DrillArm(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('coolant pumping system', bodypart.DrillbotPump(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('coolant aerator system', bodypart.DrillbotAerator(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('coolant filtering system', bodypart.DrillbotFilter(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('biomass processor', bodypart.DrillBotBiomassProcessor(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('central processor', bodypart.DrillbotProcessor(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
@@ -1806,6 +1842,8 @@ class Ghoul(Creature):
         self.bodyparts[0].connect('heart', bodypart.GhoulHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.GhoulKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.GhoulKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.GhoulStomach(self.bodyparts, 0, 0))
         if self.name != 'headless ghoul':
             self.bodyparts[0].connect('head', bodypart.GhoulHead(self.bodyparts, 0, 0))
@@ -1977,6 +2015,8 @@ class DireWolf(Creature):
         self.bodyparts[0].connect('heart', bodypart.DireWolfHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.DireWolfKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.DireWolfKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.DireWolfStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('tail', bodypart.DireWolfTail(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.DireWolfHead(self.bodyparts, 0, 0))
@@ -2063,6 +2103,8 @@ class Jobgoblin(Creature):
         self.bodyparts[0].connect('heart', bodypart.JobgoblinHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.JobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.JobgoblinKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.JobgoblinStomach(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('head', bodypart.JobgoblinHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain', bodypart.JobgoblinBrain(self.bodyparts, 0, 0))
@@ -2156,6 +2198,8 @@ class Ghast(Creature):
         self.bodyparts[0].connect('heart', bodypart.GhastHeart(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('left lung', bodypart.GhastLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right lung', bodypart.GhastLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.GhastKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.GhastKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('stomach', bodypart.GhastStomach(self.bodyparts, 0, 0))
         if self.name != 'headless ghast':
             self.bodyparts[0].connect('head', bodypart.GhastHead(self.bodyparts, 0, 0))
@@ -2230,7 +2274,7 @@ class Ghast(Creature):
 
 
 
-enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy type and a propability weight for its presence.
+enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy type and a probability weight for its presence.
     [(Zombie, 10), (MolePerson, 10), (Goblin, 10)],
     [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (CaveOctopus, 15), (Dog, 15)],
     [(CaveOctopus, 10), (Dog, 10), (Hobgoblin, 10), (MoleMonk, 10)],
