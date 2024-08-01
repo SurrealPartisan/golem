@@ -267,3 +267,15 @@ keynames = {lc.K_BACKSPACE: 'backspace',
             lc.K_POWER: 'power',
             lc.K_EURO: 'Euro',
             lc.K_AC_BACK: 'Android back button'}
+
+numkeys = {0: (lc.K_1, lc.K_KP1),
+           1: (lc.K_2, lc.K_KP2),
+           2: (lc.K_3, lc.K_KP3),
+           3: (lc.K_4, lc.K_KP4),
+           4: (lc.K_5, lc.K_KP5),
+           5: (lc.K_6, lc.K_KP6),
+           6: (lc.K_7, lc.K_KP7),
+           7: (lc.K_8, lc.K_KP8),
+           8: (lc.K_9, lc.K_KP9),
+           9: (lc.K_0, lc.K_KP0)
+           }
