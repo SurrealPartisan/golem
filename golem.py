@@ -40,6 +40,8 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'move southwest': ((None, False, True), (pygame.locals.K_KP1, False, True)),
                        'move southeast': ((None, False, True), (pygame.locals.K_KP3, False, True)),
                        'wait': ((pygame.locals.K_PERIOD, False, True), (pygame.locals.K_KP5, False, True)),
+                       'repeat last attack': ((pygame.locals.K_r, False, True), (None, False, True)),
+                       'repeat second last attack': ((pygame.locals.K_r, True, True), (None, False, True)),
                        'look': ((pygame.locals.K_l, False, True), (None, False, True)),
                        'go down': ((pygame.locals.K_GREATER, False, True), (pygame.locals.K_LESS, True, True)),
                        'go up': ((pygame.locals.K_LESS, False, True), (None, False, True)),
@@ -259,6 +261,8 @@ def game():
     numchosen = False # Also used for different item choosing gamestates
     target = None # Target of an attack
     lookx = looky = 0 # Coords of looking
+    lastattack = None
+    secondlastattack = None
 
     gamestate = 'free'
 
@@ -955,7 +959,7 @@ def game():
                 elif player.stancesknown()[j] == 'defensive':
                     stancetext = 'Defensive (-20% to get hit, -10% to hit)'
                 elif player.stancesknown()[j] == 'running':
-                    stancetext = 'Running (move twice as fast, charge with any attack (proper charging attacks deal even more damage))'
+                    stancetext = 'Running (move double speed, charge with any attack (proper charge attacks deal even more damage))'
                 elif player.stancesknown()[j] == 'berserk':
                     stancetext = 'Berserk (+50% to hit, +22.2% to get hit)'
                 elif player.stancesknown()[j] == 'fasting':
@@ -1304,6 +1308,70 @@ def game():
                             logback = 0
                             player.previousaction = ('wait',)
 
+                        if (event.key == keybindings['repeat last attack'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat last attack'][0][1])) or (event.key == keybindings['repeat last attack'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat last attack'][1][1])):
+                            if lastattack != None:
+                                target, selected, selectedattack = lastattack
+                                if not target.dead and abs(target.x - player.x) <= 1 and abs(target.y - player.y) <= 1 and selected in target.bodyparts and not selected.destroyed() and selectedattack in player.attackslist():
+                                    secondlastattack = lastattack
+                                    if player.previousaction[0] == 'fight' and player.previousaction[1] == selectedattack.weapon and player.previousaction[2] == selected:
+                                        repetitionmultiplier = 1.5
+                                    else:
+                                        repetitionmultiplier = 1
+                                    logback = 0
+                                    gamestate = 'free'
+                                    numchosen = False
+                                    updatetime(selectedattack[6] * repetitionmultiplier * (1 + player.slowed()))
+                                    if not player.dying():
+                                        if not target.dead:
+                                            player.fight(target, selected, selectedattack)
+                                            player.previousaction = ('fight', selectedattack.weapon, selected)
+                                        else:
+                                            player.log().append('The ' + target.name + ' is already dead.')
+                                            player.previousaction = ('wait',)
+                                        detecthiddenitems()
+                                    logback = 0
+                                else:
+                                    player.log().append('Cannot repeat that attack now.')
+                                    logback = 0
+                                    gamestate = 'free'
+                            else:
+                                player.log().append('No attack to repeat.')
+                                logback = 0
+                                gamestate = 'free'
+                                
+
+                        if (event.key == keybindings['repeat second last attack'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat second last attack'][0][1])) or (event.key == keybindings['repeat second last attack'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat second last attack'][1][1])):
+                            if secondlastattack != None:
+                                target, selected, selectedattack = secondlastattack
+                                if not target.dead and abs(target.x - player.x) <= 1 and abs(target.y - player.y) <= 1 and selected in target.bodyparts and not selected.destroyed() and selectedattack in player.attackslist():
+                                    secondlastattack = lastattack
+                                    lastattack = (target, selected, selectedattack)
+                                    if player.previousaction[0] == 'fight' and player.previousaction[1] == selectedattack.weapon and player.previousaction[2] == selected:
+                                        repetitionmultiplier = 1.5
+                                    else:
+                                        repetitionmultiplier = 1
+                                    logback = 0
+                                    gamestate = 'free'
+                                    numchosen = False
+                                    updatetime(selectedattack[6] * repetitionmultiplier * (1 + player.slowed()))
+                                    if not player.dying():
+                                        if not target.dead:
+                                            player.fight(target, selected, selectedattack)
+                                            player.previousaction = ('fight', selectedattack.weapon, selected)
+                                        else:
+                                            player.log().append('The ' + target.name + ' is already dead.')
+                                            player.previousaction = ('wait',)
+                                        detecthiddenitems()
+                                    logback = 0
+                                else:
+                                    player.log().append('Cannot repeat that attack now.')
+                                    logback = 0
+                                    gamestate = 'free'
+                            else:
+                                player.log().append('No attack to repeat.')
+                                logback = 0
+                                gamestate = 'free'
+
                         if (event.key == keybindings['go down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go down'][0][1])) or (event.key == keybindings['go down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go down'][1][1])):
                             if (player.x, player.y) != cave.stairsdowncoords:
                                 player.log().append("You can't go down here!")
@@ -1574,9 +1642,11 @@ def game():
                         if (event.key == keybindings['help'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][0][1])) or (event.key == keybindings['help'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][1][1])):
                             player.log().append('Default keybindings (change in options):')
                             player.log().append('  - page up, page down, home, end: explore the log')
-                            player.log().append('  - arrows or numpad: move')
+                            player.log().append('  - arrows or numpad: move or attack')
                             player.log().append('  - period or numpad 5: wait a moment')
                             player.log().append('  - < or >: go up or down')
+                            player.log().append('  - r: repeat last attack')
+                            player.log().append('  - R: repeat second last attack')
                             player.log().append('  - l: look')
                             player.log().append('  - m: mine')
                             player.log().append('  - comma: pick up an item')
@@ -1596,7 +1666,7 @@ def game():
                             player.log().append('  - f: frighten')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 15 # Increase when adding commands
+                                logback = 17 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
@@ -2072,6 +2142,8 @@ def game():
                                 numchosen = True
                         if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
+                            secondlastattack = lastattack
+                            lastattack = (target, selected, selectedattack)
                             if player.previousaction[0] == 'fight' and player.previousaction[1] == selectedattack.weapon and player.previousaction[2] == selected:
                                 repetitionmultiplier = 1.5
                             else:

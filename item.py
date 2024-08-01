@@ -199,11 +199,11 @@ class Cure(Item):
     def __init__(self, owner, x, y, curetype, level):
         if curetype.curedmaterial == 'living flesh':
             color = (255, 0, 0)
-            name = 'dose of medication labeled "' + curetype.name + ', ' + repr(curetype.dosage*level) + ' mg"'
+            name = 'dose of medication labeled "' + curetype.name + ', ' + repr(int(curetype.dosage*level)) + ' mg"'
             info = 'A cure for living flesh.'
         elif curetype.curedmaterial == 'undead flesh':
             color = (0, 255, 0)
-            name = 'vial of ectoplasmic infusion labeled "' + curetype.name + ', ' + repr(curetype.dosage*level) + ' mmol/l"'
+            name = 'vial of ectoplasmic infusion labeled "' + curetype.name + ', ' + repr(int(curetype.dosage*level)) + ' mmol/l"'
             info = 'A cure for undead flesh.'
         super().__init__(owner, x, y, name, '!', color)
         self.consumable = True

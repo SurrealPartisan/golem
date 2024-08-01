@@ -376,7 +376,7 @@ class Creature():
         return self.weightcarried() > self.carryingcapacity()
     
     def slowed(self):
-        return self.world.spiderwebs[self.x, self.y] + (self.slowedclock > 0)
+        return int(self.world.spiderwebs[self.x, self.y]) + (self.slowedclock > 0)
     
     def speed(self):
         basespeed = max([part.speed() for part in self.bodyparts])
