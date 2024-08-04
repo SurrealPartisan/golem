@@ -540,7 +540,6 @@ def game():
         elif gamestate == 'pick':
             pickmessage = 'Choose the item to pick:'
             win.write(pickmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            picklist = [it for it in cave.items if it.x == player.x and it.y == player.y and (it in player.itemsseen() or not it.hidden)]
             logrows = min(logheight-1,len(picklist))
             for i in range(logrows):
                 if len(picklist) <= logheight-1:
@@ -1551,7 +1550,7 @@ def game():
 
                         # Items
                         if (event.key == keybindings['pick up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][0][1])) or (event.key == keybindings['pick up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][1][1])):
-                            picklist = [it for it in cave.items if it.x == player.x and it.y == player.y and (it in player.itemsseen() or not it.hidden)]
+                            picklist = [it for it in cave.items if abs(it.x - player.x) <= 1 and abs(it.y - player.y) <= 1 and (it in player.itemsseen() or not it.hidden)]
                             if len(picklist) == 0:
                                 player.log().append('Nothing to pick up here.')
                                 logback = 0
@@ -1857,7 +1856,6 @@ def game():
                             numchosen = False
 
                     elif gamestate == 'pick':
-                        picklist = [it for it in cave.items if it.x == player.x and it.y == player.y and (it in player.itemsseen() or not it.hidden)]
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
                             if chosen == len(picklist) - logback - (logheight - 1) - 1:
