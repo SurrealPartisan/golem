@@ -48,6 +48,7 @@ keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygam
                        'mine': ((pygame.locals.K_m, False, True), (None, False, True)),
                        'pick up': ((pygame.locals.K_COMMA, False, True), (None, False, True)),
                        'drop': ((pygame.locals.K_d, False, True), (None, False, True)),
+                       'throw': ((pygame.locals.K_t, False, True), (None, False, True)),
                        'inventory': ((pygame.locals.K_i, False, True), (None, False, True)),
                        'information': ((pygame.locals.K_i, True, True), (None, False, True)),
                        'consume': ((pygame.locals.K_c, False, True), (None, False, True)),
@@ -843,6 +844,108 @@ def game():
                 if j == chosen:
                     win.write(targetdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
+        elif gamestate == 'throwchoosemissile':
+            attackmessage = 'Choose the item to throw:'
+            win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1,len(player.thrownattackslist()))
+            for i in range(logrows):
+                if len(player.thrownattackslist()) <= logheight-1:
+                    j = i
+                else:
+                    j = len(player.thrownattackslist())+i-logrows-logback
+                if j < 9:
+                    num = repr(j + 1) + ': '
+                elif j == 9:
+                    num = '0: '
+                else:
+                    num = ''
+                attackdescription = num + player.thrownattackslist()[j].name + ' (' + repr(int(player.thrownattackslist()[j].hitprobability * 100)) + '%, ' + repr(player.thrownattackslist()[j].mindamage) + '-' + repr(player.thrownattackslist()[j].maxdamage) + ' ' + player.thrownattackslist()[j].damagetype + ', ' + repr(int(player.thrownattackslist()[j].weapon.throwrange)) + ' paces'
+                for special in player.thrownattackslist()[j].special:
+                    if special[0] == 'bleed':
+                        attackdescription += ', bleed ' + repr(int(special[1] * 100)) + '%'
+                    if special[0] == 'knockback':
+                        attackdescription += ', knockback ' + repr(int(special[1] * 100)) + '%'
+                    if special[0] == 'charge':
+                        attackdescription += ', charge'
+                attackdescription += ')'
+                if j != chosen:
+                    win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                if j == chosen:
+                    win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+        elif gamestate == 'throwchoosetarget':
+            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+            fovmap2 = fov(cave.walls, player.x, player.y, selectedattack.weapon.throwrange, nowalls=True)
+            for i in range(mapwidth):
+                for j in range(mapheight):
+                    if fovmap[i, j] and fovmap2[i, j]:
+                        win.settint(64, 64, 0, (i, j, 1, 1))
+            win.settint(128, 128, 0, (lookx, looky, 1, 1))
+
+            instructions = 'Move the cursor with the movement keys to choose the target, then press Enter. ESC to cancel.'
+            win.write(instructions, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+
+        elif gamestate == 'throwchoosetargetbodypart':
+            attackmessage = 'Choose where to attack the ' + target.name + ':'
+            win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1,len([part for part in target.bodyparts if not part.destroyed()]))
+            for i in range(logrows):
+                if len([part for part in target.bodyparts if not part.destroyed()]) <= logheight-1:
+                    j = i
+                else:
+                    j = len([part for part in target.bodyparts if not part.destroyed()])+i-logrows-logback
+                if j < 9:
+                    num = repr(j + 1) + ': '
+                elif j == 9:
+                    num = '0: '
+                else:
+                    num = ''
+                targetbodypart = [part for part in target.bodyparts if not part.destroyed()][j]
+                if targetbodypart.parentalconnection != None:
+                    partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
+                elif targetbodypart == target.torso:
+                    partname = 'torso'
+                targetdescription = num + partname + ' (' + repr(int(targetbodypart.defensecoefficient() * 100)) + '%)'
+                if targetbodypart.incapacitated():
+                    targetdescription += ' [INCAPACITATED]'
+                if j != chosen:
+                    win.write(targetdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                if j == chosen:
+                    win.write(targetdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
+        elif gamestate == 'throwchooselimb':
+            attackmessage = 'Choose the limb to use for throwing:'
+            win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            logrows = min(logheight-1,len(limblist))
+            for i in range(logrows):
+                if len(limblist) <= logheight-1:
+                    j = i
+                else:
+                    j = len(limblist)+i-logrows-logback
+                if j < 9:
+                    num = repr(j + 1) + ': '
+                elif j == 9:
+                    num = '0: '
+                else:
+                    num = ''
+                limb = limblist[j]
+                if limb.parentalconnection != None:
+                    partname = list(limb.parentalconnection.parent.childconnections.keys())[list(limb.parentalconnection.parent.childconnections.values()).index(limb.parentalconnection)]
+                elif limb == player.torso:
+                    partname = 'torso'
+                distance = np.sqrt((targetcoords[0] - player.x)**2 + (targetcoords[1] - player.y)**2)
+                notwielded = selectedattack.weapon.owner == player.inventory
+                throwtime = (1/limb.throwspeed + notwielded) * (1 + player.slowed())
+                if int(throwtime) == throwtime:
+                    throwtime = int(throwtime)
+                else:
+                    throwtime = round(throwtime, 2)
+                limbdescription = num + partname + ' (' + repr(int(limb.throwaccuracy**distance * 100)) + '%, ' + repr(throwtime) + ' s)'
+                if j != chosen:
+                    win.write(limbdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                if j == chosen:
+                    win.write(limbdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+
         elif gamestate == 'choosetorso':
             choosemessage = 'Choose your torso:'
             win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
@@ -1589,6 +1692,16 @@ def game():
                                 player.log().append("You have nothing to undress.")
                                 logback = 0
 
+                        if (event.key == keybindings['throw'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['throw'][0][1])) or (event.key == keybindings['throw'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['throw'][1][1])):
+                            if len(player.thrownattackslist()) > 0:
+                                gamestate = 'throwchoosemissile'
+                                logback = len(player.thrownattackslist()) - logheight + 1
+                                chosen = 0
+                                numchosen = False
+                            else:
+                                player.log().append("You cannot throw anything.")
+                                logback = 0
+
                         # Stance:
                         if (event.key == keybindings['choose stance'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose stance'][0][1])) or (event.key == keybindings['choose stance'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['choose stance'][1][1])):
                                 gamestate = 'choosestance'
@@ -1651,6 +1764,7 @@ def game():
                             player.log().append('  - m: mine')
                             player.log().append('  - comma: pick up an item')
                             player.log().append('  - d: drop an item')
+                            player.log().append('  - t: throw something')
                             player.log().append('  - i: check your inventory')
                             player.log().append('  - I: information on your items and bodyparts')
                             player.log().append('  - b: list your body parts')
@@ -1666,7 +1780,7 @@ def game():
                             player.log().append('  - f: frighten')
                             player.log().append('  - h: this list of commands')
                             if len(player.log()) > 1: # Prevent crash if the player is brainless
-                                logback = 17 # Increase when adding commands
+                                logback = 18 # Increase when adding commands
 
                         # log scrolling
                         if (event.key == keybindings['log up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][0][1])) or (event.key == keybindings['log up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log up'][1][1])):
@@ -2159,6 +2273,148 @@ def game():
                                 else:
                                     player.log().append('The ' + target.name + ' is already dead.')
                                     player.previousaction = ('wait',)
+                                detecthiddenitems()
+                            logback = 0
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+                            numchosen = False
+
+                    elif gamestate == 'throwchoosemissile':
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                            chosen = max(0, chosen-1)
+                            if chosen == len(player.thrownattackslist()) - logback - (logheight - 1) - 1:
+                                logback += 1
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                            chosen = min(len(player.thrownattackslist())-1, chosen+1)
+                            if chosen == len(player.thrownattackslist()) - logback:
+                                logback -= 1
+                        for i in range(10):
+                            if event.key in numkeys[i] and i < len(player.thrownattackslist()):
+                                chosen = i
+                                numchosen = True
+                        if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            selectedattack = player.thrownattackslist()[chosen]
+                            gamestate = 'throwchoosetarget'
+                            numchosen = False
+                            logback = 0
+                            chosen = 0
+                            lookx = player.x
+                            looky = player.y
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+                            numchosen = False
+
+                    elif gamestate == 'throwchoosetarget':
+                        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+                        fovmap2 = fov(cave.walls, player.x, player.y, selectedattack.weapon.throwrange, nowalls=True)
+                        if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
+                            if fovmap[lookx, looky-1] and fovmap2[lookx, looky-1]:
+                                looky -= 1
+                        if (event.key == keybindings['move south'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][0][1])) or (event.key == keybindings['move south'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][1][1])):
+                            if fovmap[lookx, looky+1] and fovmap2[lookx, looky+1]:
+                                looky += 1
+                        if (event.key == keybindings['move west'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][0][1])) or (event.key == keybindings['move west'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][1][1])):
+                            if fovmap[lookx-1, looky] and fovmap2[lookx-1, looky]:
+                                lookx -= 1
+                        if (event.key == keybindings['move east'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][0][1])) or (event.key == keybindings['move east'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][1][1])):
+                            if fovmap[lookx+1, looky] and fovmap2[lookx+1, looky]:
+                                lookx += 1
+                        if (event.key == keybindings['move northwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][0][1])) or (event.key == keybindings['move northwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][1][1])):
+                            if fovmap[lookx-1, looky-1] and fovmap2[lookx-1, looky-1]:
+                                lookx -= 1
+                                looky -= 1
+                        if (event.key == keybindings['move northeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][0][1])) or (event.key == keybindings['move northeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][1][1])):
+                            if fovmap[lookx+1, looky-1] and fovmap2[lookx+1, looky-1]:
+                                lookx += 1
+                                looky -= 1
+                        if (event.key == keybindings['move southwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][0][1])) or (event.key == keybindings['move southwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][1][1])):
+                            if fovmap[lookx-1, looky+1] and fovmap2[lookx-1, looky+1]:
+                                lookx -= 1
+                                looky += 1
+                        if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
+                            if fovmap[lookx+1, looky+1] and fovmap2[lookx+1, looky+1]:
+                                lookx += 1
+                                looky += 1
+                        if (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            target = None
+                            targetingcreature = False
+                            targetcoords = (lookx, looky)
+                            for creat in cave.creatures:
+                                if creat.x == lookx and creat.y == looky and creat != player:
+                                    target = creat
+                                    targetingcreature = True
+                            if targetingcreature:
+                                gamestate = 'throwchoosetargetbodypart'
+                                logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
+                            else:
+                                gamestate = 'throwchooselimb'
+                                limblist = [part for part in player.bodyparts if part.capableofwielding and part.capableofthrowing and len(part.wielded) == 0]
+                                if selectedattack.weapon.owner != player.inventory:
+                                    limblist = [selectedattack.weapon.owner.owner] + limblist
+                                logback = len(limblist) - logheight + 1
+                            numchosen = False
+                            chosen = 0
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+                            numchosen = False
+
+                    elif gamestate == 'throwchoosetargetbodypart':
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                            chosen = max(0, chosen-1)
+                            if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback - (logheight - 1) - 1:
+                                logback += 1
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                            chosen = min(len([part for part in target.bodyparts if not part.destroyed()])-1, chosen+1)
+                            if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback:
+                                logback -= 1
+                        for i in range(10):
+                            if event.key in numkeys[i] and i < len([part for part in target.bodyparts if not part.destroyed()]):
+                                chosen = i
+                                numchosen = True
+                        if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            selectedbodypart = [part for part in target.bodyparts if not part.destroyed()][chosen]
+                            gamestate = 'throwchooselimb'
+                            limblist = [part for part in player.bodyparts if part.capableofwielding and part.capableofthrowing and len(part.wielded) == 0]
+                            if selectedattack.weapon.owner != player.inventory:
+                                limblist = [selectedattack.weapon.owner.owner] + limblist
+                            logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
+                            numchosen = False
+                            chosen = 0
+                        if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                            logback = 0
+                            gamestate = 'free'
+                            numchosen = False
+
+                    elif gamestate == 'throwchooselimb':
+                        if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                            chosen = max(0, chosen-1)
+                            if chosen == len(limblist) - logback - (logheight - 1) - 1:
+                                logback += 1
+                        if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                            chosen = min(len(limblist)-1, chosen+1)
+                            if chosen == len(limblist) - logback:
+                                logback -= 1
+                        for i in range(10):
+                            if event.key in numkeys[i] and i < len(limblist):
+                                chosen = i
+                                numchosen = True
+                        if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                            selected = limblist[chosen]
+                            logback = 0
+                            gamestate = 'free'
+                            numchosen = False
+                            notwielded = selectedattack.weapon.owner == player.inventory
+                            updatetime((1/selected.throwspeed + notwielded) * (1 + player.slowed()))
+                            if not player.dying():
+                                if target != None and not target.dead:
+                                    player.throwatenemy(target, selectedbodypart, selectedattack, selected)
+                                    player.previousaction = ('throw',)
+                                else:
+                                    player.throwatsquare(targetcoords[0], targetcoords[1], selectedattack.weapon, selected)
+                                    player.previousaction = ('throw',)
                                 detecthiddenitems()
                             logback = 0
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):

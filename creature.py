@@ -8,7 +8,7 @@ Created on Mon Sep 12 21:16:44 2022
 import numpy as np
 import bodypart
 import item
-from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty
+from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween
 
 def checkitems(creat, cave, x,y):
     for it in cave.items:
@@ -572,16 +572,76 @@ class Creature():
     def attackslist(self):
         return sorted([attack for part in self.bodyparts for attack in part.attackslist()], key=lambda x: x.maxdamage * x.hitprobability / x.time, reverse=True)
 
-    def fight(self, target, targetbodypart, attack):
+    def thrownattackslist(self):
+        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        freelimbs = len([part for part in self.bodyparts if part.capableofwielding and part.capableofthrowing and len(part.wielded) == 0])
+        l = sorted([attack for it in wieldlist for attack in it.thrownattackslist()], key=lambda x: x.maxdamage * x.hitprobability, reverse=True)
+        if freelimbs > 0:
+            l += sorted([attack for it in self.inventory for attack in it.thrownattackslist()], key=lambda x: x.maxdamage * x.hitprobability, reverse=True)
+        return l
+
+    def throwatsquare(self, targetx, targety, missile, throwinglimb, verbose=True):
+        if throwinglimb in self.bodyparts and not throwinglimb.incapacitated() and not throwinglimb.destroyed():
+            distance = np.sqrt((targetx - self.x)**2 + (targety - self.y)**2)
+            if distance <= missile.throwrange:
+                accuracy = throwinglimb.throwaccuracy**distance
+                if np.random.rand() < accuracy:
+                    x, y = targetx, targety
+                    if verbose:
+                        self.log().append('You threw the ' + missile.name + ' where you wanted.')
+                    hit = True
+                else:
+                    x, y = targetx, targety
+                    while (x, y) == (targetx, targety) or self.world.walls[x, y]:
+                        x, y = np.random.randint(targetx-1, targetx+2), np.random.randint(targety-1, targety+2)
+                    if verbose:
+                        self.log().append('You threw the ' + missile.name + ' approximately where you wanted.')
+                    hit = False
+            else:
+                angle = anglebetween((self.x, self.y), (targetx, targety))
+                x, y = targetx, targety
+                r = distance
+                newdistance = np.sqrt((x - self.x)**2 + (y - self.y)**2)
+                while newdistance > missile.throwrange or self.world.walls[x, y]:
+                    r -= 0.1
+                    x = round(self.x + r*np.cos(angle))
+                    y = round(self.y + r*np.sin(angle))
+                if verbose:
+                    self.log().append('You threw the ' + missile.name + ' but could not get it as far as you wanted.')
+                hit = False
+            missile.owner.remove(missile)
+            missile.owner = self.world.items
+            self.world.items.append(missile)
+            missile.x = x
+            missile.y = y
+        else:
+            if verbose:
+                self.log().append('You were unable to finish your throw.')
+            hit = False
+        return hit
+
+    def throwatenemy(self, target, targetbodypart, attack, throwinglimb):
+        missile = attack.weapon
+        if throwinglimb in self.bodyparts and not throwinglimb.incapacitated() and not throwinglimb.destroyed():
+            hitsquare = self.throwatsquare(target.x, target.y, missile, throwinglimb, verbose=False)
+            if hitsquare:
+                self.fight(target, targetbodypart, attack, thrown=True)
+            else:
+                self.log().append('You threw the ' + missile.name + ' but missed the ' + target.name + '.')
+                target.log().append('The ' + self.name + ' threw a ' + missile.name + 'at you but missed.')
+        else:
+            self.log().append('You were unable to finish your throw.')
+
+    def fight(self, target, targetbodypart, attack, thrown=False):
         if attack.weapon in self.bodyparts:
             attackingpart = attack.weapon
         elif attack.weapon.owner != self.world.items:
             attackingpart = attack.weapon.owner.owner
         else:
             attackingpart = None
-        if attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated()):
+        if thrown or (attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated())):
             if targetbodypart in target.bodyparts and not targetbodypart.destroyed():
-                if abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1:
+                if thrown or (abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1):
                     if (not self.scared() or np.random.rand() < 0.5) and not self.panicked():
                         if self.stance == 'aggressive':
                             attackerstancecoefficient = 1.25
@@ -630,7 +690,8 @@ class Creature():
                                         totaldamage = 2*totaldamage
                                     else:
                                         totaldamage = int(1.5*totaldamage)
-                                    attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
+                                    if not thrown:
+                                        attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
                                 if special[0] == 'knockback' and np.random.rand() < special[1]:
                                     dx = target.x - self.x
                                     dy = target.y - self.y
@@ -645,7 +706,8 @@ class Creature():
                                         target.move(dx, dy)
                             if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
                                 totaldamage = int(1.5*totaldamage)
-                                attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
+                                if not thrown:
+                                    attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
                             if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
                                 totaldamage *= 3
                             elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
@@ -718,18 +780,32 @@ class Creature():
                                             target.log().append('Your ' + armor.name + ' was destroyed!')
                                             armor.owner.remove(armor)
                                 elif not targetbodypart.destroyed():
-                                    if not bleed and not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
-                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
-                                    elif bleed:
-                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
-                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
-                                    elif knocked_back:
-                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
-                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
-                                    elif knocked_to_obstacle:
-                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
-                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
+                                    if not thrown:
+                                        if not bleed and not knocked_back and not knocked_to_obstacle:
+                                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                                        elif bleed:
+                                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
+                                        elif knocked_back:
+                                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
+                                        elif knocked_to_obstacle:
+                                            self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
+                                    else:
+                                        if not bleed and not knocked_back and not knocked_to_obstacle:
+                                            self.log().append('You ' + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage!')
+                                        elif bleed:
+                                            self.log().append('You ' + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage and making it bleed!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage and making you bleed!')
+                                        elif knocked_back:
+                                            self.log().append('You ' + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage and knocking it back!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage and knocking you back!')
+                                        elif knocked_to_obstacle:
+                                            self.log().append('You ' + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
+                                            target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
                                             target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -760,23 +836,34 @@ class Creature():
                                     self.log().append('The ' + target.name + ' got scared.')
                                     target.log().append('You got scared.')
                             else:
-                                if not knocked_back and not knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
-                                elif knocked_back:
-                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
-                                elif knocked_to_obstacle:
-                                    self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
-                                    target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                                if not thrown:
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
+                                    elif knocked_back:
+                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
+                                    elif knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                                else:
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', killing it!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', killing you!')
+                                    elif knocked_back:
+                                        self.log().append('You ' + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', knocking it back and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', knocking you back and killing you!')
+                                    elif knocked_to_obstacle:
+                                        self.log().append('You ' + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
                                 target.log().append('You are dead!')
                                 if targetbodypart.destroyed():
                                     targetbodypart.on_destruction(True)
                                 target.die()
                                 target.causeofdeath = ('attack', self)
                         else:
-                            self.log().append('The ' + target.name + ' evaded your ' + attack.name +'!')
-                            target.log().append("You evaded the " + self.name + "'s " + attack.name +"!")
+                            self.log().append('The ' + target.name + ' evaded your ' + 'thrown '*thrown + attack.name +'!')
+                            target.log().append("You evaded the " + self.name + "'s " + 'thrown '*thrown + attack.name +"!")
                     else:
                         self.log().append('Your attack missed due to fear!')
                         target.log().append("The " + self.name + "'s attack missed due to fear!")

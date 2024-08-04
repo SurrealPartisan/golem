@@ -43,7 +43,7 @@ godlynicknames = {'pride': ['Majestic', 'August', 'Self-Important', 'Self-Righte
                   'gluttony': ['Hungry', 'Never-Satiated', 'Corpulent', 'Bloated', 'Black Hole', 'All-Eater', 'Ravenous'],
                   'sloth': ['Sleepy', 'Hibernating', 'Faineant', 'Indolent', 'Lazy', 'Napper', 'Restful']}
 
-def fov(walls, x, y, sight):
+def fov(walls, x, y, sight, nowalls=False):
     fovmap = np.zeros((mapwidth, mapheight))
     fovmap[x,y] = 1
     for angle in np.arange(16*sight)*2*np.pi/(16*sight):
@@ -53,7 +53,8 @@ def fov(walls, x, y, sight):
             r += 0.5
             x2 = round(x + r*np.cos(angle))
             y2 = round(y + r*np.sin(angle))
-            fovmap[x2,y2] = 1
+            if walls[x2,y2] == 0 or not nowalls:
+                fovmap[x2,y2] = 1
             if walls[x2,y2] == 1 or r >= sight: cont = False
     return fovmap
 

@@ -116,6 +116,8 @@ class Item():
         self.cure = False
         self.wieldable = False
         self.weapon = False
+        self.throwable = False
+        self.throwrange = 0
         self.bodypart = False
         self.wearable = False
         self.isarmor = False
@@ -130,6 +132,9 @@ class Item():
         return self.damagetaken >= self.maxhp
 
     def attackslist(self):
+        return []
+
+    def thrownattackslist(self):
         return []
 
     def minespeed(self):
@@ -241,16 +246,21 @@ class Dagger(Item):
         super().__init__(owner, x, y, name, '/', color)
         self.wieldable = True
         self.weapon = True
+        self.throwable = True
+        self.throwrange = 5 + enchantment
         self.bane = bane
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
         self.weight = 6*density
-        self._info = 'A one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time).'
+        self._info = 'A one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time). Can be thrown up to five (plus enchantment) paces.'
 
     def attackslist(self):
         return[Attack(self.name, 'stabbed', 'stabbed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('bleed', 0.2)], self)]
+
+    def thrownattackslist(self):
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('bleed', 0.2)], self)]
 
 def randomdagger(owner, x, y, level):
     enchantment = 0
@@ -275,19 +285,24 @@ class Spear(Item):
         super().__init__(owner, x, y, name, '/', color)
         self.wieldable = True
         self.weapon = True
+        self.throwable = True
+        self.throwrange = 10 + enchantment
         self.bane = bane
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
         self.weight = 6*density + 2000
-        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack.'
+        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack. Can be thrown up to ten (plus enchantment) paces.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
             return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('charge',)], self)]
         else:
             return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', self.bane, [('charge',)], self)]
+
+    def thrownattackslist(self):
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('charge',)], self)]
 
 def randomspear(owner, x, y, level):
     enchantment = 0
