@@ -99,7 +99,8 @@ likeliestmaterialbylevel = ['bone',           # 1
 class Item():
     def __init__(self, owner, x, y, name, char, color):
         self.owner = owner  # A list, such as inventory or list of map items
-        self.owner.append(self)
+        if self.owner != None:
+            self.owner.append(self)
         self.x = x
         self.y = y
         self.name = name
@@ -130,6 +131,9 @@ class Item():
 
     def destroyed(self):
         return self.damagetaken >= self.maxhp
+
+    def pickableinstance(self):
+        return self
 
     def attackslist(self):
         return []
@@ -434,6 +438,45 @@ def randompickaxe(owner, x, y, level):
 def randomweapon(owner, x, y, level):
     return np.random.choice([randomdagger, randomspear, randommace, randomsword, randompickaxe])(owner, x, y, level)
 
+class Stone(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'stone', '.', (255, 255, 255))
+        self.wieldable = True
+        self.weapon = True
+        self.throwable = True
+        self.throwrange = 5
+        self.hitpropability = 0.75
+        self.mindamage = 1
+        self.maxdamage = 15
+        self.weight = 1000
+        self._info = 'A blunt improvised weapon. Can be thrown up to five paces.'
+
+    def attackslist(self):
+        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', [], [], self)]
+
+    def thrownattackslist(self):
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', [], [], self)]
+
+class Torch(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'torch', '/', (255, 204, 0))
+        self.wieldable = True
+        self.weapon = True
+        self.hitpropability = 0.75
+        self.mindamage = 1
+        self.maxdamage = 15
+        self.weight = 700
+        self._info = 'A light source and an improvised weapon. When wielded, increases your range of vision, as long as you have eyes. Deals fire damage.'
+
+    def attackslist(self):
+        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'fire', [], [], self)]
+
+    def sight(self):
+        if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not (part.destroyed() or part.incapacitated())]) > 0:
+            return 1
+        else:
+            return 0
+
 class Caltrops(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
         if enchantment == 0:
@@ -526,6 +569,9 @@ class LooseRoundPebbles(Item):
         self.trap = True
         self.weight = 10000
         self._info = 'A natural trap, can make you fall prone.'
+
+    def pickableinstance(self):
+        return Stone(None, self.x, self.y)
 
     def entrap(self, creat, part):
         part = np.random.choice([part for part in creat.bodyparts if not part.destroyed()])

@@ -457,7 +457,9 @@ class Creature():
             highground = 1
         else:
             highground = 0
-        return 1 + sum([part.sight() for part in self.bodyparts]) + sum([it[0].sight() for part in self.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'sight')]) + highground
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        return 1 + sum([part.sight() for part in self.bodyparts]) + sum([it.sight() for it in wornlist if hasattr(it, 'sight')]) + sum([it.sight() for it in wieldlist if hasattr(it, 'sight')]) + highground
 
     def heal(self, part, hpgiven):
         healed = min(hpgiven, part.damagetaken)
@@ -606,6 +608,7 @@ class Creature():
                     r -= 0.1
                     x = round(self.x + r*np.cos(angle))
                     y = round(self.y + r*np.sin(angle))
+                    newdistance = np.sqrt((x - self.x)**2 + (y - self.y)**2)
                 if verbose:
                     self.log().append('You threw the ' + missile.name + ' but could not get it as far as you wanted.')
                 hit = False

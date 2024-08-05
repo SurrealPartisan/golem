@@ -1550,7 +1550,17 @@ def game():
 
                         # Items
                         if (event.key == keybindings['pick up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][0][1])) or (event.key == keybindings['pick up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][1][1])):
-                            picklist = [it for it in cave.items if abs(it.x - player.x) <= 1 and abs(it.y - player.y) <= 1 and (it in player.itemsseen() or not it.hidden)]
+                            picklist = [it.pickableinstance() for it in cave.items if abs(it.x - player.x) <= 1 and abs(it.y - player.y) <= 1 and (it in player.itemsseen() or not it.hidden)]
+                            torchdistance = np.inf
+                            torchx = torchy = 0
+                            for dx in [-1, 0, 1]:
+                                for dy in [-1, 0, 1]:
+                                    if cave.campfires[player.x+dx, player.y+dy] and np.sqrt(dx**2+dy**2) < torchdistance:
+                                        torchdistance = np.sqrt(dx**2+dy**2)
+                                        torchx = player.x+dx
+                                        torchy = player.y+dy
+                            if torchdistance < np.inf:
+                                picklist.append(item.Torch(None, torchx, torchy))
                             if len(picklist) == 0:
                                 player.log().append('Nothing to pick up here.')
                                 logback = 0
@@ -1559,7 +1569,8 @@ def game():
                                 updatetime(0.5 * (1 + distance) * (1 + player.slowed()))
                                 if not player.dying():
                                     it = picklist[0]
-                                    cave.items.remove(it)
+                                    if it.owner != None:
+                                        it.owner.remove(it)
                                     player.inventory.append(it)
                                     it.owner = player.inventory
                                     player.log().append('You picked up the ' + it.name + '.')
@@ -1876,9 +1887,10 @@ def game():
                             updatetime(0.5 * (1 + distance) * (1 + player.slowed()))
                             if not player.dying():
                                 selected = picklist[chosen]
+                                if selected.owner != None:
+                                    selected.owner.remove(selected)
                                 selected.owner = player.inventory
                                 player.inventory.append(selected)
-                                cave.items.remove(selected)
                                 player.log().append('You picked up the ' + selected.name + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('pick',)
