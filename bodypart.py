@@ -2346,7 +2346,7 @@ class GhoulLung(BodyPart):
 
 class GhoulKidney(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'zombie kidney', '*', (150, 178, 82))
+        super().__init__(owner, x, y, 'ghoul kidney', '*', (150, 178, 82))
         self.categories = ['kidney']
         self.childconnections = {}
         self.maxhp = 25

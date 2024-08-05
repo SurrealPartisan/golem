@@ -1555,7 +1555,8 @@ def game():
                                 player.log().append('Nothing to pick up here.')
                                 logback = 0
                             elif len(picklist) == 1:
-                                updatetime(0.5 * (1 + player.slowed()))
+                                distance = np.sqrt((player.x - picklist[0].x)**2 + (player.y - picklist[0].y)**2)
+                                updatetime(0.5 * (1 + distance) * (1 + player.slowed()))
                                 if not player.dying():
                                     it = picklist[0]
                                     cave.items.remove(it)
@@ -1871,7 +1872,8 @@ def game():
                         if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
                             logback = 0
                             gamestate = 'free'
-                            updatetime(0.5 * (1 + player.slowed()))
+                            distance = np.sqrt((player.x - picklist[chosen].x)**2 + (player.y - picklist[chosen].y)**2)
+                            updatetime(0.5 * (1 + distance) * (1 + player.slowed()))
                             if not player.dying():
                                 selected = picklist[chosen]
                                 selected.owner = player.inventory
