@@ -58,6 +58,11 @@ def fov(walls, x, y, sight, nowalls=False):
             if walls[x2,y2] == 1 or r >= sight: cont = False
     return fovmap
 
+def constantfunction(c):
+    def fun():
+        return c
+    return fun
+
 def anglebetween(point1, point2):
     newcoords = (point2[1] - point1[1], point2[0] - point1[0])
     return np.arctan2(*newcoords)%(2*np.pi)

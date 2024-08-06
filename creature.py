@@ -142,6 +142,9 @@ class Creature():
                         known.append(stance)
         return known
 
+    def imbalanced(self):
+        return np.any([part.imbalanced() for part in self.bodyparts])
+
     def weakened(self):
         return self.weakenedclock > 0
 
@@ -251,17 +254,31 @@ class Creature():
                     damage = min(int(resistancemultiplier*totaldamage), part.hp())
                     alreadyincapacitated = part.incapacitated()
                     part.damagetaken += damage
+                    alreadyimbalanced = self.imbalanced()
+                    if 'leg' in part.categories:
+                        numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                        if np.random.rand() < 0.5 - 0.05*numlegs:
+                            part.imbalanceclock += 10*damage/part.maxhp
                     if damage > 0:
                         if part.parentalconnection != None:
                             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                         elif part == self.torso:
                             partname = 'torso'
                         if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
-                            self.log().append('The campfire burned and incapacitated your ' + partname + '.')
+                            if self.imbalanced() and not alreadyimbalanced:
+                                self.log().append('The campfire burned and incapacitated your ' + partname + ', imbalancing you.')
+                            else:
+                                self.log().append('The campfire burned and incapacitated your ' + partname + '.')
                         elif not part.destroyed():
-                            self.log().append('The campfire burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
+                            if self.imbalanced() and not alreadyimbalanced:
+                                self.log().append('The campfire burned your ' + partname + ', dealing ' + repr(damage) + ' damage and imbalancing you.')
+                            else:
+                                self.log().append('The campfire burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
                         else:
-                            self.log().append('The campfire burned and destroyed your ' + partname + '.')
+                            if self.imbalanced() and not alreadyimbalanced:
+                                self.log().append('The campfire burned and destroyed your ' + partname + ', imbalancing you.')
+                            else:
+                                self.log().append('The campfire burned and destroyed your ' + partname + '.')
                             part.on_destruction(self.dying())
                 self.burnclock = self.burnclock % 1
                 if self.dying():
@@ -278,17 +295,31 @@ class Creature():
                         damage = min(int(resistancemultiplier*totaldamage), part.hp())
                         alreadyincapacitated = part.incapacitated()
                         part.damagetaken += damage
+                        alreadyimbalanced = self.imbalanced()
+                        if 'leg' in part.categories:
+                            numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                            if np.random.rand() < 0.5 - 0.05*numlegs:
+                                part.imbalanceclock += 10*damage/part.maxhp
                         if damage > 0:
                             if part.parentalconnection != None:
                                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                             elif part == self.torso:
                                 partname = 'torso'
                             if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
-                                self.log().append('The lava burned and incapacitated your ' + partname + '.')
+                                if self.imbalanced() and not alreadyimbalanced:
+                                    self.log().append('The lava burned and incapacitated your ' + partname + ', imbalancing you.')
+                                else:
+                                    self.log().append('The lava burned and incapacitated your ' + partname + '.')
                             elif not part.destroyed():
-                                self.log().append('The lava burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
+                                if self.imbalanced() and not alreadyimbalanced:
+                                    self.log().append('The lava burned your ' + partname + ', dealing ' + repr(damage) + ' damage and imbalancing you.')
+                                else:
+                                    self.log().append('The lava burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
                             else:
-                                self.log().append('The lava burned and destroyed your ' + partname + '.')
+                                if self.imbalanced() and not alreadyimbalanced:
+                                    self.log().append('The lava burned and destroyed your ' + partname + ', imbalancing you.')
+                                else:
+                                    self.log().append('The lava burned and destroyed your ' + partname + '.')
                                 part.on_destruction(self.dying())
                 self.burnclock = self.burnclock % 1
                 if self.dying():
@@ -668,7 +699,11 @@ class Creature():
                             highgroundcoefficient = 0.95
                         else:
                             highgroundcoefficient = 1
-                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
+                        if target.imbalanced():
+                            imbalancedcoefficient = 1.25
+                        else:
+                            imbalancedcoefficient = 1
+                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*imbalancedcoefficient, 0.95), 0.05):
                             hit = True
                         else:
                             adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
@@ -676,7 +711,7 @@ class Creature():
                                 adjacentparts.append(targetbodypart.parentalconnection.parent)
                             if len(adjacentparts) > 0:
                                 targetbodypart = np.random.choice(adjacentparts)
-                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient, 0.95), 0.05):
+                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*imbalancedcoefficient, 0.95), 0.05):
                                     hit = True
                                 else:
                                     hit = False
@@ -707,6 +742,11 @@ class Creature():
                                     elif not np.any([creat.x == target.x+dx and creat.y == target.y+dy for creat in self.world.creatures]):
                                         knocked_back = True
                                         target.move(dx, dy)
+                            if target.imbalanced():
+                                totaldamage = int(1.5*totaldamage)
+                                alreadyimbalanced = True
+                            else:
+                                alreadyimbalanced = False
                             if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
                                 totaldamage = int(1.5*totaldamage)
                                 if not thrown:
@@ -761,6 +801,10 @@ class Creature():
                                         target.panickedclock += damage
                                     else:
                                         target.scaredclock += damage
+                            if 'leg' in targetbodypart.categories:
+                                numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()])
+                                if np.random.rand() < 0.5 - 0.05*numlegs:
+                                    targetbodypart.imbalanceclock += 10*damage/targetbodypart.maxhp
                             if targetbodypart.parentalconnection != None:
                                 partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                             elif targetbodypart == target.torso:
@@ -832,6 +876,9 @@ class Creature():
                                             target.log().append('Your ' + armor.name + ' was also destroyed!')
                                             armor.owner.remove(armor)
                                     targetbodypart.on_destruction(False)
+                                if not alreadyimbalanced and target.imbalanced():
+                                    self.log().append('The ' + target.name + ' was imbalanced by the attack.')
+                                    target.log().append('You were imbalanced by the attack.')
                                 if panic:
                                     self.log().append('The ' + target.name + ' got panicked.')
                                     target.log().append('You got panicked.')
@@ -923,14 +970,32 @@ class Creature():
                     armor = None
                     armordamage = 0
                 damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+                alreadyincapacitated = part.incapacitated()
                 part.damagetaken += damage
+                alreadyimbalanced = self.imbalanced()
+                if 'leg' in part.categories:
+                    numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                    if np.random.rand() < 0.5 - 0.05*numlegs:
+                        part.imbalanceclock += 10*damage/part.maxhp
+                if self.imbalanced() and not alreadyimbalanced:
+                    imbalancedtext = ', imbalancing you'
+                else:
+                    imbalancedtext = ''
                 if part.parentalconnection != None:
                     partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                 elif part == self.torso:
                     partname = 'torso'
                 if not self.dying():
-                    if not part.destroyed():
-                        self.log().append('You ran into wall. It dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                    if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                        self.log().append('You ran into wall. It incapacitated your ' + partname + imbalancedtext + '.')
+                        if armordamage > 0:
+                            if not armor.destroyed():
+                                self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                            else:
+                                self.log().append('Your ' + armor.name + ' was destroyed!')
+                                armor.owner.remove(armor)
+                    elif not part.destroyed():
+                        self.log().append('You ran into wall. It dealt ' + repr(damage) + ' damage to your ' + partname + imbalancedtext + '.')
                         if armordamage > 0:
                             if not armor.destroyed():
                                 self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -938,7 +1003,7 @@ class Creature():
                                 self.log().append('Your ' + armor.name + ' was destroyed!')
                                 armor.owner.remove(armor)
                     else:
-                        self.log().append('You ran into wall. It destroyed your ' + partname + '.')
+                        self.log().append('You ran into wall. It destroyed your ' + partname + imbalancedtext + '.')
                         if armordamage > 0:
                             if not armor.destroyed():
                                 self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -997,6 +1062,11 @@ class Creature():
                 self.burn('campfire', time)
             if self.world.lavapits[self.x, self.y] and self.stance != 'flying':
                 self.burn('lava', time)
+            imbalanced = self.imbalanced()
+            for part in self.bodyparts:
+                part.imbalanceclock = max(0, part.imbalanceclock - time)
+            if imbalanced and not self.imbalanced():
+                self.log().append('You regained your balance.')
             self.applypoison(time)
             self.weakenedclock = max(0, self.weakenedclock - time)
             self.disorientedclock = max(0, self.disorientedclock - time)
@@ -1027,6 +1097,11 @@ class Creature():
                 self.burn('campfire', timetoact)
             if self.world.lavapits[self.x, self.y] and self.stance != 'flying':
                 self.burn('lava', timetoact)
+            imbalanced = self.imbalanced()
+            for part in self.bodyparts:
+                part.imbalanceclock = max(0, part.imbalanceclock - time)
+            if imbalanced and not self.imbalanced():
+                self.log().append('You regained your balance.')
             self.applypoison(timetoact)
             self.weakenedclock = max(0, self.weakenedclock - timetoact)
             self.disorientedclock = max(0, self.disorientedclock - timetoact)
@@ -1060,7 +1135,7 @@ class Creature():
                         self.log().append('You were poisoned by the gas.')
             if not self.dead:
                 self.resolveaction()
-    
+
                 fovmap = fov(self.world.walls, self.x, self.y, self.sight())
                 for i in range(self.world.width):
                     for j in range(self.world.height):
@@ -1150,7 +1225,7 @@ class Zombie(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1240,7 +1315,7 @@ class MolePerson(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1326,7 +1401,7 @@ class Goblin(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1417,7 +1492,7 @@ class CaveOctopus(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1504,7 +1579,7 @@ class Dog(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1591,7 +1666,7 @@ class Hobgoblin(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1678,7 +1753,7 @@ class MoleMonk(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1765,7 +1840,7 @@ class Wolf(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1850,7 +1925,7 @@ class Drillbot(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -1944,7 +2019,7 @@ class Ghoul(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -2030,7 +2105,7 @@ class SmallFireElemental(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -2117,7 +2192,7 @@ class DireWolf(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -2204,7 +2279,7 @@ class Jobgoblin(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
@@ -2300,7 +2375,7 @@ class Ghast(Creature):
         
     def ai(self):
         disoriented = False
-        if self.disorientedclock > 0 and np.random.rand() < 0.5:
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.

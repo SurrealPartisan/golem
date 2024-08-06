@@ -515,13 +515,22 @@ class Caltrops(Item):
         damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), part.hp())
         alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
+        alreadyimbalanced = creat.imbalanced()
+        if 'leg' in part.categories:
+            numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+            if np.random.rand() < 0.5 - 0.05*numlegs:
+                part.imbalanceclock += 10*damage/part.maxhp
+        if creat.imbalanced() and not alreadyimbalanced:
+            imbalancedtext = ', imbalancing you'
+        else:
+            imbalancedtext = ''
         if part.parentalconnection != None:
             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
         elif part == creat.torso:
             partname = 'torso'
         if not creat.dying():
             if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
-                creat.log().append('You stepped on ' + self.name + '. They incapacitated your ' + partname + '.')
+                creat.log().append('You stepped on ' + self.name + '. They incapacitated your ' + partname + imbalancedtext + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
                         creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -529,7 +538,7 @@ class Caltrops(Item):
                         creat.log().append('Your ' + armor.name + ' was destroyed!')
                         armor.owner.remove(armor)
             elif not part.destroyed():
-                creat.log().append('You stepped on ' + self.name + '. They dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                creat.log().append('You stepped on ' + self.name + '. They dealt ' + repr(damage) + ' damage to your ' + partname + imbalancedtext + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
                         creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -537,7 +546,7 @@ class Caltrops(Item):
                         creat.log().append('Your ' + armor.name + ' was destroyed!')
                         armor.owner.remove(armor)
             else:
-                creat.log().append('You stepped on ' + self.name + '. They destroyed your ' + partname + '.')
+                creat.log().append('You stepped on ' + self.name + '. They destroyed your ' + partname + imbalancedtext + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
                         creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -587,13 +596,22 @@ class LooseRoundPebbles(Item):
         damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
         alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
+        alreadyimbalanced = creat.imbalanced()
+        if 'leg' in part.categories:
+            numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+            if np.random.rand() < 0.5 - 0.05*numlegs:
+                part.imbalanceclock += 10*damage/part.maxhp
+        if creat.imbalanced() and not alreadyimbalanced:
+            imbalancedtext = ', imbalancing you'
+        else:
+            imbalancedtext = ''
         if part.parentalconnection != None:
             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
         elif part == creat.torso:
             partname = 'torso'
         if not creat.dying():
             if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
-                creat.log().append('You stepped on ' + self.name + ', falling prone. It incapacitated your ' + partname + '.')
+                creat.log().append('You stepped on ' + self.name + ', falling prone. It incapacitated your ' + partname + imbalancedtext + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
                         creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -601,7 +619,7 @@ class LooseRoundPebbles(Item):
                         creat.log().append('Your ' + armor.name + ' was destroyed!')
                         armor.owner.remove(armor)
             elif not part.destroyed():
-                creat.log().append('You stepped on ' + self.name + ', falling prone. It dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                creat.log().append('You stepped on ' + self.name + ', falling prone. It dealt ' + repr(damage) + ' damage to your ' + partname + imbalancedtext + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
                         creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -609,7 +627,7 @@ class LooseRoundPebbles(Item):
                         creat.log().append('Your ' + armor.name + ' was destroyed!')
                         armor.owner.remove(armor)
             else:
-                creat.log().append('You stepped on ' + self.name + ', falling prone. It destroyed your ' + partname + '.')
+                creat.log().append('You stepped on ' + self.name + ', falling prone. It destroyed your ' + partname + imbalancedtext + '.')
                 if armordamage > 0:
                     if not armor.destroyed():
                         creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')

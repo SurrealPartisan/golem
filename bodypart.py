@@ -9,7 +9,7 @@ Created on Thu Jun 15 21:26:04 2023
 import numpy as np
 import item
 from item import Attack
-from utils import listwithowner, loglist, mapwidth, mapheight, numlevels, difficulty
+from utils import constantfunction, listwithowner, loglist, mapwidth, mapheight, numlevels, difficulty
 
 class BodyPartConnection():
     def __init__(self, parent, categories, vital, prefix, defensecoefficient=1, armorapplies=False):
@@ -46,6 +46,7 @@ class BodyPart(item.Item):
         self._attackpoisonresistance = 0
         self._wearwieldname = name
         self.bleedclocks = []
+        self.imbalanceclock = 0
         self._resistances = {'sharp': 0, 'blunt': 0, 'rough': 0, 'fire': 0}
         self.detectiondistance = 0
         self.detectionprobability = 0
@@ -128,6 +129,16 @@ class BodyPart(item.Item):
                 newbleedclocklist.append((dmgleft - dmg, timepassed % 1, causer))
         self.bleedclocks = newbleedclocklist
         return dmgtotal, causers
+
+    def imbalanced(self):
+        if 'torso' in self.categories:
+            maxlegs = len([connection for connection in self.childconnections.values() if 'leg' in connection.categories])
+            functioninglegs = len([connection for connection in self.childconnections.values() if 'leg' in connection.categories and connection.child != None and not connection.child.destroyed() and not connection.child.incapacitated()])
+            return 0 < functioninglegs <= maxlegs/2
+        elif 'leg' in self.categories:
+            return self.imbalanceclock > 0
+        else:
+            return False
 
     def consume(self, user, efficiency):
         if int(self.hp()*efficiency) > user.hunger:

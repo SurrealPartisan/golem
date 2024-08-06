@@ -421,6 +421,8 @@ def game():
                 statuseffects.append(('Panicked', (255, 0, 0)))
             elif player.scared():
                 statuseffects.append(('Scared', (255, 255, 0)))
+            elif player.imbalanced():
+                statuseffects.append(('Imbalanced', (255, 255, 0)))
             if player.overloaded():
                 statuseffects.append(('Overloaded', (255, 0, 0)))
             elif player.burdened():
@@ -1133,6 +1135,11 @@ def game():
             player.burn('campfire', time)
         if cave.lavapits[player.x, player.y] and player.stance != 'flying':
             player.burn('lava', time)
+        imbalanced = player.imbalanced()
+        for part in player.bodyparts:
+            part.imbalanceclock = max(0, part.imbalanceclock - time)
+        if imbalanced and not player.imbalanced():
+            player.log().append('You regained your balance.')
         player.applypoison(time)
         player.weakenedclock = max(0, player.weakenedclock - time)
         player.disorientedclock = max(0, player.disorientedclock - time)
@@ -1195,16 +1202,16 @@ def game():
                             player.itemsseen().append(it)
 
     def moveorattack(dx, dy):
-        disoriented = False
-        if player.disorientedclock > 0 and np.random.rand() < 0.5:
-            disoriented = True
+        stumbling = False
+        if (player.disorientedclock > 0 and np.random.rand() < 0.5) or (player.imbalanced() and np.random.rand() < 0.2):
+            stumbling = True
             player.log().append('You stumble around.')
             originaldxdy = (dx, dy)
             while (dx,dy) == (0,0) or (dx,dy) == originaldxdy:
                 dx = np.random.choice([-1,0,1])
                 dy = np.random.choice([-1,0,1])
         targets = [creature for creature in cave.creatures if creature.x == player.x+dx and creature.y == player.y+dy]
-        if len(targets) > 0 and not disoriented:
+        if len(targets) > 0 and not stumbling:
             if not player.panicked():
                 target = targets[0]
                 gamestate = 'chooseattack'
@@ -1246,13 +1253,22 @@ def game():
                         armordamage = 0
                     damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
                     part.damagetaken += damage
+                    alreadyimbalanced = player.imbalanced()
+                    if 'leg' in part.categories:
+                        numlegs = len([p for p in player.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                        if np.random.rand() < 0.5 - 0.05*numlegs:
+                            part.imbalanceclock += 10*damage/part.maxhp
+                    if player.imbalanced() and not alreadyimbalanced:
+                        imbalancedtext = ', imbalancing you'
+                    else:
+                        imbalancedtext = ''
                     if part.parentalconnection != None:
                         partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                     elif part == player.torso:
                         partname = 'torso'
                     if not player.dying():
                         if not part.destroyed():
-                            player.log().append('You ran into wall. It dealt ' + repr(damage) + ' damage to your ' + partname + '.')
+                            player.log().append('You ran into wall. It dealt ' + repr(damage) + ' damage to your ' + partname + imbalancedtext + '.')
                             if armordamage > 0:
                                 if not armor.destroyed():
                                     player.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -1260,7 +1276,7 @@ def game():
                                     player.log().append('Your ' + armor.name + ' was destroyed!')
                                     armor.owner.remove(armor)
                         else:
-                            player.log().append('You ran into wall. It destroyed your ' + partname + '.')
+                            player.log().append('You ran into wall. It destroyed your ' + partname + imbalancedtext + '.')
                             if armordamage > 0:
                                 if not armor.destroyed():
                                     player.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
