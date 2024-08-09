@@ -10,7 +10,7 @@ import numpy as np
 
 import utils
 
-Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'bane', 'special', 'weapon'])
+Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'weaponlength', 'bane', 'special', 'weapon'])
 
 Material = namedtuple('Material', ['damage', 'hitbonus', 'minespeed', 'armor', 'hp', 'density', 'color'])
 materials = {'leather': Material(None, None, None, 5, 100, 4, (186, 100, 13)),
@@ -261,10 +261,10 @@ class Dagger(Item):
         self._info = 'A one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time). Can be thrown up to five (plus enchantment) paces.'
 
     def attackslist(self):
-        return[Attack(self.name, 'stabbed', 'stabbed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('bleed', 0.2)], self)]
+        return[Attack(self.name, 'stabbed', 'stabbed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('bleed', 0.2)], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
 
 def randomdagger(owner, x, y, level):
     enchantment = 0
@@ -301,12 +301,12 @@ class Spear(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('charge',)], self)]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
         else:
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', self.bane, [('charge',)], self)]
+            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 100, self.bane, [('charge',)], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [('charge',)], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
 
 def randomspear(owner, x, y, level):
     enchantment = 0
@@ -341,9 +341,9 @@ class Mace(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', self.bane, [('knockback', 0.2)], self)]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, [('knockback', 0.2)], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', self.bane, [('knockback', 0.1)], self)]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', 50, self.bane, [('knockback', 0.1)], self)]
 
 def randommace(owner, x, y, level):
     enchantment = 0
@@ -378,9 +378,9 @@ class Sword(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', self.bane, [], self)]
+            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 50, self.bane, [], self)]
         else:
-            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', self.bane, [], self)]
+            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 50, 'sharp', self.bane, [], self)]
 
 def randomsword(owner, x, y, level):
     enchantment = 0
@@ -416,9 +416,9 @@ class PickAxe(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.25, self.mindamage, self.maxdamage, 'rough', self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.25, self.mindamage, self.maxdamage, 'rough', 50, self.bane, [], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 1.5, self.mindamage, int(0.67*self.maxdamage), 'rough', self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 1.5, self.mindamage, int(0.67*self.maxdamage), 'rough', 50, self.bane, [], self)]
 
     def minespeed(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -452,10 +452,10 @@ class Stone(Item):
         self._info = 'A blunt improvised weapon. Can be thrown up to five paces.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', [], [], self)]
+        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', [], [], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
 
 class Torch(Item):
     def __init__(self, owner, x, y):
@@ -469,7 +469,7 @@ class Torch(Item):
         self._info = 'A light source and an improvised weapon. When wielded, increases your range of vision, as long as you have eyes. Deals fire damage.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'fire', [], [], self)]
+        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'fire', 50, [], [], self)]
 
     def sight(self):
         if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not (part.destroyed() or part.incapacitated())]) > 0:

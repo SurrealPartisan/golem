@@ -1,5 +1,5 @@
 import sys
-import pickle
+import dill as pickle
 from os.path import exists as file_exists
 from os import remove as remove_file
 
@@ -800,7 +800,21 @@ def game():
                     attacktime = int(attacktime)
                 else:
                     attacktime = round(attacktime, 2)
-                attackdescription = num + player.attackslist()[j].name + ' (' + repr(int(player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ' ' + player.attackslist()[j].damagetype + ', ' + repr(attacktime) + ' s'
+                if player.stance == 'aggressive':
+                    attackerstancecoefficient = 1.25
+                elif player.stance == 'defensive':
+                    attackerstancecoefficient = 0.9
+                elif player.stance == 'berserk':
+                    attackerstancecoefficient = 1.5
+                else:
+                    attackerstancecoefficient = 1
+                if (player.stance == 'flying' or cave.largerocks[player.x, player.y]) and target.stance != 'flying' and not cave.largerocks[target.x, target.y]:
+                    highgroundcoefficient = 1.05
+                elif player.stance != 'flying' and not cave.largerocks[player.x, player.y] and (target.stance == 'flying' or cave.largerocks[target.x, target.y]):
+                    highgroundcoefficient = 0.95
+                else:
+                    highgroundcoefficient = 1
+                attackdescription = num + player.attackslist()[j].name + ' (' + repr(int(attackerstancecoefficient*highgroundcoefficient*player.attackslist()[j].hitprobability * 100)) + '%, ' + repr(player.attackslist()[j].mindamage) + '-' + repr(player.attackslist()[j].maxdamage) + ' ' + player.attackslist()[j].damagetype + ', ' + repr(attacktime) + ' s'
                 for special in player.attackslist()[j].special:
                     if special[0] == 'bleed':
                         attackdescription += ', bleed ' + repr(int(special[1] * 100)) + '%'
@@ -834,10 +848,39 @@ def game():
                     partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                 elif targetbodypart == target.torso:
                     partname = 'torso'
-                if player.previousaction[0] == 'fight' and player.previousaction[1] == selectedattack.weapon and player.previousaction[2] == targetbodypart:
-                    targetdescription = num + partname + ' (' + repr(int(targetbodypart.defensecoefficient() * 100)) + '%, time x1.5)'
+                if target.stance == 'aggressive':
+                    defenderstancecoefficient = 1.111
+                elif target.stance == 'defensive':
+                    defenderstancecoefficient = 0.80
+                elif target.stance == 'berserk':
+                    defenderstancecoefficient = 1.222
                 else:
-                    targetdescription = num + partname + ' (' + repr(int(targetbodypart.defensecoefficient() * 100)) + '%)'
+                    defenderstancecoefficient = 1
+                if selectedattack.weapon in player.bodyparts:
+                    attackingpart = selectedattack.weapon
+                elif selectedattack.weapon.owner != cave.items:
+                    attackingpart = selectedattack.weapon.owner.owner
+                upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + selectedattack.weaponlength
+                upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + selectedattack.weaponlength
+                lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - selectedattack.weaponlength
+                lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - selectedattack.weaponlength
+                if upperfinelimit >= targetbodypart.topheight() >= lowerfinelimit or upperfinelimit >= targetbodypart.bottomheight() >= lowerfinelimit or targetbodypart.topheight() >= upperfinelimit >= targetbodypart.bottomheight():
+                    heightcoefficient = 1
+                elif targetbodypart.bottomheight() >= upperpoorlimit or targetbodypart.topheight() <= lowerpoorlimit:
+                    heightcoefficient = 0.5
+                elif upperpoorlimit > targetbodypart.bottomheight() > upperfinelimit:
+                    heightcoefficient = 0.5 + 0.5*(upperpoorlimit - targetbodypart.bottomheight())/(upperpoorlimit - upperfinelimit)
+                elif lowerpoorlimit < targetbodypart.topheight() < lowerfinelimit:
+                    heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                speedcoefficient = 1/np.sqrt(target.speed()+0.1)
+                if target.imbalanced():
+                    imbalancedcoefficient = 1.25
+                else:
+                    imbalancedcoefficient = 1
+                if player.previousaction[0] == 'fight' and player.previousaction[1] == selectedattack.weapon and player.previousaction[2] == targetbodypart:
+                    targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%, time x1.5)'
+                else:
+                    targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%)'
                 if targetbodypart.incapacitated():
                     targetdescription += ' [INCAPACITATED]'
                 if j != chosen:
@@ -860,7 +903,15 @@ def game():
                     num = '0: '
                 else:
                     num = ''
-                attackdescription = num + player.thrownattackslist()[j].name + ' (' + repr(int(player.thrownattackslist()[j].hitprobability * 100)) + '%, ' + repr(player.thrownattackslist()[j].mindamage) + '-' + repr(player.thrownattackslist()[j].maxdamage) + ' ' + player.thrownattackslist()[j].damagetype + ', ' + repr(int(player.thrownattackslist()[j].weapon.throwrange)) + ' paces'
+                if player.stance == 'aggressive':
+                    attackerstancecoefficient = 1.25
+                elif player.stance == 'defensive':
+                    attackerstancecoefficient = 0.9
+                elif player.stance == 'berserk':
+                    attackerstancecoefficient = 1.5
+                else:
+                    attackerstancecoefficient = 1
+                attackdescription = num + player.thrownattackslist()[j].name + ' (' + repr(int(attackerstancecoefficient*player.thrownattackslist()[j].hitprobability * 100)) + '%, ' + repr(player.thrownattackslist()[j].mindamage) + '-' + repr(player.thrownattackslist()[j].maxdamage) + ' ' + player.thrownattackslist()[j].damagetype + ', ' + repr(int(player.thrownattackslist()[j].weapon.throwrange)) + ' paces'
                 for special in player.thrownattackslist()[j].special:
                     if special[0] == 'bleed':
                         attackdescription += ', bleed ' + repr(int(special[1] * 100)) + '%'
@@ -906,7 +957,20 @@ def game():
                     partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                 elif targetbodypart == target.torso:
                     partname = 'torso'
-                targetdescription = num + partname + ' (' + repr(int(targetbodypart.defensecoefficient() * 100)) + '%)'
+                if target.stance == 'aggressive':
+                    defenderstancecoefficient = 1.111
+                elif target.stance == 'defensive':
+                    defenderstancecoefficient = 0.80
+                elif target.stance == 'berserk':
+                    defenderstancecoefficient = 1.222
+                else:
+                    defenderstancecoefficient = 1
+                speedcoefficient = 1/np.sqrt(target.speed()+0.1)
+                if target.imbalanced():
+                    imbalancedcoefficient = 1.25
+                else:
+                    imbalancedcoefficient = 1
+                targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%)'
                 if targetbodypart.incapacitated():
                     targetdescription += ' [INCAPACITATED]'
                 if j != chosen:
@@ -934,6 +998,12 @@ def game():
                     partname = list(limb.parentalconnection.parent.childconnections.keys())[list(limb.parentalconnection.parent.childconnections.values()).index(limb.parentalconnection)]
                 elif limb == player.torso:
                     partname = 'torso'
+                if (player.stance == 'flying' or cave.largerocks[player.x, player.y]) and target.stance != 'flying' and not cave.largerocks[target.x, target.y]:
+                    highgroundcoefficient = 1.05
+                elif player.stance != 'flying' and not cave.largerocks[player.x, player.y] and (target.stance == 'flying' or cave.largerocks[target.x, target.y]):
+                    highgroundcoefficient = 0.95
+                else:
+                    highgroundcoefficient = 1
                 distance = np.sqrt((targetcoords[0] - player.x)**2 + (targetcoords[1] - player.y)**2)
                 notwielded = selectedattack.weapon.owner == player.inventory
                 throwtime = (1/limb.throwspeed + notwielded) * (1 + player.slowed())
@@ -941,7 +1011,7 @@ def game():
                     throwtime = int(throwtime)
                 else:
                     throwtime = round(throwtime, 2)
-                limbdescription = num + partname + ' (' + repr(int(limb.throwaccuracy**distance * 100)) + '%, ' + repr(throwtime) + ' s)'
+                limbdescription = num + partname + ' (' + repr(int(highgroundcoefficient*limb.throwaccuracy**distance * 100)) + '%, ' + repr(throwtime) + ' s)'
                 if j != chosen:
                     win.write(limbdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
@@ -1760,7 +1830,7 @@ def game():
                         if (event.key == keybindings['list bodyparts'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][0][1])) or (event.key == keybindings['list bodyparts'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list bodyparts'][1][1])):
                             player.log().append('The parts of your body:')
                             for part in player.bodyparts:
-                                player.log().append('  - a ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ')')
+                                player.log().append('  - a ' + part.name + ' (hp: ' + repr(part.hp()) + '/' + repr(part.maxhp) + ', ' + repr(part.bottomheight()) + ' to ' + repr(part.topheight()) + ' cm from ground)')
                             if len(player.bodyparts) > logheight - 1 and len(player.log()) > 1:
                                 logback = len(player.bodyparts) - logheight + 1
                             else:

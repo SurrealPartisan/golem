@@ -336,7 +336,9 @@ class Creature():
                 partname = 'torso'
             alreadyincapacitated = part.incapacitated()
             bled, causers = part.bleed(time)
-            totalcausers += causers
+            for causer in causers:
+                if not causer in totalcausers:
+                    totalcausers.append(causer)
             if bled > 0:
                 if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
                     self.log().append('The bleeding incapacitated your ' + partname + '.')
@@ -352,7 +354,7 @@ class Creature():
                 if fovmap[self.x, self.y] and creat != self:
                     creat.log().append('The ' + self.name + ' bled to death!')
             self.die()
-            self.causeofdeath = ('bloodloss', np.unique(totalcausers))
+            self.causeofdeath = ('bloodloss', totalcausers)
 
     def endotoxicity(self):
         return 0.1 + sum([part.endotoxicity for part in self.bodyparts if not (part.destroyed() or part.incapacitated())])
@@ -699,11 +701,27 @@ class Creature():
                             highgroundcoefficient = 0.95
                         else:
                             highgroundcoefficient = 1
+                        if not thrown:
+                            upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
+                            upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
+                            lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
+                            lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - attack.weaponlength
+                            if upperfinelimit >= targetbodypart.topheight() >= lowerfinelimit or upperfinelimit >= targetbodypart.bottomheight() >= lowerfinelimit or targetbodypart.topheight() >= upperfinelimit >= targetbodypart.bottomheight():
+                                heightcoefficient = 1
+                            elif targetbodypart.bottomheight() >= upperpoorlimit or targetbodypart.topheight() <= lowerpoorlimit:
+                                heightcoefficient = 0.5
+                            elif upperpoorlimit > targetbodypart.bottomheight() > upperfinelimit:
+                                heightcoefficient = 0.5 + 0.5*(upperpoorlimit - targetbodypart.bottomheight())/(upperpoorlimit - upperfinelimit)
+                            elif lowerpoorlimit < targetbodypart.topheight() < lowerfinelimit:
+                                heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                        else:
+                            heightcoefficient = 1
+                        speedcoefficient = 1/np.sqrt(target.speed()+0.1)
                         if target.imbalanced():
                             imbalancedcoefficient = 1.25
                         else:
                             imbalancedcoefficient = 1
-                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*imbalancedcoefficient, 0.95), 0.05):
+                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                             hit = True
                         else:
                             adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
@@ -711,7 +729,7 @@ class Creature():
                                 adjacentparts.append(targetbodypart.parentalconnection.parent)
                             if len(adjacentparts) > 0:
                                 targetbodypart = np.random.choice(adjacentparts)
-                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*imbalancedcoefficient, 0.95), 0.05):
+                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                                     hit = True
                                 else:
                                     hit = False
@@ -729,7 +747,7 @@ class Creature():
                                     else:
                                         totaldamage = int(1.5*totaldamage)
                                     if not thrown:
-                                        attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
+                                        attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13])
                                 if special[0] == 'knockback' and np.random.rand() < special[1]:
                                     dx = target.x - self.x
                                     dy = target.y - self.y
@@ -750,7 +768,7 @@ class Creature():
                             if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
                                 totaldamage = int(1.5*totaldamage)
                                 if not thrown:
-                                    attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12])
+                                    attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13])
                             if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
                                 totaldamage *= 3
                             elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():

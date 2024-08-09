@@ -12,12 +12,13 @@ from item import Attack
 from utils import constantfunction, listwithowner, loglist, mapwidth, mapheight, numlevels, difficulty
 
 class BodyPartConnection():
-    def __init__(self, parent, categories, vital, prefix, defensecoefficient=1, armorapplies=False):
+    def __init__(self, parent, categories, vital, prefix, heightfunc, defensecoefficient=1, armorapplies=False):
         self.parent = parent
         self.categories = categories
         self.vital = vital
         self.child = None
         self.prefix = prefix
+        self.heightfunc = heightfunc
         self.defensecoefficient = defensecoefficient
         self.armorapplies = armorapplies
     
@@ -36,6 +37,8 @@ class BodyPart(item.Item):
         self.categories = []
         self.parentalconnection = None
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = 0
         self.capableofwielding = False
         self.capableofthrowing = False
         self.worn = {}  # Each key is a category of item, e.g. helmet or backpack. Each value is a listwithowner, with the bodypart as the owner. The lists themselves should contain at most one item per list.
@@ -60,6 +63,28 @@ class BodyPart(item.Item):
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
+
+    def baseheight(self):
+        if 'torso' in self.categories:
+            leglengths = [part.standingheight() for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()] # These should all be same
+            if len(leglengths) > 0:
+                if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+                    return leglengths[0] + 50
+                else:
+                    return leglengths[0]
+            else:
+                if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+                    return 50 - self._bottomheight
+                else:
+                    return 0 - self._bottomheight
+        else:
+            return self.parentalconnection.parent.baseheight() + self.parentalconnection.heightfunc()
+
+    def topheight(self):
+        return self.baseheight() + self._topheight
+
+    def bottomheight(self):
+        return self.baseheight() + self._bottomheight
 
     def vital(self):
         if 'torso' in self.categories:
@@ -133,7 +158,7 @@ class BodyPart(item.Item):
     def imbalanced(self):
         if 'torso' in self.categories:
             maxlegs = len([connection for connection in self.childconnections.values() if 'leg' in connection.categories])
-            functioninglegs = len([connection for connection in self.childconnections.values() if 'leg' in connection.categories and connection.child != None and not connection.child.destroyed() and not connection.child.incapacitated()])
+            functioninglegs = len([connection for connection in self.childconnections.values() if 'leg' in connection.categories and connection.child != None and 'leg' in connection.child.categories and not connection.child.destroyed() and not connection.child.incapacitated()])
             return 0 < functioninglegs <= maxlegs/2
         elif 'leg' in self.categories:
             return self.imbalanceclock > 0
@@ -174,23 +199,36 @@ class BodyPart(item.Item):
 
 
 
+def heightfuncuprightorprone(torso, uprightheight, proneheight):
+    def fun():
+        legs = [part for part in torso.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return proneheight
+        else:
+            return uprightheight
+    return fun
+
+
+
 class HumanTorso(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'human torso', '*', (250, 220, 196))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 60
+        self._pronetopheight = 30
         self.maxhp = 50
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -198,11 +236,24 @@ class HumanTorso(BodyPart):
         self.carryingcapacity = 20000
         self._info = 'A torso consisting of living flesh.'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class HumanArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'human arm', '~', (250, 220, 196))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 20
         self.capableofthrowing = True
         self.throwaccuracy = 0.99
@@ -236,7 +287,7 @@ class HumanArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -247,6 +298,13 @@ class HumanLeg(BodyPart):
         super().__init__(owner, x, y, 'human leg', '~', (250, 220, 196))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
         self.maxhp = 20
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -255,6 +313,16 @@ class HumanLeg(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -267,7 +335,7 @@ class HumanLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -276,10 +344,16 @@ class HumanHead(BodyPart):
         super().__init__(owner, x, y, 'human head', '*', (250, 220, 196))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 20
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -288,7 +362,7 @@ class HumanHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -297,6 +371,8 @@ class HumanEye(BodyPart):
         super().__init__(owner, x, y, 'human eye', '*', (0, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 10
         self.weight = 8
         self.detectiondistance = 1.5
@@ -314,6 +390,8 @@ class HumanBrain(BodyPart):
         super().__init__(owner, x, y, 'human brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.weight = 1300
         self.log = loglist()
@@ -333,6 +411,8 @@ class HumanHeart(BodyPart):
         super().__init__(owner, x, y, 'human heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.weight = 300
         self.bravery = 0.5
@@ -343,6 +423,8 @@ class HumanLung(BodyPart):
         super().__init__(owner, x, y, 'human lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 10
         self.weight = 600
         self.breathepoisonresistance = 0
@@ -354,6 +436,8 @@ class HumanKidney(BodyPart):
         super().__init__(owner, x, y, 'human kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 10
         self.weight = 120
         self.endotoxicity = -1
@@ -364,6 +448,8 @@ class HumanStomach(BodyPart):
         super().__init__(owner, x, y, 'human stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -381,18 +467,20 @@ class ZombieTorso(BodyPart):
         super().__init__(owner, x, y, 'zombie torso', '*', (191, 255, 128))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], False, ''),
-            'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 60
+        self._pronetopheight = 30
         self.maxhp = 50
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
@@ -404,11 +492,24 @@ class ZombieTorso(BodyPart):
         self._resistances['sharp'] = -0.2
         self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class ZombieArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'zombie arm', '~', (191, 255, 128))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 20
         self.material = "undead flesh"
         self.capableofthrowing = True
@@ -446,7 +547,7 @@ class ZombieArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -457,6 +558,13 @@ class ZombieLeg(BodyPart):
         super().__init__(owner, x, y, 'zombie leg', '~', (191, 255, 128))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
         self.maxhp = 20
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
@@ -470,9 +578,19 @@ class ZombieLeg(BodyPart):
         self.maxrunstamina = 20
         self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -490,10 +608,16 @@ class ZombieHead(BodyPart):
         super().__init__(owner, x, y, 'zombie head', '*', (191, 255, 128))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], False, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 20
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
@@ -507,7 +631,7 @@ class ZombieHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -516,6 +640,8 @@ class ZombieEye(BodyPart):
         super().__init__(owner, x, y, 'zombie eye', '*', (155, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 7
@@ -537,6 +663,8 @@ class ZombieBrain(BodyPart):
         super().__init__(owner, x, y, 'zombie brain', '*', (150, 178, 82))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 1000
@@ -560,6 +688,8 @@ class ZombieHeart(BodyPart):
         super().__init__(owner, x, y, 'zombie heart', '*', (150, 178, 82))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 250
@@ -574,6 +704,8 @@ class ZombieLung(BodyPart):
         super().__init__(owner, x, y, 'zombie lung', '*', (150, 178, 82))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 10
         self.material = 'undead flesh'
         self.weight = 500
@@ -589,6 +721,8 @@ class ZombieKidney(BodyPart):
         super().__init__(owner, x, y, 'zombie kidney', '*', (150, 178, 82))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 10
         self.material = 'undead flesh'
         self.weight = 100
@@ -602,6 +736,8 @@ class ZombieStomach(BodyPart):
         super().__init__(owner, x, y, 'zombie stomach', '*', (150, 178, 82))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 1000
@@ -623,18 +759,20 @@ class MolePersonTorso(BodyPart):
         super().__init__(owner, x, y, 'mole person torso', '*', (186, 100, 13))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 60
+        self._pronetopheight = 30
         self.maxhp = 50
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -642,11 +780,24 @@ class MolePersonTorso(BodyPart):
         self.carryingcapacity = 20000
         self._info = 'A torso consisting of living flesh.'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class MolePersonArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole person arm', '~', (186, 100, 13))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 20
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
@@ -680,7 +831,7 @@ class MolePersonArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'rough', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'rough', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -691,6 +842,13 @@ class MolePersonLeg(BodyPart):
         super().__init__(owner, x, y, 'mole person leg', '~', (186, 100, 13))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
         self.maxhp = 20
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -699,6 +857,16 @@ class MolePersonLeg(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 5
         self._info = 'A leg consisting of living flesh. Somewhat weak at carrying. Low running stamina.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -711,7 +879,7 @@ class MolePersonLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -720,10 +888,16 @@ class MolePersonHead(BodyPart):
         super().__init__(owner, x, y, 'mole person head', '*', (186, 100, 13))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 20
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -732,7 +906,7 @@ class MolePersonHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -741,6 +915,8 @@ class MolePersonEye(BodyPart):
         super().__init__(owner, x, y, 'mole person eye', '*', (0, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 10
         self.weight = 5
         self.detectiondistance = 1.5
@@ -758,6 +934,8 @@ class MolePersonBrain(BodyPart):
         super().__init__(owner, x, y, 'mole person brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.weight = 1300
         self.log = loglist()
@@ -777,6 +955,8 @@ class MolePersonHeart(BodyPart):
         super().__init__(owner, x, y, 'mole person heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.weight = 300
         self.bravery = 0.25
@@ -787,6 +967,8 @@ class MolePersonLung(BodyPart):
         super().__init__(owner, x, y, 'mole person lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 10
         self.weight = 600
         self.breathepoisonresistance = 0
@@ -798,6 +980,8 @@ class MolePersonKidney(BodyPart):
         super().__init__(owner, x, y, 'mole person kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 10
         self.weight = 120
         self.endotoxicity = -1
@@ -808,6 +992,8 @@ class MolePersonStomach(BodyPart):
         super().__init__(owner, x, y, 'mole person stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -825,18 +1011,20 @@ class GoblinTorso(BodyPart):
         super().__init__(owner, x, y, 'goblin torso', '*', (0, 255, 0))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 35, 17)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 35, 17)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 40, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 30, 12), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 20, 12), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 40
+        self._pronetopheight = 25
         self.maxhp = 50
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -846,11 +1034,24 @@ class GoblinTorso(BodyPart):
         self._resistances['blunt'] = -0.2
         self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class GoblinArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'goblin arm', '~', (0, 255, 0))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 20
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -886,7 +1087,7 @@ class GoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'sharp', [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -897,6 +1098,13 @@ class GoblinLeg(BodyPart):
         super().__init__(owner, x, y, 'goblin leg', '~', (0, 255, 0))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -70
+        self.upperpoorlimit = 30
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -70
+        self.lowerpoorlimit = -70
+        self.maxheight = 70
         self.maxhp = 20
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -906,7 +1114,17 @@ class GoblinLeg(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.maxrunstamina = 10
-        self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -919,7 +1137,7 @@ class GoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -928,10 +1146,16 @@ class GoblinHead(BodyPart):
         super().__init__(owner, x, y, 'goblin head', '*', (0, 255, 0))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 20
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -942,7 +1166,7 @@ class GoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 15, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 15, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -951,6 +1175,8 @@ class GoblinEye(BodyPart):
         super().__init__(owner, x, y, 'goblin eye', '*', (0, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 10
         self.weight = 5
         self.detectiondistance = 1.5
@@ -968,6 +1194,8 @@ class GoblinBrain(BodyPart):
         super().__init__(owner, x, y, 'goblin brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.weight = 1000
         self.log = loglist()
@@ -987,6 +1215,8 @@ class GoblinHeart(BodyPart):
         super().__init__(owner, x, y, 'goblin heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 10
         self.weight = 250
         self.bravery = 0.5
@@ -997,6 +1227,8 @@ class GoblinLung(BodyPart):
         super().__init__(owner, x, y, 'goblin lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 10
         self.weight = 600
         self.breathepoisonresistance = 0.2
@@ -1008,6 +1240,8 @@ class GoblinKidney(BodyPart):
         super().__init__(owner, x, y, 'goblin kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 10
         self.weight = 120
         self.endotoxicity = -1
@@ -1018,6 +1252,8 @@ class GoblinStomach(BodyPart):
         super().__init__(owner, x, y, 'goblin stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 10
         self.weight = 900
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -1035,26 +1271,31 @@ class OctopusHead(BodyPart):
         super().__init__(owner, x, y, 'cave octopus head', '*', (255, 0, 255))
         self.categories = ['torso']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.8, armorapplies=True),
-            'central heart': BodyPartConnection(self, ['heart'], True, 'central ', defensecoefficient=0.8, armorapplies=True),
-            'left heart': BodyPartConnection(self, ['heart'], True, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right heart': BodyPartConnection(self, ['heart'], True, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
-            'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
-            'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left '),
-            'center-back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back left '),
-            'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left '),
-            'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right '),
-            'center-front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front right '),
-            'center-back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back right '),
-            'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ')
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(35)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(35)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(40), defensecoefficient=0.8, armorapplies=True),
+            'central heart': BodyPartConnection(self, ['heart'], True, 'central ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
+            'left heart': BodyPartConnection(self, ['heart'], True, 'left ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
+            'right heart': BodyPartConnection(self, ['heart'], True, 'right ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
+            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
+            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
+            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
+            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(35), defensecoefficient=0.8, armorapplies=True),
+            'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
+            'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left ', constantfunction(0)),
+            'center-back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back left ', constantfunction(0)),
+            'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left ', constantfunction(0)),
+            'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right ', constantfunction(0)),
+            'center-front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front right ', constantfunction(0)),
+            'center-back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back right ', constantfunction(0)),
+            'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ', constantfunction(0))
             }
+        self._topheight = 50
+        self.upperpoorlimit = 50
+        self.upperfinelimit = 30
+        self.lowerfinelimit = 0
+        self.lowerpoorlimit = 0
         self.maxhp = 80
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1064,7 +1305,7 @@ class OctopusHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1073,6 +1314,14 @@ class OctopusTentacle(BodyPart):
         super().__init__(owner, x, y, 'cave octopus tentacle', '~', (255, 0, 255))
         self.categories = ['arm', 'leg', 'tentacle']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -10
+        self.upperpoorlimit = 100
+        self.upperfinelimit = 65
+        self.lowerfinelimit = -65
+        self.lowerpoorlimit = -100
+        self.maxheight = 120
+        self.minheight = 10
         self.maxhp = 10
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -1086,6 +1335,21 @@ class OctopusTentacle(BodyPart):
         self.carefulness = 0.4
         self.maxrunstamina = 2.5
         self._info = 'A tentacle consisting of living flesh. Works both as an arm and as a leg. Slow at moving, but faster if there are more of them. Also faster at attacking if there are more of them. Slow and rather inaccurate at throwing. Individually very low running stamina, collectively average. Slightly clumsy.'
+
+    def standingheight(self):
+        legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        tentacles = [part for part in self.owner if 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legsnotentacles) > 0:
+            legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+            return min([leg.maxheight for leg in legs])
+        else:
+            return max([tentacle.minheight for tentacle in tentacles])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1111,7 +1375,7 @@ class OctopusTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10, 'blunt', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1122,6 +1386,8 @@ class OctopusEye(BodyPart):
         super().__init__(owner, x, y, 'cave octopus eye', '*', (0, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 10
         self.weight = 10
         self.detectiondistance = 2.9
@@ -1139,6 +1405,8 @@ class OctopusBrain(BodyPart):
         super().__init__(owner, x, y, 'cave octopus brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 6
+        self._bottomheight = -6
         self.maxhp = 20
         self.weight = 2000
         self.log = loglist()
@@ -1158,6 +1426,8 @@ class OctopusHeart(BodyPart):
         super().__init__(owner, x, y, 'cave octopus heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 20
         self.weight = 500
         self.bravery = 0.25
@@ -1168,6 +1438,8 @@ class OctopusGills(BodyPart):
         super().__init__(owner, x, y, 'cave octopus gills', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 20
         self.weight = 500
         self.breathepoisonresistance = 0
@@ -1179,6 +1451,8 @@ class OctopusMetanephridium(BodyPart):
         super().__init__(owner, x, y, 'cave octopus metanephridium', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 20
         self.weight = 100
         self.endotoxicity = -1
@@ -1189,6 +1463,8 @@ class OctopusStomach(BodyPart):
         super().__init__(owner, x, y, 'cave octopus stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -1206,19 +1482,21 @@ class DogTorso(BodyPart):
         super().__init__(owner, x, y, 'dog torso', '*', (170, 130, 70))
         self.categories = ['torso']
         self.childconnections = {
-            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left '),
-            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right '),
-            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left '),
-            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
-            'tail': BodyPartConnection(self, ['tail'], False, '')
+            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left ', constantfunction(0)),
+            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right ', constantfunction(0)),
+            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
+            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', constantfunction(10)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(9), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(9), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(13))
             }
+        self._topheight = 18
+        self._bottomheight = -18
         self.maxhp = 75
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -1231,6 +1509,13 @@ class DogLeg(BodyPart):
         super().__init__(owner, x, y, 'dog leg', '~', (170, 130, 70))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -54
+        self.upperpoorlimit = 27
+        self.upperfinelimit = -22
+        self.lowerfinelimit = -54
+        self.lowerpoorlimit = -54
+        self.maxheight = 54
         self.maxhp = 25
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -1239,6 +1524,16 @@ class DogLeg(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh. On its own very weak at carrying. Quite fast if there are at least four legs.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1253,7 +1548,7 @@ class DogLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 5, 'sharp', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 5, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -1262,10 +1557,16 @@ class DogHead(BodyPart):
         super().__init__(owner, x, y, 'dog head', '*', (170, 130, 70))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(13)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(13)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(22), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 27
+        self._bottomheight = 0
+        self.upperpoorlimit = 50
+        self.upperfinelimit = 27
+        self.lowerfinelimit = -58
+        self.lowerpoorlimit = -63
         self.maxhp = 25
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1274,7 +1575,7 @@ class DogHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.80, 1, 1, 25, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.80, 1, 1, 25, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1283,6 +1584,8 @@ class DogEye(BodyPart):
         super().__init__(owner, x, y, 'dog eye', '*', (255, 255, 0))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 15
         self.weight = 5
         self.detectiondistance = 1.5
@@ -1300,6 +1603,8 @@ class DogBrain(BodyPart):
         super().__init__(owner, x, y, 'dog brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 3
+        self._bottomheight = -3
         self.maxhp = 15
         self.weight = 100
         self.log = loglist()
@@ -1319,6 +1624,8 @@ class DogHeart(BodyPart):
         super().__init__(owner, x, y, 'dog heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 6
+        self._bottomheight = -6
         self.maxhp = 15
         self.weight = 400
         self.bravery = 0.5
@@ -1329,6 +1636,8 @@ class DogLung(BodyPart):
         super().__init__(owner, x, y, 'dog lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 15
         self.weight = 450
         self.breathepoisonresistance = 0
@@ -1340,8 +1649,10 @@ class DogKidney(BodyPart):
         super().__init__(owner, x, y, 'dog kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 2
+        self._bottomheight = -2
         self.maxhp = 15
-        self.weight = 100
+        self.weight = 90
         self.endotoxicity = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
@@ -1350,6 +1661,8 @@ class DogStomach(BodyPart):
         super().__init__(owner, x, y, 'dog stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 8
+        self._bottomheight = -8
         self.maxhp = 15
         self.weight = 800
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -1365,6 +1678,7 @@ class DogTail(BodyPart):
         super().__init__(owner, x, y, 'dog tail', '~', (170, 130, 70))
         self.categories = ['tail']
         self.childconnections = {}
+        self._bottomheight = -59
         self.maxhp = 7
         self.weight = 400
         self._info = 'A tail consisting of living flesh.'
@@ -1376,18 +1690,20 @@ class HobgoblinTorso(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin torso', '*', (0, 255, 0))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 45, 19)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 45, 19)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 50, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 45, 14), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 25, 14), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 50
+        self._pronetopheight = 27
         self.maxhp = 100
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -1397,11 +1713,24 @@ class HobgoblinTorso(BodyPart):
         self._resistances['blunt'] = -0.2
         self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class HobgoblinArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'hobgoblin arm', '~', (0, 255, 0))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 30
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -1437,7 +1766,7 @@ class HobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'sharp', [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1448,6 +1777,13 @@ class HobgoblinLeg(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin leg', '~', (0, 255, 0))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -80
+        self.upperpoorlimit = 35
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -80
+        self.lowerpoorlimit = -80
+        self.maxheight = 80
         self.maxhp = 30
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -1457,7 +1793,17 @@ class HobgoblinLeg(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.maxrunstamina = 10
-        self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1470,7 +1816,7 @@ class HobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -1479,10 +1825,16 @@ class HobgoblinHead(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin head', '*', (0, 255, 0))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 30
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1493,7 +1845,7 @@ class HobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1502,6 +1854,8 @@ class HobgoblinEye(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin eye', '*', (0, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 20
         self.weight = 5
         self.detectiondistance = 1.5
@@ -1519,6 +1873,8 @@ class HobgoblinBrain(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 20
         self.weight = 1000
         self.log = loglist()
@@ -1538,6 +1894,8 @@ class HobgoblinHeart(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 20
         self.weight = 250
         self.bravery = 0.5
@@ -1548,6 +1906,8 @@ class HobgoblinLung(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 20
         self.weight = 600
         self.breathepoisonresistance = 0.2
@@ -1559,6 +1919,8 @@ class HobgoblinKidney(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 20
         self.weight = 120
         self.endotoxicity = -1
@@ -1569,6 +1931,8 @@ class HobgoblinStomach(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 20
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -1586,18 +1950,20 @@ class MoleMonkTorso(BodyPart):
         super().__init__(owner, x, y, 'mole monk torso', '*', (186, 100, 13))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 60
+        self._pronetopheight = 30
         self.maxhp = 100
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -1605,11 +1971,24 @@ class MoleMonkTorso(BodyPart):
         self.carryingcapacity = 30000
         self._info = 'A torso consisting of living flesh. Good carrying capacity.'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class MoleMonkArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole monk arm', '~', (186, 100, 13))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 50
+        self.upperfinelimit = 25
+        self.lowerfinelimit = -25
+        self.lowerpoorlimit = -50
         self.maxhp = 30
         self.capableofthrowing = True
         self.throwaccuracy = 0.99
@@ -1643,7 +2022,7 @@ class MoleMonkArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'rough', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'rough', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1654,6 +2033,13 @@ class MoleMonkLeg(BodyPart):
         super().__init__(owner, x, y, 'mole monk leg', '~', (186, 100, 13))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 70
+        self.upperfinelimit = 0
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
         self.maxhp = 30
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -1662,6 +2048,16 @@ class MoleMonkLeg(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 5
         self._info = 'A leg consisting of living flesh. Low running stamina.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1674,7 +2070,7 @@ class MoleMonkLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -1683,10 +2079,16 @@ class MoleMonkHead(BodyPart):
         super().__init__(owner, x, y, 'mole monk head', '*', (186, 100, 13))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 30
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1695,7 +2097,7 @@ class MoleMonkHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 45, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 45, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1704,6 +2106,8 @@ class MoleMonkEye(BodyPart):
         super().__init__(owner, x, y, 'mole monk eye', '*', (0, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 20
         self.weight = 5
         self.detectiondistance = 1.5
@@ -1721,6 +2125,8 @@ class MoleMonkBrain(BodyPart):
         super().__init__(owner, x, y, 'mole monk brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 20
         self.weight = 1300
         self.log = loglist()
@@ -1740,6 +2146,8 @@ class MoleMonkHeart(BodyPart):
         super().__init__(owner, x, y, 'mole monk heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 20
         self.weight = 300
         self.bravery = 0.25
@@ -1750,6 +2158,8 @@ class MoleMonkLung(BodyPart):
         super().__init__(owner, x, y, 'mole monk lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 20
         self.weight = 600
         self.breathepoisonresistance = 0
@@ -1761,6 +2171,8 @@ class MoleMonkKidney(BodyPart):
         super().__init__(owner, x, y, 'mole monk kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 20
         self.weight = 120
         self.endotoxicity = -1
@@ -1771,6 +2183,8 @@ class MoleMonkStomach(BodyPart):
         super().__init__(owner, x, y, 'mole monk stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 20
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -1788,19 +2202,21 @@ class WolfTorso(BodyPart):
         super().__init__(owner, x, y, 'wolf torso', '*', (100, 100, 150))
         self.categories = ['torso']
         self.childconnections = {
-            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left '),
-            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right '),
-            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left '),
-            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
-            'tail': BodyPartConnection(self, ['tail'], False, '')
+            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left ', constantfunction(0)),
+            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right ', constantfunction(0)),
+            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
+            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', constantfunction(12)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(10), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(10), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(15))
             }
+        self._topheight = 20
+        self._bottomheight = -20
         self.maxhp = 150
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -1813,6 +2229,13 @@ class WolfLeg(BodyPart):
         super().__init__(owner, x, y, 'wolf leg', '~', (100, 100, 150))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -60
+        self.upperpoorlimit = 30
+        self.upperfinelimit = -25
+        self.lowerfinelimit = -60
+        self.lowerpoorlimit = -60
+        self.maxheight = 60
         self.maxhp = 30
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -1821,6 +2244,16 @@ class WolfLeg(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh. On its own rather weak at carrying. Very fast if there are at least four legs, and quite fast even when there are two.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1835,7 +2268,7 @@ class WolfLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 10, 'sharp', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 10, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -1844,10 +2277,16 @@ class WolfHead(BodyPart):
         super().__init__(owner, x, y, 'wolf head', '*', (100, 100, 150))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(15)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(15)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(24), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 55
+        self.upperfinelimit = 30
+        self.lowerfinelimit = -65
+        self.lowerpoorlimit = -70
         self.maxhp = 30
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1856,7 +2295,7 @@ class WolfHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 40, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 40, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1865,6 +2304,8 @@ class WolfEye(BodyPart):
         super().__init__(owner, x, y, 'wolf eye', '*', (255, 255, 0))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 20
         self.weight = 5
         self.detectiondistance = 1.5
@@ -1882,6 +2323,8 @@ class WolfBrain(BodyPart):
         super().__init__(owner, x, y, 'wolf brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 3
+        self._bottomheight = -3
         self.maxhp = 20
         self.weight = 120
         self.log = loglist()
@@ -1901,6 +2344,8 @@ class WolfHeart(BodyPart):
         super().__init__(owner, x, y, 'wolf heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 6
+        self._bottomheight = -6
         self.maxhp = 20
         self.weight = 500
         self.bravery = 0.75
@@ -1911,6 +2356,8 @@ class WolfLung(BodyPart):
         super().__init__(owner, x, y, 'wolf lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 8
+        self._bottomheight = -8
         self.maxhp = 20
         self.weight = 600
         self.breathepoisonresistance = 0
@@ -1922,8 +2369,10 @@ class WolfKidney(BodyPart):
         super().__init__(owner, x, y, 'wolf kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 2
+        self._bottomheight = -2
         self.maxhp = 20
-        self.weight = 120
+        self.weight = 95
         self.endotoxicity = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
@@ -1932,6 +2381,8 @@ class WolfStomach(BodyPart):
         super().__init__(owner, x, y, 'wolf stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 9
+        self._bottomheight = -9
         self.maxhp = 20
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -1947,6 +2398,7 @@ class WolfTail(BodyPart):
         super().__init__(owner, x, y, 'wolf tail', '~', (100, 100, 150))
         self.categories = ['tail']
         self.childconnections = {}
+        self._bottomheight = -65
         self.maxhp = 10
         self.weight = 500
         self._info = 'A tail consisting of living flesh.'
@@ -1958,19 +2410,20 @@ class DrillbotChassis(BodyPart):
         super().__init__(owner, x, y, 'drillbot chassis', '*', (150, 150, 150))
         self.categories = ['torso']
         self.childconnections = {
-            'front left wheel': BodyPartConnection(self, ['leg'], False, 'front left '),
-            'front right wheel': BodyPartConnection(self, ['leg'], False, 'front right '),
-            'back left wheel': BodyPartConnection(self, ['leg'], False, 'back left '),
-            'back right wheel': BodyPartConnection(self, ['leg'], False, 'back right '),
-            'arm': BodyPartConnection(self, ['arm'], False, ''),
-            'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'coolant aerator system': BodyPartConnection(self, ['lung'], False, '', defensecoefficient=0.5, armorapplies=True),
-            'coolant filtering system': BodyPartConnection(self, ['kidney'], False, '', defensecoefficient=0.5, armorapplies=True),
-            'biomass processor': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.5, armorapplies=True),
-            'left camera': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right camera': BodyPartConnection(self, ['eye'], False, 'right '),
-            'central processor': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'front left wheel': BodyPartConnection(self, ['leg'], False, 'front left ', constantfunction(0)),
+            'front right wheel': BodyPartConnection(self, ['leg'], False, 'front right ', constantfunction(0)),
+            'back left wheel': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
+            'back right wheel': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
+            'arm': BodyPartConnection(self, ['arm'], False, '', constantfunction(50)),
+            'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
+            'coolant aerator system': BodyPartConnection(self, ['lung'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
+            'coolant filtering system': BodyPartConnection(self, ['kidney'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
+            'biomass processor': BodyPartConnection(self, ['stomach'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
+            'left camera': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(45)),
+            'right camera': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(45)),
+            'central processor': BodyPartConnection(self, ['brain'], True, '', constantfunction(30), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 50
         self.maxhp = 150
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'chassis'
@@ -1988,6 +2441,9 @@ class DrillbotWheel(BodyPart):
         super().__init__(owner, x, y, 'drillbot wheel', '*', (150, 150, 150))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 40
+        self._bottomheight = -40
+        self.maxheight = 40
         self.maxhp = 30
         self.worn = {'wheel cover': listwithowner([], self)}
         self._wearwieldname = 'wheel'
@@ -2002,6 +2458,16 @@ class DrillbotWheel(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 20
         self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Very weak against sharp and rough attacks. Very fast if there are at least four legs or wheels, and quite fast even when there are two. High "running" stamina.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2019,6 +2485,12 @@ class DrillArm(BodyPart):
         super().__init__(owner, x, y, 'drill arm', '~', (150, 150, 150))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 50
+        self.upperfinelimit = 50
+        self.lowerfinelimit = -50
+        self.lowerpoorlimit = -50
         self.maxhp = 40
         self.weight = 7000
         self.material = 'electronics'
@@ -2033,7 +2505,7 @@ class DrillArm(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, 'rough', [], [('bleed', 0.2)], self)]
+            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, 'rough', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -2042,6 +2514,8 @@ class DrillbotCamera(BodyPart):
         super().__init__(owner, x, y, 'drillbot camera', '*', (255, 255, 0))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 20
         self.weight = 20
         self.material = 'electronics'
@@ -2064,6 +2538,8 @@ class DrillbotPump(BodyPart):
         super().__init__(owner, x, y, 'coolant pump, model DB-100', '*', (0, 0, 255))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 30
         self.weight = 1500
         self.material = 'electronics'
@@ -2079,6 +2555,8 @@ class DrillbotAerator(BodyPart):
         super().__init__(owner, x, y, 'coolant aerator, model DB-100', '*', (0, 0, 255))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 30
         self.weight = 600
         self.material = 'electronics'
@@ -2093,6 +2571,8 @@ class DrillbotFilter(BodyPart):
         super().__init__(owner, x, y, 'coolant filter, model DB-100', '*', (0, 0, 255))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 30
         self.weight = 600
         self.material = 'electronics'
@@ -2106,6 +2586,8 @@ class DrillbotProcessor(BodyPart):
         super().__init__(owner, x, y, 'tactical processor, model DB-100', '*', (255, 255, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 30
         self.weight = 2000
         self.log = loglist()
@@ -2130,6 +2612,8 @@ class DrillBotBiomassProcessor(BodyPart):
         super().__init__(owner, x, y, 'drillbot biomass processor', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 30
         self.weight = 2000
         self.material = 'electronics'
@@ -2152,18 +2636,20 @@ class GhoulTorso(BodyPart):
         super().__init__(owner, x, y, 'ghoul torso', '*', (191, 255, 255))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], False, ''),
-            'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 60
+        self._pronetopheight = 30
         self.maxhp = 175
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
@@ -2175,11 +2661,24 @@ class GhoulTorso(BodyPart):
         self._resistances['sharp'] = -0.2
         self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class GhoulArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'ghoul arm', '~', (191, 255, 255))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 50
         self.material = "undead flesh"
         self.capableofthrowing = True
@@ -2217,7 +2716,7 @@ class GhoulArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 50, 'blunt', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 50, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -2228,6 +2727,13 @@ class GhoulLeg(BodyPart):
         super().__init__(owner, x, y, 'ghoul leg', '~', (191, 255, 255))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
         self.maxhp = 50
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
@@ -2241,9 +2747,19 @@ class GhoulLeg(BodyPart):
         self.maxrunstamina = 20
         self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 75, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 75, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -2261,10 +2777,16 @@ class GhoulHead(BodyPart):
         super().__init__(owner, x, y, 'ghoul head', '*', (191, 255, 255))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], False, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 50
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
@@ -2278,7 +2800,7 @@ class GhoulHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 50, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 50, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -2287,6 +2809,8 @@ class GhoulEye(BodyPart):
         super().__init__(owner, x, y, 'ghoul eye', '*', (155, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 7
@@ -2308,6 +2832,8 @@ class GhoulBrain(BodyPart):
         super().__init__(owner, x, y, 'ghoul brain', '*', (150, 178, 82))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 1000
@@ -2331,6 +2857,8 @@ class GhoulHeart(BodyPart):
         super().__init__(owner, x, y, 'ghoul heart', '*', (150, 178, 82))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 250
@@ -2345,6 +2873,8 @@ class GhoulLung(BodyPart):
         super().__init__(owner, x, y, 'ghoul lung', '*', (150, 178, 82))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 25
         self.material = 'undead flesh'
         self.weight = 600
@@ -2360,6 +2890,8 @@ class GhoulKidney(BodyPart):
         super().__init__(owner, x, y, 'ghoul kidney', '*', (150, 178, 82))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 25
         self.material = 'undead flesh'
         self.weight = 120
@@ -2373,6 +2905,8 @@ class GhoulStomach(BodyPart):
         super().__init__(owner, x, y, 'ghoul stomach', '*', (150, 178, 82))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 1000
@@ -2394,18 +2928,19 @@ class SmallFireElementalTorso(BodyPart):
         super().__init__(owner, x, y, 'small fire elemental torso', '*', (255, 204, 0))
         self.categories = ['torso']
         self.childconnections = {
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.8, armorapplies=True),
-            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
-            'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left '),
-            'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left '),
-            'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right '),
-            'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ')
+            'head': BodyPartConnection(self, ['head'], True, '', constantfunction(100)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(50), defensecoefficient=0.8, armorapplies=True),
+            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
+            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(30), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(30), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(60), defensecoefficient=0.8, armorapplies=True),
+            'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
+            'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left ', constantfunction(0)),
+            'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right ', constantfunction(0)),
+            'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ', constantfunction(0))
             }
+        self._topheight = 100
         self.maxhp = 200
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -2423,9 +2958,11 @@ class SmallFireElementalHead(BodyPart):
         super().__init__(owner, x, y, 'small fire elemental head', '*', (255, 204, 0))
         self.categories = ['head']
         self.childconnections = {
-            'eye': BodyPartConnection(self, ['eye'], False, ''),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.8, armorapplies=True)
+            'eye': BodyPartConnection(self, ['eye'], False, '', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
         self.maxhp = 55
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -2442,6 +2979,8 @@ class SmallFireElementalEye(BodyPart):
         super().__init__(owner, x, y, 'ember eye', '*', (255, 204, 0))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 3
+        self._bottomheight = -3
         self.maxhp = 20
         self.weight = 0
         self.material = 'elemental'
@@ -2464,6 +3003,8 @@ class SmallFireElementalBrain(BodyPart):
         super().__init__(owner, x, y, 'small fire elemental brain', '*', (255, 204, 0))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 30
         self.material = "elemental"
         self.consumable = False
@@ -2488,6 +3029,8 @@ class SmallFireElementalHeart(BodyPart):
         super().__init__(owner, x, y, 'fiery heart', '*', (255, 204, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 30
         self.material = "elemental"
         self.consumable = False
@@ -2503,6 +3046,8 @@ class SmallFireElementalBellows(BodyPart):
         super().__init__(owner, x, y, 'small fire elemental bellows', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 30
         self.material = 'elemental'
         self.weight = 600
@@ -2516,6 +3061,14 @@ class SmallFireElementalTentacle(BodyPart):
         super().__init__(owner, x, y, 'small fire elemental tentacle', '~', (255, 204, 0))
         self.categories = ['arm', 'leg', 'tentacle']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -10
+        self.upperpoorlimit = 150
+        self.upperfinelimit = 100
+        self.lowerfinelimit = -100
+        self.lowerpoorlimit = -150
+        self.maxheight = 200
+        self.minheight = 20
         self.maxhp = 40
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -2534,6 +3087,21 @@ class SmallFireElementalTentacle(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 10
         self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
+
+    def standingheight(self):
+        legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        tentacles = [part for part in self.owner if 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legsnotentacles) > 0:
+            legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+            return min([leg.maxheight for leg in legs])
+        else:
+            return max([tentacle.minheight for tentacle in tentacles])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2559,7 +3127,7 @@ class SmallFireElementalTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.8, timetaken, 1, 30, 'fire', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.8, timetaken, 1, 30, 'fire', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -2572,19 +3140,21 @@ class DireWolfTorso(BodyPart):
         super().__init__(owner, x, y, 'dire wolf torso', '*', (100, 100, 150))
         self.categories = ['torso']
         self.childconnections = {
-            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left '),
-            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right '),
-            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left '),
-            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True),
-            'tail': BodyPartConnection(self, ['tail'], False, '')
+            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left ', constantfunction(0)),
+            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right ', constantfunction(0)),
+            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
+            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', constantfunction(13)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(11), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(11), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(17))
             }
+        self._topheight = 22
+        self._bottomheight = -22
         self.maxhp = 225
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -2597,6 +3167,13 @@ class DireWolfLeg(BodyPart):
         super().__init__(owner, x, y, 'dire wolf leg', '~', (100, 100, 150))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -66
+        self.upperpoorlimit = 33
+        self.upperfinelimit = -28
+        self.lowerfinelimit = -66
+        self.lowerpoorlimit = -66
+        self.maxheight = 66
         self.maxhp = 60
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -2605,6 +3182,16 @@ class DireWolfLeg(BodyPart):
         self.carefulness = 0.5
         self.maxrunstamina = 10
         self._info = 'A leg consisting of living flesh. On its own somewhat weak at carrying. Very fast if there are at least four legs, and quite fast even when there are two.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2619,7 +3206,7 @@ class DireWolfLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 20, 'sharp', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 20, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -2628,10 +3215,16 @@ class DireWolfHead(BodyPart):
         super().__init__(owner, x, y, 'dire wolf head', '*', (100, 100, 150))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(17)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(17)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(27), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 33
+        self._bottomheight = 0
+        self.upperpoorlimit = 60
+        self.upperfinelimit = 33
+        self.lowerfinelimit = -72
+        self.lowerpoorlimit = -77
         self.maxhp = 60
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -2640,7 +3233,7 @@ class DireWolfHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 60, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 60, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -2649,6 +3242,8 @@ class DireWolfEye(BodyPart):
         super().__init__(owner, x, y, 'dire wolf eye', '*', (255, 255, 0))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 20
         self.weight = 5
         self.detectiondistance = 1.5
@@ -2666,6 +3261,8 @@ class DireWolfBrain(BodyPart):
         super().__init__(owner, x, y, 'dire wolf brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 3
+        self._bottomheight = -3
         self.maxhp = 20
         self.weight = 120
         self.log = loglist()
@@ -2685,6 +3282,8 @@ class DireWolfHeart(BodyPart):
         super().__init__(owner, x, y, 'dire wolf heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 35
         self.weight = 700
         self.bravery = 0.75
@@ -2695,6 +3294,8 @@ class DireWolfLung(BodyPart):
         super().__init__(owner, x, y, 'dire wolf lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 9
+        self._bottomheight = -9
         self.maxhp = 35
         self.weight = 800
         self.breathepoisonresistance = 0
@@ -2706,6 +3307,8 @@ class DireWolfKidney(BodyPart):
         super().__init__(owner, x, y, 'dire wolf kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 2
+        self._bottomheight = -2
         self.maxhp = 35
         self.weight = 160
         self.endotoxicity = -1
@@ -2716,6 +3319,8 @@ class DireWolfStomach(BodyPart):
         super().__init__(owner, x, y, 'dire wolf stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 9
+        self._bottomheight = -9
         self.maxhp = 30
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -2731,6 +3336,7 @@ class DireWolfTail(BodyPart):
         super().__init__(owner, x, y, 'dire wolf tail', '~', (100, 100, 150))
         self.categories = ['tail']
         self.childconnections = {}
+        self._bottomheight = -72
         self.maxhp = 10
         self.weight = 600
         self._info = 'A tail consisting of living flesh.'
@@ -2742,32 +3348,47 @@ class JobgoblinTorso(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin torso', '*', (0, 255, 0))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], True, ''),
-            'heart': BodyPartConnection(self, ['heart'], True, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 60
+        self._pronetopheight = 30
         self.maxhp = 250
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
-        self.weight = 35000
+        self.weight = 45000
         self.carryingcapacity = 20000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
 
 class JobgoblinArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'jobgoblin arm', '~', (0, 255, 0))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 60
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -2803,7 +3424,7 @@ class JobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 65, 'blunt', [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 65, 'sharp', [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 65, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 65, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -2814,16 +3435,33 @@ class JobgoblinLeg(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin leg', '~', (0, 255, 0))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
         self.maxhp = 60
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
-        self.weight = 13000
-        self.carryingcapacity = 15000
+        self.weight = 17000
+        self.carryingcapacity = 20000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.maxrunstamina = 10
-        self._info = 'A torso consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2836,7 +3474,7 @@ class JobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 90, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 90, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -2845,21 +3483,27 @@ class JobgoblinHead(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin head', '*', (0, 255, 0))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 60
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
-        self.weight = 6000
+        self.weight = 7000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 90, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 90, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -2868,6 +3512,8 @@ class JobgoblinEye(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin eye', '*', (0, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 40
         self.weight = 5
         self.detectiondistance = 1.5
@@ -2885,6 +3531,8 @@ class JobgoblinBrain(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin brain', '*', (255, 0, 255))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 40
         self.weight = 1000
         self.log = loglist()
@@ -2904,8 +3552,10 @@ class JobgoblinHeart(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin heart', '*', (255, 0, 0))
         self.categories = ['heart']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 40
-        self.weight = 250
+        self.weight = 300
         self.bravery = 0.5
         self._info = 'A heart consisting of living flesh. Average bravery.'
 
@@ -2914,8 +3564,10 @@ class JobgoblinLung(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 40
-        self.weight = 500
+        self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
         self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
@@ -2925,6 +3577,8 @@ class JobgoblinKidney(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin kidney', '*', (255, 0, 0))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 40
         self.weight = 100
         self.endotoxicity = -1
@@ -2935,6 +3589,8 @@ class JobgoblinStomach(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin stomach', '*', (255, 0, 0))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 40
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
@@ -2952,18 +3608,20 @@ class GhastTorso(BodyPart):
         super().__init__(owner, x, y, 'ghast torso', '*', (191, 255, 255))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left '),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right '),
-            'left leg': BodyPartConnection(self, ['leg'], False, 'left '),
-            'right leg': BodyPartConnection(self, ['leg'], False, 'right '),
-            'head': BodyPartConnection(self, ['head'], False, ''),
-            'heart': BodyPartConnection(self, ['heart'], False, '', defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', defensecoefficient=0.8, armorapplies=True)
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
             }
+        self._topheight = 60
+        self._pronetopheight = 30
         self.maxhp = 275
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
@@ -2975,11 +3633,24 @@ class GhastTorso(BodyPart):
         self._resistances['sharp'] = -0.2
         self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
 class GhastArm(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'ghast arm', '~', (191, 255, 255))
         self.categories = ['arm']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
         self.maxhp = 65
         self.material = "undead flesh"
         self.capableofthrowing = True
@@ -3017,7 +3688,7 @@ class GhastArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 70, 'blunt', [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 70, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -3028,6 +3699,13 @@ class GhastLeg(BodyPart):
         super().__init__(owner, x, y, 'ghast leg', '~', (191, 255, 255))
         self.categories = ['leg']
         self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
         self.maxhp = 65
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
@@ -3041,9 +3719,19 @@ class GhastLeg(BodyPart):
         self.maxrunstamina = 20
         self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
 
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 105, 'blunt', [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 105, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -3061,10 +3749,16 @@ class GhastHead(BodyPart):
         super().__init__(owner, x, y, 'ghast head', '*', (191, 255, 255))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], False, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
         self.maxhp = 65
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
@@ -3078,7 +3772,7 @@ class GhastHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 70, 'sharp', [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 70, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3087,6 +3781,8 @@ class GhastEye(BodyPart):
         super().__init__(owner, x, y, 'ghast eye', '*', (155, 255, 255))
         self.categories = ['eye']
         self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
         self.maxhp = 45
         self.material = "undead flesh"
         self.weight = 7
@@ -3108,6 +3804,8 @@ class GhastBrain(BodyPart):
         super().__init__(owner, x, y, 'ghast brain', '*', (150, 178, 82))
         self.categories = ['brain']
         self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
         self.maxhp = 45
         self.material = "undead flesh"
         self.weight = 1000
@@ -3133,6 +3831,8 @@ class GhastHeart(BodyPart):
         self.childconnections = {}
         self.maxhp = 45
         self.material = "undead flesh"
+        self._topheight = 5
+        self._bottomheight = -5
         self.weight = 250
         self.bravery = 0.5
         self._attackpoisonresistance = 1
@@ -3145,6 +3845,8 @@ class GhastLung(BodyPart):
         super().__init__(owner, x, y, 'ghast lung', '*', (150, 178, 82))
         self.categories = ['lung']
         self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
         self.maxhp = 45
         self.material = 'undead flesh'
         self.weight = 600
@@ -3160,6 +3862,8 @@ class GhastKidney(BodyPart):
         super().__init__(owner, x, y, 'ghast kidney', '*', (150, 178, 82))
         self.categories = ['kidney']
         self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
         self.maxhp = 45
         self.material = 'undead flesh'
         self.weight = 120
@@ -3173,6 +3877,8 @@ class GhastStomach(BodyPart):
         super().__init__(owner, x, y, 'ghast stomach', '*', (150, 178, 82))
         self.categories = ['stomach']
         self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
         self.maxhp = 45
         self.material = "undead flesh"
         self.weight = 1000
@@ -3194,10 +3900,16 @@ class VelociraptorSkull(BodyPart):
         super().__init__(owner, x, y, 'fossilized velociraptor skull', '*', (255, 255, 255))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(6)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(6)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(5), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 8
+        self._bottomheight = 0
+        self.upperpoorlimit = 55
+        self.upperfinelimit = 30
+        self.lowerfinelimit = -65
+        self.lowerpoorlimit = -70
         self.maxhp = 50
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -3215,7 +3927,7 @@ class VelociraptorSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.9, 1, 1, 50, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.9, 1, 1, 50, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -3224,10 +3936,16 @@ class DeinonychusSkull(BodyPart):
         super().__init__(owner, x, y, 'fossilized deinonychus skull', '*', (255, 255, 255))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(15)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(15)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(15), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 20
+        self._bottomheight = 0
+        self.upperpoorlimit = 65
+        self.upperfinelimit = 40
+        self.lowerfinelimit = -70
+        self.lowerpoorlimit = -80
         self.maxhp = 75
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -3245,7 +3963,7 @@ class DeinonychusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 75, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -3254,10 +3972,16 @@ class CeratosaurusSkull(BodyPart):
         super().__init__(owner, x, y, 'fossilized ceratosaurus skull', '*', (255, 255, 255))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(30)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(30)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(30), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 40
+        self._bottomheight = 0
+        self.upperpoorlimit = 70
+        self.upperfinelimit = 45
+        self.lowerfinelimit = -75
+        self.lowerpoorlimit = -85
         self.maxhp = 100
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -3275,7 +3999,7 @@ class CeratosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 100, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 100, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -3284,10 +4008,16 @@ class AllosaurusSkull(BodyPart):
         super().__init__(owner, x, y, 'fossilized allosaurus skull', '*', (255, 255, 255))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(40)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(40)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(40), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 50
+        self._bottomheight = 0
+        self.upperpoorlimit = 80
+        self.upperfinelimit = 60
+        self.lowerfinelimit = -80
+        self.lowerpoorlimit = -100
         self.maxhp = 125
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -3305,7 +4035,7 @@ class AllosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 125, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 125, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -3314,10 +4044,16 @@ class TyrannosaurusSkull(BodyPart):
         super().__init__(owner, x, y, 'fossilized tyrannosaurus skull', '*', (255, 255, 255))
         self.categories = ['head']
         self.childconnections = {
-            'left eye': BodyPartConnection(self, ['eye'], False, 'left '),
-            'right eye': BodyPartConnection(self, ['eye'], False, 'right '),
-            'brain': BodyPartConnection(self, ['brain'], True, '', defensecoefficient=0.5, armorapplies=True)
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(80)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(80)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(80), defensecoefficient=0.5, armorapplies=True)
             }
+        self._topheight = 100
+        self._bottomheight = 0
+        self.upperpoorlimit = 120
+        self.upperfinelimit = 100
+        self.lowerfinelimit = -100
+        self.lowerpoorlimit = -120
         self.maxhp = 150
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -3335,6 +4071,6 @@ class TyrannosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 150, 'sharp', [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 150, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
