@@ -56,16 +56,33 @@ class God(creature.Creature):
             partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
         elif targetbodypart == target.torso:
             partname = 'torso'
+        alreadyimbalanced = target.imbalanced()
+        if 'leg' in targetbodypart.categories:
+            numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+            if np.random.rand() < 0.5 - 0.05*numlegs:
+                targetbodypart.imbalanceclock += 10*damage/targetbodypart.maxhp
         if not target.dying():
             if not targetbodypart.destroyed() and not targetbodypart.incapacitated():
-                self.log().append('You smote the ' + target.name + ' in the ' + partname + ', dealing ' + repr(damage) + ' damage!')
-                target.log().append(self.name + ' smote you in the ' + partname + ', dealing ' + repr(damage) + ' damage!')
+                if target.imbalanced() and not alreadyimbalanced:
+                    self.log().append('You smote the ' + target.name + ' in the ' + partname + ', dealing ' + repr(damage) + ' damage and imbalancing it!')
+                    target.log().append(self.name + ' smote you in the ' + partname + ', dealing ' + repr(damage) + ' damage and imbalancing you!')
+                else:
+                    self.log().append('You smote the ' + target.name + ' in the ' + partname + ', dealing ' + repr(damage) + ' damage!')
+                    target.log().append(self.name + ' smote you in the ' + partname + ', dealing ' + repr(damage) + ' damage!')
             elif targetbodypart.incapacitated() and not targetbodypart.destroyed():
-                self.log().append('You smote and incapacitated the ' + partname + ' of the ' + target.name + '!')
-                target.log().append(self.name + ' smote and incapacitated your ' + partname + '!')
+                if target.imbalanced() and not alreadyimbalanced:
+                    self.log().append('You smote and incapacitated the ' + partname + ' of the ' + target.name + ', imbalancing it!')
+                    target.log().append(self.name + ' smote and incapacitated your ' + partname + ', imbalancing you!')
+                else:
+                    self.log().append('You smote and incapacitated the ' + partname + ' of the ' + target.name + '!')
+                    target.log().append(self.name + ' smote and incapacitated your ' + partname + '!')
             else:
-                self.log().append('You smote and destroyed the ' + partname + ' of the ' + target.name + '!')
-                target.log().append(self.name + ' smote and destroyed your ' + partname + '!')
+                if target.imbalanced() and not alreadyimbalanced:
+                    self.log().append('You smote and destroyed the ' + partname + ' of the ' + target.name + ', imbalancing it!!')
+                    target.log().append(self.name + ' smote and destroyed your ' + partname + ', imbalancing you!')
+                else:
+                    self.log().append('You smote and destroyed the ' + partname + ' of the ' + target.name + '!')
+                    target.log().append(self.name + ' smote and destroyed your ' + partname + '!')
         else:
             self.log().append('You smote the ' + target.name + ' in the ' + partname + ', killing it!')
             target.log().append(self.name + ' smote you in the ' + partname + ', killing you!')

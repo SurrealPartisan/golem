@@ -159,7 +159,10 @@ class BodyPart(item.Item):
         if 'torso' in self.categories:
             maxlegs = len([connection for connection in self.childconnections.values() if 'leg' in connection.categories])
             functioninglegs = len([connection for connection in self.childconnections.values() if 'leg' in connection.categories and connection.child != None and 'leg' in connection.child.categories and not connection.child.destroyed() and not connection.child.incapacitated()])
-            return 0 < functioninglegs <= maxlegs/2
+            if functioninglegs < 4:
+                return 0 < functioninglegs <= maxlegs/2
+            else:
+                return False
         elif 'leg' in self.categories:
             return self.imbalanceclock > 0
         else:
