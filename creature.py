@@ -8,7 +8,7 @@ Created on Mon Sep 12 21:16:44 2022
 import numpy as np
 import bodypart
 import item
-from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween
+from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween, directionnames
 
 def checkitems(creat, cave, x,y):
     for it in cave.items:
@@ -436,6 +436,13 @@ class Creature():
         self.y_old = self.y
         self.x += dx
         self.y += dy
+        for smellx in [self.x_old-1, self.x_old, self.x_old+1]:
+            for smelly in [self.y_old-1, self.y_old, self.y_old+1]:
+                smelldistance = np.sqrt((smellx - self.x_old)**2 + (smelly - self.y_old)**2)
+                if self in self.world.smells[smellx][smelly]:
+                    self.world.smells[smellx][smelly][self] = max(self.world.smells[smellx][smelly][self], self.smell()/(1+smelldistance))
+                else:
+                    self.world.smells[smellx][smelly][self] = self.smell()/(1+smelldistance)
         if self.stance != 'flying':
             for it in self.world.items:
                 if (it.x, it.y) == (self.x, self.y) and it.trap:
@@ -473,6 +480,20 @@ class Creature():
                     self.godsknown().append(gd)
                     self.log().append('You learn the ways of ' + gd.name + ', the ' + gd.faction + '-god of ' + gd.sin + '.')
                     self.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
+        if self.senseofsmell() > 0:
+            for creat in self.world.smells[self.x][self.y]:
+                if creat != self and self.world.smells[self.x][self.y][creat] > 1/self.senseofsmell():
+                    strongestsmell = self.world.smells[self.x][self.y][creat]
+                    strongestdcoords = (0, 0)
+                    for dx2 in [-1, 0, 1]:
+                        for dy2 in [-1, 0, 1]:
+                            if creat in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][creat] > strongestsmell:
+                                strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][creat]
+                                strongestdcoords = (dx2, dy2)
+                    if strongestdcoords != (0,0):
+                        self.log().append('You smell ' + creat.name + '. The smell gets stronger towards ' + directionnames[strongestdcoords] + '.')
+                    else:
+                        self.log().append('You smell ' + creat.name + '. The smell is at its strongest right here.')
         checkitems(self, self.world, self.x, self.y)
 
     def pray(self, gd):
@@ -484,6 +505,12 @@ class Creature():
 
     def minetime(self):
         return 1/self.minespeed()
+
+    def smell(self):
+        return sum([part.smell for part in self.bodyparts])
+
+    def senseofsmell(self):
+        return sum([part.senseofsmell for part in self.bodyparts if hasattr(part, 'senseofsmell')])
 
     def sight(self):
         if (self.world.largerocks[self.x, self.y] or self.stance == 'flying') and sum([part.sight() for part in self.bodyparts]) > 0:
@@ -1344,6 +1371,16 @@ class MolePerson(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
+            elif player in self.world.smells[self.x][self.y] and self.world.smells[self.x][self.y][player] > 1/self.senseofsmell():
+                strongestsmell = self.world.smells[self.x][self.y][player]
+                strongestdcoords = (0, 0)
+                for dx2 in [-1, 0, 1]:
+                    for dy2 in [-1, 0, 1]:
+                        if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
+                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestdcoords = (dx2, dy2)
+                if strongestdcoords != (0, 0):
+                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
@@ -1608,6 +1645,16 @@ class Dog(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
+            elif player in self.world.smells[self.x][self.y] and self.world.smells[self.x][self.y][player] > 1/self.senseofsmell():
+                strongestsmell = self.world.smells[self.x][self.y][player]
+                strongestdcoords = (0, 0)
+                for dx2 in [-1, 0, 1]:
+                    for dy2 in [-1, 0, 1]:
+                        if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
+                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestdcoords = (dx2, dy2)
+                if strongestdcoords != (0, 0):
+                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
@@ -1782,6 +1829,16 @@ class MoleMonk(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
+            elif player in self.world.smells[self.x][self.y] and self.world.smells[self.x][self.y][player] > 1/self.senseofsmell():
+                strongestsmell = self.world.smells[self.x][self.y][player]
+                strongestdcoords = (0, 0)
+                for dx2 in [-1, 0, 1]:
+                    for dy2 in [-1, 0, 1]:
+                        if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
+                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestdcoords = (dx2, dy2)
+                if strongestdcoords != (0, 0):
+                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
@@ -1869,6 +1926,16 @@ class Wolf(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
+            elif player in self.world.smells[self.x][self.y] and self.world.smells[self.x][self.y][player] > 1/self.senseofsmell():
+                strongestsmell = self.world.smells[self.x][self.y][player]
+                strongestdcoords = (0, 0)
+                for dx2 in [-1, 0, 1]:
+                    for dy2 in [-1, 0, 1]:
+                        if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
+                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestdcoords = (dx2, dy2)
+                if strongestdcoords != (0, 0):
+                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
@@ -2221,6 +2288,16 @@ class DireWolf(Creature):
                 target = player
             elif fovmap[player.x, player.y]:
                 self.targetcoords = (player.x, player.y)
+            elif player in self.world.smells[self.x][self.y] and self.world.smells[self.x][self.y][player] > 1/self.senseofsmell():
+                strongestsmell = self.world.smells[self.x][self.y][player]
+                strongestdcoords = (0, 0)
+                for dx2 in [-1, 0, 1]:
+                    for dy2 in [-1, 0, 1]:
+                        if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
+                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestdcoords = (dx2, dy2)
+                if strongestdcoords != (0, 0):
+                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!

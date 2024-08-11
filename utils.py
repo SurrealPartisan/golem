@@ -12,6 +12,8 @@ import pygame.locals as lc
 mapwidth, mapheight = 100, 40
 numlevels = 10
 difficulty = 0.75
+smellhalflife = 5
+smellmin = 0.01
 
 enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot', 'elemental']
 sins = ['pride', 'greed', 'wrath', 'envy', 'lust', 'gluttony', 'sloth']
@@ -86,6 +88,17 @@ class loglist(list):
             else:
                 super().append(start[:lastspace])
                 self.append(start[lastspace+1:] + end)
+
+directionnames = {(-1, -1): 'northwest',
+                  (0, -1): 'north',
+                  (1, -1): 'northeast',
+                  (-1, 0): 'west',
+                  (0, 0): 'here',
+                  (1, 0): 'east',
+                  (-1, 1): 'southwest',
+                  (0, 1): 'south',
+                  (1, 1): 'southeast',
+                  }
 
 bodypartshortnames = {'torso': 'torso',
                       'left arm': 'l arm',

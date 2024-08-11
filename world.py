@@ -9,6 +9,8 @@ Created on Thu Dec  8 17:32:51 2022
 from collections import namedtuple
 import numpy as np
 
+from utils import smellhalflife, smellmin
+
 Altar = namedtuple('Altar', ['x', 'y', 'god'])
 
 class World():
@@ -20,6 +22,11 @@ class World():
         self.lavapits = np.zeros((width, height))
         self.spiderwebs = np.zeros((width, height))
         self.poisongas = np.zeros((width, height))
+        self.smells = []
+        for i in range(width):
+            self.smells.append([])
+            for j in range(height):
+                self.smells[i].append({})
         self.items = []
         self.creatures = []
         self.altars = []
@@ -141,3 +148,14 @@ class World():
             x = np.random.randint(self.width)
             y = np.random.randint(self.height)
         self.stairsupcoords = (x, y)
+
+    def fadesmells(self, t):
+        for i in range(self.width):
+            for j in range(self.height):
+                toberemoved = []
+                for creat in self.smells[i][j]:
+                    self.smells[i][j][creat] = self.smells[i][j][creat]*2**-(t/smellhalflife)
+                    if self.smells[i][j][creat] < smellmin:
+                        toberemoved.append(creat)
+                for creat in toberemoved:
+                    del self.smells[i][j][creat]

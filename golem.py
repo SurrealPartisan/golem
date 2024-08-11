@@ -1200,6 +1200,7 @@ def game():
                         else:
                             it.entrap(player, part)
                             player.itemsseen().append(it)
+        cave.fadesmells(time)
         player.bleed(time)
         if cave.campfires[player.x, player.y] and player.stance != 'flying':
             player.burn('campfire', time)
@@ -3079,6 +3080,7 @@ def credits():
                     'pygame',
                     'Pygcurse',
                     'NumPy',
+                    'dill',
                     'PyInstaller',
                     '',
                     'Fonts:',
