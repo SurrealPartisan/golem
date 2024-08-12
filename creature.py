@@ -490,10 +490,14 @@ class Creature():
                             if creat in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][creat] > strongestsmell:
                                 strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][creat]
                                 strongestdcoords = (dx2, dy2)
-                    if strongestdcoords != (0,0):
-                        self.log().append('You smell ' + creat.name + '. The smell gets stronger towards ' + directionnames[strongestdcoords] + '.')
+                    if hasattr(creat, 'smellname'):
+                        smellname = creat.smellname
                     else:
-                        self.log().append('You smell ' + creat.name + '. The smell is at its strongest right here.')
+                        smellname = creat.name
+                    if strongestdcoords != (0,0):
+                        self.log().append('You smell a ' + smellname + '. The smell gets stronger towards ' + directionnames[strongestdcoords] + '.')
+                    else:
+                        self.log().append('You smell a ' + smellname + '. The smell is at its strongest right here.')
         checkitems(self, self.world, self.x, self.y)
 
     def pray(self, gd):
@@ -507,7 +511,8 @@ class Creature():
         return 1/self.minespeed()
 
     def smell(self):
-        return sum([part.smell for part in self.bodyparts])
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        return max(0, sum([part.smell for part in self.bodyparts] + [it.smell for it in wornlist if hasattr(it, 'smell')]))
 
     def senseofsmell(self):
         return sum([part.senseofsmell for part in self.bodyparts if hasattr(part, 'senseofsmell')])
@@ -1241,6 +1246,7 @@ class Zombie(Creature):
         self.char = 'z'
         self.color = (191, 255, 128)
         self.name = np.random.choice(['zombie', 'headless zombie', 'one-armed zombie', 'crawler zombie'], p=[0.7, 0.1, 0.1, 0.1])
+        self.smellname = 'zombie'
         self.x = x
         self.y = y
         self.torso = bodypart.ZombieTorso(self.bodyparts, 0, 0)
@@ -2075,6 +2081,7 @@ class Ghoul(Creature):
         self.char = 'g'
         self.color = (191, 255, 255)
         self.name = np.random.choice(['ghoul', 'headless ghoul', 'one-armed ghoul', 'crawler ghoul'], p=[0.7, 0.1, 0.1, 0.1])
+        self.smellname = 'ghoul'
         self.x = x
         self.y = y
         self.torso = bodypart.GhoulTorso(self.bodyparts, 0, 0)
@@ -2441,6 +2448,7 @@ class Ghast(Creature):
         self.char = 'g'
         self.color = (191, 255, 255)
         self.name = np.random.choice(['ghast', 'headless ghast', 'one-armed ghast', 'crawler ghast'], p=[0.7, 0.1, 0.1, 0.1])
+        self.smellname = 'ghast'
         self.x = x
         self.y = y
         self.torso = bodypart.GhastTorso(self.bodyparts, 0, 0)

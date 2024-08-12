@@ -745,8 +745,17 @@ class CapeOfFlying(Item):
         self.stances = ['flying']
         self._info = 'A magical cape. When worn, enables the flying stance.'
 
+class CapeOfSmellNeutralizing(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'cape of smell neutralizing', '(', (255, 0, 255))
+        self.wearable = True
+        self.wearcategory = 'back'
+        self.weight = 500
+        self.smell = -np.inf
+        self._info = 'A magical cape. When worn, prevents you from leaving a smell trace.'
+
 def randomBackItem(owner, x, y):
-    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying])(owner, x, y)
+    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying, CapeOfSmellNeutralizing])(owner, x, y)
 
 class RingOfCarrying(Item):
     def __init__(self, owner, x, y):
