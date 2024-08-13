@@ -83,10 +83,13 @@ class God(creature.Creature):
                 else:
                     self.log().append('You smote and destroyed the ' + partname + ' of the ' + target.name + '!')
                     target.log().append(self.name + ' smote and destroyed your ' + partname + '!')
+                targetbodypart.on_destruction(False)
         else:
             self.log().append('You smote the ' + target.name + ' in the ' + partname + ', killing it!')
             target.log().append(self.name + ' smote you in the ' + partname + ', killing you!')
             target.log().append('You are dead!')
+            if targetbodypart.destroyed():
+                targetbodypart.on_destruction(True)
             target.die()
             target.causeofdeath = ('smite', self)
 

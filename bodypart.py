@@ -460,7 +460,7 @@ class HumanStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
@@ -753,7 +753,7 @@ class ZombieStomach(BodyPart):
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -923,7 +923,7 @@ class MolePersonHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 15, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1013,7 +1013,7 @@ class MolePersonStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
@@ -1134,7 +1134,7 @@ class GoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Somewhat weak at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -1179,7 +1179,7 @@ class GoblinHead(BodyPart):
         self.maxhp = 20
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
-        self.weight = 5000
+        self.weight = 6000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
@@ -1276,8 +1276,8 @@ class GoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 10
-        self.weight = 900
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
@@ -1327,7 +1327,7 @@ class OctopusHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 20, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.42, 1, 1, 30, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1398,7 +1398,7 @@ class OctopusTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.8, timetaken, 1, 10, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.82, timetaken, 1, 5, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1490,7 +1490,7 @@ class OctopusStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (-1,),
             'living flesh': (1, 1, None),
@@ -1573,7 +1573,7 @@ class DogLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 5, 'sharp', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.72, 1, 1, 5, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -1602,7 +1602,7 @@ class DogHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.80, 1, 1, 25, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.82, 1, 1, 20, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1692,7 +1692,7 @@ class DogStomach(BodyPart):
         self._bottomheight = -8
         self.maxhp = 15
         self.weight = 800
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
             'living flesh': (1, 1, None),
@@ -1718,19 +1718,19 @@ class HobgoblinTorso(BodyPart):
         super().__init__(owner, x, y, 'hobgoblin torso', '*', (0, 255, 0))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 45, 19)),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 45, 19)),
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 40, 19)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 40, 19)),
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
-            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 50, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 45, 14), defensecoefficient=0.5, armorapplies=True),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 45, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 35, 14), defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True),
             'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True),
             'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 25, 14), defensecoefficient=0.8, armorapplies=True)
             }
-        self._topheight = 50
+        self._topheight = 45
         self._pronetopheight = 27
         self.maxhp = 100
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
@@ -1755,11 +1755,11 @@ class HobgoblinArm(BodyPart):
         self.categories = ['arm']
         self.childconnections = {}
         self._topheight = 5
-        self._bottomheight = -20
-        self.upperpoorlimit = 30
-        self.upperfinelimit = 15
-        self.lowerfinelimit = -15
-        self.lowerpoorlimit = -30
+        self._bottomheight = -25
+        self.upperpoorlimit = 35
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -20
+        self.lowerpoorlimit = -35
         self.maxhp = 30
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -1796,7 +1796,7 @@ class HobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 30, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.84, 1, 1, 30, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.84, 1, 1, 30, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1808,12 +1808,12 @@ class HobgoblinLeg(BodyPart):
         self.categories = ['leg']
         self.childconnections = {}
         self._topheight = 0
-        self._bottomheight = -80
+        self._bottomheight = -75
         self.upperpoorlimit = 35
         self.upperfinelimit = -15
-        self.lowerfinelimit = -80
-        self.lowerpoorlimit = -80
-        self.maxheight = 80
+        self.lowerfinelimit = -75
+        self.lowerpoorlimit = -75
+        self.maxheight = 75
         self.maxhp = 30
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -1824,7 +1824,7 @@ class HobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Somewhat weak at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -1839,15 +1839,15 @@ class HobgoblinLeg(BodyPart):
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
             if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
-                return 1.5
+                return 1
             else:
-                return 0.75
+                return 0.5
         else:
             return 0
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.64, 1, 1, 45, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -1877,7 +1877,7 @@ class HobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 40, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.64, 1, 1, 45, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1967,7 +1967,7 @@ class HobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 20
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
@@ -2056,7 +2056,7 @@ class MoleMonkArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 30, 'rough', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.84, 1, 1, 30, 'rough', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -2105,7 +2105,7 @@ class MoleMonkLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 40, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.64, 1, 1, 45, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -2134,7 +2134,7 @@ class MoleMonkHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 45, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.44, 1, 1, 45, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -2224,7 +2224,7 @@ class MoleMonkStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 20
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
@@ -2307,7 +2307,7 @@ class WolfLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 10, 'sharp', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.76, 1, 1, 10, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -2336,7 +2336,7 @@ class WolfHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 40, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.86, 1, 1, 40, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -2426,7 +2426,7 @@ class WolfStomach(BodyPart):
         self._bottomheight = -9
         self.maxhp = 20
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
             'living flesh': (1, 1, None),
@@ -2547,7 +2547,7 @@ class DrillArm(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.8, 1, 1, 50, 'rough', 0, [], [('bleed', 0.2)], self)]
+            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.88, 1, 1, 50, 'rough', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -2663,13 +2663,277 @@ class DrillBotBiomassProcessor(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (1, 1, None),
             'undead flesh': (1, 1, None)
             }
         self._info = 'A stomach consisting of electronics. Processes everything even somewhat edible perfectly. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
+
+
+
+class LobgoblinTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin torso', '*', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 45, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 45, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 50, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 35, 15), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 35, 15), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            }
+        self._topheight = 50
+        self._pronetopheight = 30
+        self.maxhp = 150
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 45000
+        self.carryingcapacity = 25000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A torso consisting of living flesh. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+class LobgoblinArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin arm', '~', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -30
+        self.upperpoorlimit = 40
+        self.upperfinelimit = 25
+        self.lowerfinelimit = -25
+        self.lowerpoorlimit = -40
+        self.maxhp = 40
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.95
+        self.throwspeed = 1.5
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.smell = 1
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.9, 1, 1, 50, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.9, 1, 1, 50, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class LobgoblinLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin leg', '~', (0, 255, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -80
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -80
+        self.lowerpoorlimit = -80
+        self.maxheight = 80
+        self.maxhp = 40
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 16000
+        self.carryingcapacity = 20000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.maxrunstamina = 10
+        self.smell = 1
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 1
+            else:
+                return 0.5
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.7, 1, 1, 75, 'blunt', 0, [], [], self)]
+        else:
+            return []
+
+class LobgoblinHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin head', '*', (0, 255, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 40
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.7, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class LobgoblinEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 30
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
+        self._info = 'An eye consisting of living flesh. Good at detecting traps.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class LobgoblinBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 30
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._info = 'A brain consisting of living flesh.'
+
+class LobgoblinHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 30
+        self.weight = 250
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
+
+class LobgoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 30
+        self.weight = 600
+        self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
+        self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
+
+class LobgoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 30
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
+class LobgoblinStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'lobgoblin stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 30
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+        self._info = 'A stomach consisting of living flesh.'
 
 
 
@@ -2760,7 +3024,7 @@ class GhoulArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 50, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.92, 1, 1, 60, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -2804,7 +3068,7 @@ class GhoulLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 75, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.72, 1, 1, 90, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -2846,7 +3110,7 @@ class GhoulHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 50, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.52, 2, 1, 60, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -2956,7 +3220,7 @@ class GhoulStomach(BodyPart):
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -3173,11 +3437,275 @@ class SmallFireElementalTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.8, timetaken, 1, 30, 'fire', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.94, timetaken, 1, 35, 'fire', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
             return []
+
+
+
+class MobgoblinTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin torso', '*', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 50, 21)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 50, 21)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 55, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 45, 16), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 40, 16), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 40, 16), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 30, 16), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 30, 16), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 35, 16), defensecoefficient=0.8, armorapplies=True)
+            }
+        self._topheight = 55
+        self._pronetopheight = 32
+        self.maxhp = 200
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 50000
+        self.carryingcapacity = 25000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A torso consisting of living flesh. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+class MobgoblinArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin arm', '~', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -35
+        self.upperpoorlimit = 45
+        self.upperfinelimit = 30
+        self.lowerfinelimit = -30
+        self.lowerpoorlimit = -45
+        self.maxhp = 50
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.95
+        self.throwspeed = 1.5
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 7000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.smell = 1
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.94, 1, 1, 70, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.94, 1, 1, 70, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class MobgoblinLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin leg', '~', (0, 255, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -85
+        self.upperpoorlimit = 45
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -85
+        self.lowerpoorlimit = -85
+        self.maxheight = 85
+        self.maxhp = 50
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 17000
+        self.carryingcapacity = 20000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.maxrunstamina = 10
+        self.smell = 1
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 1
+            else:
+                return 0.5
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.74, 1, 1, 105, 'blunt', 0, [], [], self)]
+        else:
+            return []
+
+class MobgoblinHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin head', '*', (0, 255, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 50
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.74, 1, 1, 105, 'sharp', 0, [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class MobgoblinEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 40
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
+        self._info = 'An eye consisting of living flesh. Good at detecting traps.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class MobgoblinBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 40
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._info = 'A brain consisting of living flesh.'
+
+class MobgoblinHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 40
+        self.weight = 250
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
+
+class MobgoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 40
+        self.weight = 600
+        self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
+        self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
+
+class MobgoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 40
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
+class MobgoblinStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mobgoblin stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 40
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+        self._info = 'A stomach consisting of living flesh.'
 
 
 
@@ -3254,7 +3782,7 @@ class DireWolfLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.7, 1, 1, 20, 'sharp', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.86, 1, 1, 20, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -3283,7 +3811,7 @@ class DireWolfHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.85, 1, 1, 60, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.96, 1, 1, 80, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -3399,29 +3927,29 @@ class JobgoblinTorso(BodyPart):
         super().__init__(owner, x, y, 'jobgoblin torso', '*', (0, 255, 0))
         self.categories = ['torso']
         self.childconnections = {
-            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
-            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 22)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 22)),
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 50, 17), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 17), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 17), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 35, 17), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 35, 17), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 40, 17), defensecoefficient=0.8, armorapplies=True)
             }
         self._topheight = 60
-        self._pronetopheight = 30
+        self._pronetopheight = 34
         self.maxhp = 250
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
         self._wearwieldname = 'torso'
-        self.weight = 45000
-        self.carryingcapacity = 20000
+        self.weight = 55000
+        self.carryingcapacity = 30000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3436,11 +3964,11 @@ class JobgoblinArm(BodyPart):
         self.categories = ['arm']
         self.childconnections = {}
         self._topheight = 5
-        self._bottomheight = -20
-        self.upperpoorlimit = 30
-        self.upperfinelimit = 15
-        self.lowerfinelimit = -15
-        self.lowerpoorlimit = -30
+        self._bottomheight = -40
+        self.upperpoorlimit = 50
+        self.upperfinelimit = 35
+        self.lowerfinelimit = -35
+        self.lowerpoorlimit = -50
         self.maxhp = 60
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -3449,7 +3977,7 @@ class JobgoblinArm(BodyPart):
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
         self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
-        self.weight = 5000
+        self.weight = 8000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
@@ -3477,7 +4005,7 @@ class JobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 65, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 65, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.98, 1, 1, 90, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.98, 1, 1, 90, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -3490,7 +4018,7 @@ class JobgoblinLeg(BodyPart):
         self.childconnections = {}
         self._topheight = 0
         self._bottomheight = -90
-        self.upperpoorlimit = 40
+        self.upperpoorlimit = 50
         self.upperfinelimit = -15
         self.lowerfinelimit = -90
         self.lowerpoorlimit = -90
@@ -3498,14 +4026,14 @@ class JobgoblinLeg(BodyPart):
         self.maxhp = 60
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
-        self.weight = 17000
-        self.carryingcapacity = 20000
+        self.weight = 18000
+        self.carryingcapacity = 25000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3528,7 +4056,7 @@ class JobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 90, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.78, 1, 1, 135, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -3550,7 +4078,7 @@ class JobgoblinHead(BodyPart):
         self.maxhp = 60
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
-        self.weight = 7000
+        self.weight = 6000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
@@ -3558,7 +4086,7 @@ class JobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 90, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.78, 1, 1, 135, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3569,7 +4097,7 @@ class JobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 40
+        self.maxhp = 50
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -3588,7 +4116,7 @@ class JobgoblinBrain(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 40
+        self.maxhp = 50
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -3609,7 +4137,7 @@ class JobgoblinHeart(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 40
+        self.maxhp = 50
         self.weight = 300
         self.bravery = 0.5
         self._info = 'A heart consisting of living flesh. Average bravery.'
@@ -3621,7 +4149,7 @@ class JobgoblinLung(BodyPart):
         self.childconnections = {}
         self._topheight = 10
         self._bottomheight = -10
-        self.maxhp = 40
+        self.maxhp = 50
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -3634,7 +4162,7 @@ class JobgoblinKidney(BodyPart):
         self.childconnections = {}
         self._topheight = 4
         self._bottomheight = -4
-        self.maxhp = 40
+        self.maxhp = 50
         self.weight = 100
         self.endotoxicity = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
@@ -3646,9 +4174,9 @@ class JobgoblinStomach(BodyPart):
         self.childconnections = {}
         self._topheight = 7
         self._bottomheight = -7
-        self.maxhp = 40
+        self.maxhp = 50
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
@@ -3745,7 +4273,7 @@ class GhastArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 70, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.0, 1, 1, 100, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -3789,7 +4317,7 @@ class GhastLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 105, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.8, 1, 1, 150, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -3831,7 +4359,7 @@ class GhastHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 70, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 2, 1, 100, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3842,7 +4370,7 @@ class GhastEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 45
+        self.maxhp = 55
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -3865,7 +4393,7 @@ class GhastBrain(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 45
+        self.maxhp = 55
         self.material = "undead flesh"
         self.weight = 1000
         self.log = loglist()
@@ -3888,7 +4416,7 @@ class GhastHeart(BodyPart):
         super().__init__(owner, x, y, 'ghast heart', '*', (150, 178, 82))
         self.categories = ['heart']
         self.childconnections = {}
-        self.maxhp = 45
+        self.maxhp = 55
         self.material = "undead flesh"
         self._topheight = 5
         self._bottomheight = -5
@@ -3906,7 +4434,7 @@ class GhastLung(BodyPart):
         self.childconnections = {}
         self._topheight = 10
         self._bottomheight = -10
-        self.maxhp = 45
+        self.maxhp = 55
         self.material = 'undead flesh'
         self.weight = 600
         self.breathepoisonresistance = 0.5
@@ -3923,7 +4451,7 @@ class GhastKidney(BodyPart):
         self.childconnections = {}
         self._topheight = 4
         self._bottomheight = -4
-        self.maxhp = 45
+        self.maxhp = 55
         self.material = 'undead flesh'
         self.weight = 120
         self._attackpoisonresistance = 1
@@ -3938,10 +4466,10 @@ class GhastStomach(BodyPart):
         self.childconnections = {}
         self._topheight = 7
         self._bottomheight = -7
-        self.maxhp = 45
+        self.maxhp = 55
         self.material = "undead flesh"
         self.weight = 1000
-        self.foodprocessing = { # Tuples, first item: is 1 if can eta normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -3951,6 +4479,798 @@ class GhastStomach(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+
+
+
+class NobgoblinTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin torso', '*', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 60, 23)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 60, 23)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 65, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 55, 18), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 50, 18), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 50, 18), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 40, 18), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 40, 18), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 45, 18), defensecoefficient=0.8, armorapplies=True)
+            }
+        self._topheight = 65
+        self._pronetopheight = 36
+        self.maxhp = 300
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 60000
+        self.carryingcapacity = 30000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+class NobgoblinArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin arm', '~', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -45
+        self.upperpoorlimit = 55
+        self.upperfinelimit = 40
+        self.lowerfinelimit = -40
+        self.lowerpoorlimit = -55
+        self.maxhp = 70
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.95
+        self.throwspeed = 1.5
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 9000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.smell = 1
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.02, 1, 1, 110, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.02, 1, 1, 110, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class NobgoblinLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin leg', '~', (0, 255, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -95
+        self.upperpoorlimit = 55
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -95
+        self.lowerpoorlimit = -95
+        self.maxheight = 95
+        self.maxhp = 70
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 19000
+        self.carryingcapacity = 25000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.maxrunstamina = 10
+        self.smell = 1
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 2
+            else:
+                return 1
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.82, 1, 1, 165, 'blunt', 0, [], [], self)]
+        else:
+            return []
+
+class NobgoblinHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin head', '*', (0, 255, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 70
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.82, 1, 1, 165, 'sharp', 0, [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class NobgoblinEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 60
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
+        self._info = 'An eye consisting of living flesh. Good at detecting traps.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class NobgoblinBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 60
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._info = 'A brain consisting of living flesh.'
+
+class NobgoblinHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'jobgoblin heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 60
+        self.weight = 300
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
+
+class NobgoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 60
+        self.weight = 600
+        self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
+        self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
+
+class NobgoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 60
+        self.weight = 100
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
+class NobgoblinStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nobgoblin stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 60
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+        self._info = 'A stomach consisting of living flesh.'
+
+
+
+class FobgoblinTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin torso', '*', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 65, 24)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 65, 24)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 70, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 60, 19), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 55, 19), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 55, 19), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 45, 19), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 45, 19), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 50, 19), defensecoefficient=0.8, armorapplies=True)
+            }
+        self._topheight = 70
+        self._pronetopheight = 38
+        self.maxhp = 350
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 65000
+        self.carryingcapacity = 35000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+class FobgoblinArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin arm', '~', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -50
+        self.upperpoorlimit = 60
+        self.upperfinelimit = 45
+        self.lowerfinelimit = -45
+        self.lowerpoorlimit = -60
+        self.maxhp = 80
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.95
+        self.throwspeed = 1.5
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 10000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.smell = 1
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.06, 1, 1, 130, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.06, 1, 1, 130, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class FobgoblinLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin leg', '~', (0, 255, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -100
+        self.upperpoorlimit = 60
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -100
+        self.lowerpoorlimit = -100
+        self.maxheight = 100
+        self.maxhp = 80
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 30000
+        self.carryingcapacity = 20000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.maxrunstamina = 10
+        self.smell = 1
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 2
+            else:
+                return 1
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.86, 1, 1, 195, 'blunt', 0, [], [], self)]
+        else:
+            return []
+
+class FobgoblinHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin head', '*', (0, 255, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 80
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.86, 1, 1, 195, 'sharp', 0, [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class FobgoblinEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 70
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
+        self._info = 'An eye consisting of living flesh. Good at detecting traps.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class FobgoblinBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 70
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._info = 'A brain consisting of living flesh.'
+
+class FobgoblinHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 70
+        self.weight = 300
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
+
+class FobgoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 70
+        self.weight = 600
+        self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
+        self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
+
+class FobgoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 70
+        self.weight = 100
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
+class FobgoblinStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fobgoblin stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 70
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+        self._info = 'A stomach consisting of living flesh.'
+
+
+
+class DobgoblinTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin torso', '*', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 70, 25)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 70, 25)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 75, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 65, 20), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 60, 20), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 60, 20), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 50, 20), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 50, 20), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 55, 20), defensecoefficient=0.8, armorapplies=True)
+            }
+        self._topheight = 75
+        self._pronetopheight = 40
+        self.maxhp = 400
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 70000
+        self.carryingcapacity = 35000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+class DobgoblinArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin arm', '~', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -55
+        self.upperpoorlimit = 65
+        self.upperfinelimit = 50
+        self.lowerfinelimit = -50
+        self.lowerpoorlimit = -65
+        self.maxhp = 90
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.95
+        self.throwspeed = 1.5
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 11000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.smell = 1
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.10, 1, 1, 150, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.10, 1, 1, 150, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class DobgoblinLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin leg', '~', (0, 255, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -105
+        self.upperpoorlimit = 65
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -105
+        self.lowerpoorlimit = -105
+        self.maxheight = 105
+        self.maxhp = 90
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 21000
+        self.carryingcapacity = 30000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.carefulness = 0.75
+        self.maxrunstamina = 10
+        self.smell = 1
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 2
+            else:
+                return 1
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.90, 1, 1, 225, 'blunt', 0, [], [], self)]
+        else:
+            return []
+
+class DobgoblinHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin head', '*', (0, 255, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 90
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 6000
+        self._resistances['sharp'] = 0.2
+        self._resistances['blunt'] = -0.2
+        self.smell = 1
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.90, 1, 1, 225, 'sharp', 0, [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class DobgoblinEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 80
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.3
+        self._info = 'An eye consisting of living flesh. Good at detecting traps.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class DobgoblinBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 80
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._info = 'A brain consisting of living flesh.'
+
+class DobgoblinHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 80
+        self.weight = 300
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
+
+class DobgoblinLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 80
+        self.weight = 600
+        self.breathepoisonresistance = 0.2
+        self.runstaminarecoveryspeed = 0.5
+        self._info = 'A lung consisting of living flesh. Some protection against poison gas.'
+
+class DobgoblinKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 80
+        self.weight = 100
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
+class DobgoblinStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dobgoblin stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 80
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+        self._info = 'A stomach consisting of living flesh.'
 
 
 
@@ -4022,7 +5342,7 @@ class DeinonychusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 100, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -4058,7 +5378,7 @@ class CeratosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 100, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 150, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -4094,7 +5414,7 @@ class AllosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 125, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 200, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -4130,6 +5450,6 @@ class TyrannosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 150, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 250, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
