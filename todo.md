@@ -8,6 +8,7 @@ Major
 * Sense of hearing
   * Wolf howling
 * Make NPC:s use items (and consider carrying capacity)
+  * Make Bodypart.on_destruction work also when dying.
 * Spellcasting
 
 Never ready
