@@ -1005,7 +1005,8 @@ def game():
                 else:
                     highgroundcoefficient = 1
                 distance = np.sqrt((targetcoords[0] - player.x)**2 + (targetcoords[1] - player.y)**2)
-                notwielded = selectedattack.weapon.owner == player.inventory
+                wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
+                notwielded = selectedattack.weapon.owner == player.inventory and not np.any([hasattr(it, 'quickdraw') and it.quickdraw for it in wornlist])
                 throwtime = (1/limb.throwspeed + notwielded) * (1 + player.slowed())
                 if int(throwtime) == throwtime:
                     throwtime = int(throwtime)
@@ -1449,6 +1450,8 @@ def game():
                             deathmessage = 'burned to death ' + player.causeofdeath[1]
                         elif player.causeofdeath[0] == 'step':
                             deathmessage = 'died from stepping on ' + player.causeofdeath[1].name
+                        elif player.causeofdeath[0] == 'trip':
+                            deathmessage = 'died from tripping on ' + player.causeofdeath[1].name
                         elif player.causeofdeath[0] == 'ranintowall':
                             deathmessage = 'died from running into wall ' + player.causeofdeath[1] + ' first'
                         else:
@@ -2505,7 +2508,8 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
-                            notwielded = selectedattack.weapon.owner == player.inventory
+                            wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
+                            notwielded = selectedattack.weapon.owner == player.inventory and not np.any([hasattr(it, 'quickdraw') and it.quickdraw for it in wornlist])
                             updatetime((1/selected.throwspeed + notwielded) * (1 + player.slowed()))
                             if not player.dying():
                                 if target != None and not target.dead:

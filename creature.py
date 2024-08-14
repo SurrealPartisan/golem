@@ -500,6 +500,11 @@ class Creature():
                         self.log().append('You smell a ' + smellname + '. The smell is at its strongest right here.')
         checkitems(self, self.world, self.x, self.y)
 
+    def godlylove(self):
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        return 1 + sum([part.godlylove for part in self.bodyparts if hasattr(part, 'godlylove') and not (part.destroyed() or part.incapacitated())]) + sum([it.godlylove for it in wornlist if hasattr(it, 'godlylove')]) + sum([it.godlylove for it in wieldlist if hasattr(it, 'godlylove')])
+
     def pray(self, gd):
         self.log().append('You prayed to ' + gd.name + '.')
         gd.answer_to_prayer(self)
@@ -701,6 +706,7 @@ class Creature():
             self.log().append('You were unable to finish your throw.')
 
     def fight(self, target, targetbodypart, attack, thrown=False):
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         if attack.weapon in self.bodyparts:
             attackingpart = attack.weapon
         elif attack.weapon.owner != self.world.items:
@@ -733,7 +739,7 @@ class Creature():
                             highgroundcoefficient = 0.95
                         else:
                             highgroundcoefficient = 1
-                        if not thrown:
+                        if not thrown and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
                             upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
                             upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
                             lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
@@ -2796,6 +2802,104 @@ class Nobgoblin(Creature):
         else:
             return(['wait', 1])
 
+class Warg(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'canine'
+        self.char = 'W'
+        self.color = (150, 150, 1200)
+        self.name = 'warg'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.WargTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('front left leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.WargHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.WargLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.WargLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.WargKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.WargKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.WargStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('tail', bodypart.WargTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.WargHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.WargBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.WargEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.WargEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        disoriented = False
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
+            disoriented = True
+            self.log().append('You stumble around.')
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            elif player in self.world.smells[self.x][self.y] and self.world.smells[self.x][self.y][player] > 1/self.senseofsmell():
+                strongestsmell = self.world.smells[self.x][self.y][player]
+                strongestdcoords = (0, 0)
+                for dx2 in [-1, 0, 1]:
+                    for dy2 in [-1, 0, 1]:
+                        if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
+                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestdcoords = (dx2, dy2)
+                if strongestdcoords != (0, 0):
+                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                maxdmglist = [atk[8] for atk in self.attackslist()]
+                i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            elif not disoriented:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0):
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    if not self.world.walls[self.x+dx, self.y+dy]:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['bump', time/2])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
 class Fobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
@@ -2857,6 +2961,91 @@ class Fobgoblin(Creature):
                 dx = 0
                 dy = 0
                 while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0):
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    if not self.world.walls[self.x+dx, self.y+dy]:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['bump', time/2])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+class LargeFireElemental(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.faction = 'elemental'
+        self.char = 'F'
+        self.color = (255, 204, 0)
+        self.name = 'large fire elemental'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.LargeFireElementalTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('left arm', bodypart.LargeFireElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right arm', bodypart.LargeFireElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front left limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.LargeFireElementalHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.LargeFireElementalHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.LargeFireElementalBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        disoriented = False
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
+            disoriented = True
+            self.log().append('You stumble around.')
+        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            elif not disoriented:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
                     dx = np.random.choice([-1,0,1])
                     dy = np.random.choice([-1,0,1])
                 time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
@@ -2982,8 +3171,8 @@ enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy ty
     [(DireWolf, 10), (Jobgoblin, 10)],
     [(Jobgoblin, 10), (Ghast, 10)],
     [(Ghast, 10), (Nobgoblin, 10)],
-    [(Nobgoblin, 10)],
-    [(Fobgoblin, 10)],
-    [(Fobgoblin, 10)],
-    [(Dobgoblin, 10)]
+    [(Nobgoblin, 10), (Warg, 10)],
+    [(Warg, 10), (Fobgoblin, 10)],
+    [(Fobgoblin, 10), (LargeFireElemental, 10)],
+    [(LargeFireElemental, 10), (Dobgoblin, 10)]
     ]

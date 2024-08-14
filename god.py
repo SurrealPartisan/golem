@@ -95,9 +95,9 @@ class God(creature.Creature):
 
     def answer_to_prayer(self, creat):
         if self.attitude == 'irritable':
-            limit = 200
+            limit = 200/creat.godlylove()
         else:
-            limit = 100
+            limit = 100/creat.godlylove()
         if not creat in self.prayerclocks or self.prayerclocks[creat] > limit:
             creat.log().append(self.name + ' is pleased by your prayer.')
             self.bless(creat)

@@ -234,7 +234,7 @@ class HumanTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 50
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 45000
         self.carryingcapacity = 20000
@@ -491,7 +491,7 @@ class ZombieTorso(BodyPart):
         self._pronetopheight = 30
         self.maxhp = 50
         self.material = "undead flesh"
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 40000
         self.carryingcapacity = 30000
@@ -499,7 +499,7 @@ class ZombieTorso(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.smell = 2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -534,7 +534,7 @@ class ZombieArm(BodyPart):
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -587,7 +587,7 @@ class ZombieLeg(BodyPart):
         self.carefulness = 0.3
         self.maxrunstamina = 20
         self.smell = 2
-        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -639,7 +639,7 @@ class ZombieHead(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.smell = 2
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -662,7 +662,7 @@ class ZombieEye(BodyPart):
         self._resistances['sharp'] = -0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -693,7 +693,7 @@ class ZombieBrain(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -709,7 +709,7 @@ class ZombieHeart(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class ZombieLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -726,7 +726,7 @@ class ZombieLung(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class ZombieKidney(BodyPart):
     def __init__(self, owner, x, y):
@@ -741,7 +741,7 @@ class ZombieKidney(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = -0.5
         self._resistances['sharp'] = -0.2
-        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage.'
 
 class ZombieStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -762,7 +762,7 @@ class ZombieStomach(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 
@@ -786,7 +786,7 @@ class MolePersonTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 50
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 45000
         self.carryingcapacity = 20000
@@ -1043,14 +1043,14 @@ class GoblinTorso(BodyPart):
         self._topheight = 40
         self._pronetopheight = 25
         self.maxhp = 50
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 25000
         self.carryingcapacity = 20000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -1083,7 +1083,7 @@ class GoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1134,7 +1134,7 @@ class GoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Somewhat weak at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Somewhat weak at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -1183,7 +1183,7 @@ class GoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1318,7 +1318,7 @@ class OctopusHead(BodyPart):
         self.lowerfinelimit = 0
         self.lowerpoorlimit = 0
         self.maxhp = 80
-        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 40000
         self.carryingcapacity = 20000
@@ -1521,7 +1521,7 @@ class DogTorso(BodyPart):
         self._topheight = 18
         self._bottomheight = -18
         self.maxhp = 75
-        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 20000
         self.carryingcapacity = 20000
@@ -1656,7 +1656,8 @@ class DogHeart(BodyPart):
         self.maxhp = 15
         self.weight = 400
         self.bravery = 0.5
-        self._info = 'A heart consisting of living flesh. Average bravery.'
+        self.godlylove = 1
+        self._info = 'A heart consisting of living flesh. Average bravery. Reduces the waiting period between successful prayers, as all gods love a good dog.'
 
 class DogLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -1733,14 +1734,14 @@ class HobgoblinTorso(BodyPart):
         self._topheight = 45
         self._pronetopheight = 27
         self.maxhp = 100
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 35000
         self.carryingcapacity = 20000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -1773,7 +1774,7 @@ class HobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1824,7 +1825,7 @@ class HobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Somewhat weak at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Somewhat weak at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -1873,7 +1874,7 @@ class HobgoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1997,7 +1998,7 @@ class MoleMonkTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 100
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 50000
         self.carryingcapacity = 30000
@@ -2255,7 +2256,7 @@ class WolfTorso(BodyPart):
         self._topheight = 20
         self._bottomheight = -20
         self.maxhp = 150
-        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 25000
         self.carryingcapacity = 25000
@@ -2440,7 +2441,7 @@ class WolfTail(BodyPart):
         self.categories = ['tail']
         self.childconnections = {}
         self._bottomheight = -65
-        self.maxhp = 10
+        self.maxhp = 20
         self.weight = 500
         self.smell = 1
         self._info = 'A tail consisting of living flesh.'
@@ -2467,7 +2468,7 @@ class DrillbotChassis(BodyPart):
             }
         self._topheight = 50
         self.maxhp = 150
-        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'chassis'
         self.weight = 30000
         self.carryingcapacity = 50000
@@ -2476,7 +2477,7 @@ class DrillbotChassis(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A torso consisting of electronics. Has very good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks. No smell.'
+        self._info = 'A torso consisting of electronics. Has very good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage. No smell.'
 
 class DrillbotWheel(BodyPart):
     def __init__(self, owner, x, y):
@@ -2499,7 +2500,7 @@ class DrillbotWheel(BodyPart):
         self._resistances['rough'] = -0.5
         self.carefulness = 0.5
         self.maxrunstamina = 20
-        self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Very weak against sharp and rough attacks. Very fast if there are at least four legs or wheels, and quite fast even when there are two. High "running" stamina. No smell.'
+        self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Very weak against sharp and rough damage. Very fast if there are at least four legs or wheels, and quite fast even when there are two. High "running" stamina. No smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -2540,7 +2541,7 @@ class DrillArm(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A dual-purpose pneumatic drill arm consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks. Can be used for mining. No smell.'
+        self._info = 'A dual-purpose pneumatic drill arm consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage. Can be used for mining. No smell.'
 
     def minespeed(self):
         return 0.5
@@ -2567,7 +2568,7 @@ class DrillbotCamera(BodyPart):
         self._resistances['sharp'] = 0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
-        self._info = 'An eye consisting of electronics. Good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
+        self._info = 'An eye consisting of electronics. Good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2590,7 +2591,7 @@ class DrillbotPump(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
         self.bravery = 0.5
-        self._info = 'A heart consisting of electronics. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
+        self._info = 'A heart consisting of electronics. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage.'
 
 class DrillbotAerator(BodyPart):
     def __init__(self, owner, x, y):
@@ -2606,7 +2607,7 @@ class DrillbotAerator(BodyPart):
         self.breathepoisonresistance = 0.5
         self.runstaminarecoveryspeed = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A lung consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Recovers running stamina quickly. Resistant against sharp attacks.'
+        self._info = 'A lung consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Recovers running stamina quickly. Resistant against sharp damage.'
 
 class DrillbotFilter(BodyPart):
     def __init__(self, owner, x, y):
@@ -2621,7 +2622,7 @@ class DrillbotFilter(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = -1
         self._resistances['sharp'] = 0.2
-        self._info = 'A kidney consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Filters toxins at an average speed. Resistant against sharp attacks.'
+        self._info = 'A kidney consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Filters toxins at an average speed. Resistant against sharp damage.'
 
 class DrillbotProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -2647,7 +2648,7 @@ class DrillbotProcessor(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A brain consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
+        self._info = 'A brain consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage.'
 
 class DrillBotBiomassProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -2669,7 +2670,7 @@ class DrillBotBiomassProcessor(BodyPart):
             'living flesh': (1, 1, None),
             'undead flesh': (1, 1, None)
             }
-        self._info = 'A stomach consisting of electronics. Processes everything even somewhat edible perfectly. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp attacks.'
+        self._info = 'A stomach consisting of electronics. Processes everything even somewhat edible perfectly. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage.'
 
 
 
@@ -2693,14 +2694,14 @@ class LobgoblinTorso(BodyPart):
         self._topheight = 50
         self._pronetopheight = 30
         self.maxhp = 150
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 45000
         self.carryingcapacity = 25000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Rather strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -2733,7 +2734,7 @@ class LobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2784,7 +2785,7 @@ class LobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -2833,7 +2834,7 @@ class LobgoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2958,7 +2959,7 @@ class GhoulTorso(BodyPart):
         self._pronetopheight = 30
         self.maxhp = 175
         self.material = "undead flesh"
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 40000
         self.carryingcapacity = 60000
@@ -2966,7 +2967,7 @@ class GhoulTorso(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.smell = 2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3001,7 +3002,7 @@ class GhoulArm(BodyPart):
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3054,7 +3055,7 @@ class GhoulLeg(BodyPart):
         self.carefulness = 0.3
         self.maxrunstamina = 20
         self.smell = 2
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3106,7 +3107,7 @@ class GhoulHead(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.smell = 2
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 10 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 10 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3129,7 +3130,7 @@ class GhoulEye(BodyPart):
         self._resistances['sharp'] = -0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3160,7 +3161,7 @@ class GhoulBrain(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhoulHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -3176,7 +3177,7 @@ class GhoulHeart(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.bravery = 0.5
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhoulLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -3193,7 +3194,7 @@ class GhoulLung(BodyPart):
         self._resistances['sharp'] = -0.2
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhoulKidney(BodyPart):
     def __init__(self, owner, x, y):
@@ -3208,7 +3209,7 @@ class GhoulKidney(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = -0.5
         self._resistances['sharp'] = -0.2
-        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage.'
 
 class GhoulStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -3229,7 +3230,7 @@ class GhoulStomach(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 
@@ -3252,7 +3253,7 @@ class SmallFireElementalTorso(BodyPart):
             }
         self._topheight = 100
         self.maxhp = 200
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 400
         self.carryingcapacity = 60000
@@ -3261,7 +3262,7 @@ class SmallFireElementalTorso(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A torso consisting of elemental fire. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks. No smell.'
+        self._info = 'A torso consisting of elemental fire. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
 
 class SmallFireElementalHead(BodyPart):
     def __init__(self, owner, x, y):
@@ -3282,7 +3283,7 @@ class SmallFireElementalHead(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A head consisting of elemental fire.Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks. No smell.'
+        self._info = 'A head consisting of elemental fire.Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
 
 class SmallFireElementalEye(BodyPart):
     def __init__(self, owner, x, y):
@@ -3300,7 +3301,7 @@ class SmallFireElementalEye(BodyPart):
         self._resistances['fire'] = 1
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
-        self._info = 'An eye consisting of elemental fire. Sees much farther than most, and is rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
+        self._info = 'An eye consisting of elemental fire. Sees much farther than most, and is rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3332,7 +3333,7 @@ class SmallFireElementalBrain(BodyPart):
         self.frightenedby = []
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A brain consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
+        self._info = 'A brain consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
 
 class SmallFireElementalHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -3349,7 +3350,7 @@ class SmallFireElementalHeart(BodyPart):
         self.bravery = 0.5
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks.'
+        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
 
 class SmallFireElementalBellows(BodyPart):
     def __init__(self, owner, x, y):
@@ -3364,7 +3365,7 @@ class SmallFireElementalBellows(BodyPart):
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
         self._resistances['fire'] = 1
-        self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire attacks.'
+        self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire damage.'
 
 class SmallFireElementalTentacle(BodyPart):
     def __init__(self, owner, x, y):
@@ -3396,7 +3397,7 @@ class SmallFireElementalTentacle(BodyPart):
         self._resistances['fire'] = 1
         self.carefulness = 0.5
         self.maxrunstamina = 10
-        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire attacks. No smell.'
+        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
 
     def standingheight(self):
         legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3465,14 +3466,14 @@ class MobgoblinTorso(BodyPart):
         self._topheight = 55
         self._pronetopheight = 32
         self.maxhp = 200
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 50000
         self.carryingcapacity = 25000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Rather strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3505,7 +3506,7 @@ class MobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3556,7 +3557,7 @@ class MobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3605,7 +3606,7 @@ class MobgoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3730,7 +3731,7 @@ class DireWolfTorso(BodyPart):
         self._topheight = 22
         self._bottomheight = -22
         self.maxhp = 225
-        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 35000
         self.carryingcapacity = 40000
@@ -3822,7 +3823,7 @@ class DireWolfEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 20
+        self.maxhp = 45
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -3841,7 +3842,7 @@ class DireWolfBrain(BodyPart):
         self.childconnections = {}
         self._topheight = 3
         self._bottomheight = -3
-        self.maxhp = 20
+        self.maxhp = 45
         self.weight = 120
         self.log = loglist()
         self.seen = []
@@ -3862,7 +3863,7 @@ class DireWolfHeart(BodyPart):
         self.childconnections = {}
         self._topheight = 7
         self._bottomheight = -7
-        self.maxhp = 35
+        self.maxhp = 45
         self.weight = 700
         self.bravery = 0.75
         self._info = 'A heart consisting of living flesh. Very brave.'
@@ -3874,7 +3875,7 @@ class DireWolfLung(BodyPart):
         self.childconnections = {}
         self._topheight = 9
         self._bottomheight = -9
-        self.maxhp = 35
+        self.maxhp = 45
         self.weight = 800
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -3887,7 +3888,7 @@ class DireWolfKidney(BodyPart):
         self.childconnections = {}
         self._topheight = 2
         self._bottomheight = -2
-        self.maxhp = 35
+        self.maxhp = 45
         self.weight = 160
         self.endotoxicity = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
@@ -3899,7 +3900,7 @@ class DireWolfStomach(BodyPart):
         self.childconnections = {}
         self._topheight = 9
         self._bottomheight = -9
-        self.maxhp = 30
+        self.maxhp = 45
         self.weight = 1000
         self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -3915,7 +3916,7 @@ class DireWolfTail(BodyPart):
         self.categories = ['tail']
         self.childconnections = {}
         self._bottomheight = -72
-        self.maxhp = 10
+        self.maxhp = 45
         self.weight = 600
         self.smell = 1
         self._info = 'A tail consisting of living flesh.'
@@ -3942,14 +3943,14 @@ class JobgoblinTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 34
         self.maxhp = 250
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 55000
         self.carryingcapacity = 30000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -3982,7 +3983,7 @@ class JobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4033,7 +4034,7 @@ class JobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Rather strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -4082,7 +4083,7 @@ class JobgoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4207,7 +4208,7 @@ class GhastTorso(BodyPart):
         self._pronetopheight = 30
         self.maxhp = 275
         self.material = "undead flesh"
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 40000
         self.carryingcapacity = 60000
@@ -4215,7 +4216,7 @@ class GhastTorso(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.smell = 2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -4250,7 +4251,7 @@ class GhastArm(BodyPart):
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4303,7 +4304,7 @@ class GhastLeg(BodyPart):
         self.carefulness = 0.3
         self.maxrunstamina = 20
         self.smell = 2
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -4355,7 +4356,7 @@ class GhastHead(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.smell = 2
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 15 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 15 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4378,7 +4379,7 @@ class GhastEye(BodyPart):
         self._resistances['sharp'] = -0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4409,7 +4410,7 @@ class GhastBrain(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhastHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -4425,7 +4426,7 @@ class GhastHeart(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhastLung(BodyPart):
     def __init__(self, owner, x, y):
@@ -4442,7 +4443,7 @@ class GhastLung(BodyPart):
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.runstaminarecoveryspeed = 0.25
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhastKidney(BodyPart):
     def __init__(self, owner, x, y):
@@ -4457,7 +4458,7 @@ class GhastKidney(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = -0.5
         self._resistances['sharp'] = -0.2
-        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks.'
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage.'
 
 class GhastStomach(BodyPart):
     def __init__(self, owner, x, y):
@@ -4478,7 +4479,7 @@ class GhastStomach(BodyPart):
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp attacks. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 
@@ -4502,14 +4503,14 @@ class NobgoblinTorso(BodyPart):
         self._topheight = 65
         self._pronetopheight = 36
         self.maxhp = 300
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 60000
         self.carryingcapacity = 30000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -4542,7 +4543,7 @@ class NobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4593,7 +4594,7 @@ class NobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Rather strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Rather strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -4642,7 +4643,7 @@ class NobgoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4746,6 +4747,219 @@ class NobgoblinStomach(BodyPart):
 
 
 
+class WargTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg torso', '*', (150, 150, 200))
+        self.categories = ['torso']
+        self.childconnections = {
+            'front left leg': BodyPartConnection(self, ['leg'], False, 'front left ', constantfunction(0)),
+            'front right leg': BodyPartConnection(self, ['leg'], False, 'front right ', constantfunction(0)),
+            'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
+            'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', constantfunction(15)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-6), defensecoefficient=0.5, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(13), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(13), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(20))
+            }
+        self._topheight = 25
+        self._bottomheight = -25
+        self.maxhp = 325
+        self.worn = {'barding': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 50000
+        self.carryingcapacity = 60000
+        self.smell = 1
+        self._info = 'A torso consisting of living flesh. Extremely strong at carrying.'
+
+class WargLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg leg', '~', (150, 150, 200))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -76
+        self.upperpoorlimit = 38
+        self.upperfinelimit = -32
+        self.lowerfinelimit = -76
+        self.lowerpoorlimit = -76
+        self.maxheight = 76
+        self.maxhp = 90
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 9000
+        self.carryingcapacity = 15000
+        self.carefulness = 0.5
+        self.maxrunstamina = 10
+        self.smell = 1
+        self._info = 'A leg consisting of living flesh. On its own somewhat weak at carrying. Very fast if there are at least four legs, and quite fast even when there are two.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 3:
+                return 2
+            elif len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 1.5
+            else:
+                return 0.5
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.86, 1, 1, 20, 'sharp', 0, [], [], self)]
+        else:
+            return []
+
+class WargHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg head', '*', (150, 150, 200))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(31), defensecoefficient=0.5, armorapplies=True)
+            }
+        self._topheight = 38
+        self._bottomheight = 0
+        self.upperpoorlimit = 69
+        self.upperfinelimit = 38
+        self.lowerfinelimit = -83
+        self.lowerpoorlimit = -89
+        self.maxhp = 90
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 9000
+        self.smell = 1
+        self.senseofsmell = 10
+        self._info = 'A head consisting of living flesh. Good sense of smell.'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.96, 1, 1, 80, 'sharp', 0, [], [('bleed', 0.2)], self)]
+        else:
+            return []
+
+class WargEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg eye', '*', (255, 255, 0))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 65
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
+        self._info = 'An eye consisting of living flesh. Sees farther than most.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 4
+        else:
+            return 0
+
+class WargBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 3
+        self._bottomheight = -3
+        self.maxhp = 65
+        self.weight = 120
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._info = 'A brain consisting of living flesh.'
+
+class WargHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 65
+        self.weight = 700
+        self.bravery = 0.75
+        self._info = 'A heart consisting of living flesh. Very brave.'
+
+class WargLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 65
+        self.weight = 1000
+        self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
+        self._info = 'A lung consisting of living flesh.'
+
+class WargKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 2
+        self._bottomheight = -2
+        self.maxhp = 65
+        self.weight = 160
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
+
+class WargStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 9
+        self._bottomheight = -9
+        self.maxhp = 65
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
+            'living flesh': (1, 1, None),
+            'undead flesh': (-1,)
+            }
+        self._info = 'A stomach consisting of living flesh. Very poor at processing vegetables.'
+
+class WargTail(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'warg tail', '~', (150, 150, 200))
+        self.categories = ['tail']
+        self.childconnections = {}
+        self._bottomheight = -83
+        self.maxhp = 65
+        self.weight = 900
+        self.smell = 1
+        self._info = 'A tail consisting of living flesh.'
+
+
+
 class FobgoblinTorso(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'fobgoblin torso', '*', (0, 255, 0))
@@ -4766,14 +4980,14 @@ class FobgoblinTorso(BodyPart):
         self._topheight = 70
         self._pronetopheight = 38
         self.maxhp = 350
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 65000
         self.carryingcapacity = 35000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -4806,7 +5020,7 @@ class FobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4857,7 +5071,7 @@ class FobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -4906,7 +5120,7 @@ class FobgoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5010,6 +5224,276 @@ class FobgoblinStomach(BodyPart):
 
 
 
+class LargeFireElementalTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'large fire elemental torso', '*', (255, 204, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', constantfunction(145)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', constantfunction(145)),
+            'head': BodyPartConnection(self, ['head'], True, '', constantfunction(150)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
+            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
+            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(90), defensecoefficient=0.8, armorapplies=True),
+            'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
+            'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left ', constantfunction(0)),
+            'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right ', constantfunction(0)),
+            'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ', constantfunction(0))
+            }
+        self._topheight = 150
+        self.maxhp = 375
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 800
+        self.carryingcapacity = 60000
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
+        self._info = 'A torso consisting of elemental fire. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
+
+class LargeFireElementalArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'large fire elemental arm', '~', (255, 204, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -55
+        self.upperpoorlimit = 65
+        self.upperfinelimit = 50
+        self.lowerfinelimit = -50
+        self.lowerpoorlimit = -65
+        self.maxhp = 85
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.97
+        self.throwspeed = 1
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 100
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
+        self.carefulness = 0.5
+        self._info = 'An arm consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist burn', 'burned', 'burned', '', '', 1.08, 1, 1, 140, 'fire', 0, [], [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class LargeFireElementalHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'large fire elemental head', '*', (255, 204, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.maxhp = 90
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 200
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
+        self._info = 'A head consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
+
+class LargeFireElementalEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'flaming eye', '*', (255, 204, 0))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 3
+        self._bottomheight = -3
+        self.maxhp = 75
+        self.weight = 0
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
+        self._info = 'An eye consisting of elemental fire. Rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class LargeFireElementalBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'large fire elemental brain', '*', (255, 204, 0))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 75
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 10
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
+        self._info = 'A brain consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
+
+class LargeFireElementalHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'burning heart', '*', (255, 204, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 75
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 10
+        self.bravery = 0.5
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
+        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
+
+class LargeFireElementalBellows(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'large fire elemental bellows', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 12
+        self._bottomheight = -12
+        self.maxhp = 75
+        self.material = 'elemental'
+        self.weight = 600
+        self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
+        self._resistances['fire'] = 1
+        self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire damage.'
+
+class LargeFireElementalTentacle(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'large fire elemental tentacle', '~', (255, 204, 0))
+        self.categories = ['arm', 'leg', 'tentacle']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -30
+        self.upperpoorlimit = 150
+        self.upperfinelimit = 100
+        self.lowerfinelimit = -100
+        self.lowerpoorlimit = -150
+        self.maxheight = 200
+        self.minheight = 30
+        self.maxhp = 90
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.95
+        self.throwspeed = 0.75
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'tentacle'
+        self.worn = {'tentacle armor': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 200
+        self.carryingcapacity = 20000
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = 1
+        self.carefulness = 0.5
+        self.maxrunstamina = 10
+        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
+
+    def standingheight(self):
+        legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        tentacles = [part for part in self.owner if 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legsnotentacles) > 0:
+            legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+            return min([leg.maxheight for leg in legs])
+        else:
+            return max([tentacle.minheight for tentacle in tentacles])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if 'leg' in self.parentalconnection.categories:
+                return 0.5*len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())])
+            elif 'arm' in self.parentalconnection.categories:
+                return 0.5*len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())])
+            else:
+                return 0.5*len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 1.08, timetaken, 1, 70, 'fire', 0, [], [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+
+
 class DobgoblinTorso(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'dobgoblin torso', '*', (0, 255, 0))
@@ -5030,14 +5514,14 @@ class DobgoblinTorso(BodyPart):
         self._topheight = 75
         self._pronetopheight = 40
         self.maxhp = 400
-        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self)}
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
         self.weight = 70000
         self.carryingcapacity = 35000
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A torso consisting of living flesh. Strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -5070,7 +5554,7 @@ class DobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5121,7 +5605,7 @@ class DobgoblinLeg(BodyPart):
         self.carefulness = 0.75
         self.maxrunstamina = 10
         self.smell = 1
-        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Strong at carrying. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A leg consisting of living flesh. Good at avoiding traps. Strong at carrying. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
@@ -5170,7 +5654,7 @@ class DobgoblinHead(BodyPart):
         self._resistances['sharp'] = 0.2
         self._resistances['blunt'] = -0.2
         self.smell = 1
-        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp attacks) but weak bones (weak against blunt attacks).'
+        self._info = 'A head consisting of living flesh. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5301,7 +5785,7 @@ class VelociraptorSkull(BodyPart):
         self._resistances['blunt'] = 0.5
         self._resistances['fire'] = 0.5
         self._resistances['rough'] = -1
-        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire attacks, but very weak against rough attacks. No smell.'
+        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire damage, but very weak against rough damage. No smell.'
         
 
     def attackslist(self):
@@ -5337,7 +5821,7 @@ class DeinonychusSkull(BodyPart):
         self._resistances['blunt'] = 0.5
         self._resistances['fire'] = 0.5
         self._resistances['rough'] = -1
-        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire attacks, but very weak against rough attacks. No smell.'
+        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire damage, but very weak against rough damage. No smell.'
         
 
     def attackslist(self):
@@ -5373,7 +5857,7 @@ class CeratosaurusSkull(BodyPart):
         self._resistances['blunt'] = 0.5
         self._resistances['fire'] = 0.5
         self._resistances['rough'] = -1
-        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire attacks, but very weak against rough attacks. No smell.'
+        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire damage, but very weak against rough damage. No smell.'
         
 
     def attackslist(self):
@@ -5409,7 +5893,7 @@ class AllosaurusSkull(BodyPart):
         self._resistances['blunt'] = 0.5
         self._resistances['fire'] = 0.5
         self._resistances['rough'] = -1
-        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire attacks, but very weak against rough attacks. No smell.'
+        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire damage, but very weak against rough damage. No smell.'
         
 
     def attackslist(self):
@@ -5445,7 +5929,7 @@ class TyrannosaurusSkull(BodyPart):
         self._resistances['blunt'] = 0.5
         self._resistances['fire'] = 0.5
         self._resistances['rough'] = -1
-        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire attacks, but very weak against rough attacks. No smell.'
+        self._info = 'A head consisting of stone. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt and fire damage, but very weak against rough damage. No smell.'
         
 
     def attackslist(self):

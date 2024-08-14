@@ -641,7 +641,7 @@ class LooseRoundPebbles(Item):
             if part.destroyed():
                 part.on_destruction(True)
             creat.die()
-            creat.causeofdeath = ('step', self)
+            creat.causeofdeath = ('trip', self)
 
 class PieceOfArmor(Item):
     def __init__(self, owner, x, y, wearcategory, material, enchantment):
@@ -754,8 +754,83 @@ class CapeOfSmellNeutralizing(Item):
         self.smell = -np.inf
         self._info = 'A magical cape. When worn, prevents you from leaving a smell trace.'
 
+class PriestlyChasuble(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'priestly chasuble', '(', (255, 255, 255))
+        self.wearable = True
+        self.wearcategory = 'back'
+        self.weight = 500
+        self.godlylove = 1
+        self._info = 'A back slot item. When worn, reduces the waiting period between successful prayers.'
+
 def randomBackItem(owner, x, y):
-    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying, CapeOfSmellNeutralizing])(owner, x, y)
+    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying, CapeOfSmellNeutralizing, PriestlyChasuble])(owner, x, y)
+
+class TouristFannyPack(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'tourist fanny pack', '(', (0, 0, 255))
+        self.wearable = True
+        self.wearcategory = 'belt'
+        self.carryingcapacity = 5000
+        self.weight = 100
+        self._info = 'A fanny pack that can carry up to 5 kg of items.'
+
+class HikerFannyPack(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'hiker fanny pack', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'belt'
+        self.carryingcapacity = 10000
+        self.weight = 200
+        self._info = 'A fanny pack that can carry up to 10 kg of items.'
+
+class MilitaryFannyPack(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'military fanny pack', '(', (0, 155, 0))
+        self.wearable = True
+        self.wearcategory = 'belt'
+        self.carryingcapacity = 20000
+        self.weight = 400
+        self._info = 'A fanny pack that can carry up to 20 kg of items.'
+
+class FannyPackOfHolding(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'fanny pack of holding', '(', (190, 110, 0))
+        self.wearable = True
+        self.wearcategory = 'belt'
+        self.carryingcapacity = 40000
+        self.weight = 100
+        self._info = 'A magical fanny pack that can carry up to 40 kg of items.'
+
+class GreaterFannyPackOfHolding(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'greater fanny pack of holding', '(', (190, 110, 0))
+        self.wearable = True
+        self.wearcategory = 'belt'
+        self.carryingcapacity = 80000
+        self.weight = 100
+        self._info = 'A magical fanny pack that can carry up to 80 kg of items.'
+
+class MartialArtsBelt(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'martial arts belt', '(', (0, 0, 0))
+        self.wearable = True
+        self.wearcategory = 'belt'
+        self.weight = 100
+        self.martialartist = True
+        self._info = 'A belt. When worn, makes your unarmed attacks ignore height differences.'
+
+class QuickdrawProjectileBelt(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'quickdraw projectile belt', '(', (190, 110, 0))
+        self.wearable = True
+        self.wearcategory = 'belt'
+        self.weight = 100
+        self.quickdraw = True
+        self._info = 'A belt. When worn, makes throwing unwielded items as fast as throwing wielded ones.'
+
+def randomBelt(owner, x, y):
+    return np.random.choice([TouristFannyPack, HikerFannyPack, MilitaryFannyPack, FannyPackOfHolding, GreaterFannyPackOfHolding, MartialArtsBelt, QuickdrawProjectileBelt])(owner, x, y)
 
 class RingOfCarrying(Item):
     def __init__(self, owner, x, y):
@@ -834,4 +909,4 @@ def randomFaceItem(owner, x, y):
     return np.random.choice([Eyeglasses, GasMask, BerserkerMask])(owner, x, y)
 
 def randomUtilityItem(owner, x, y):
-    return np.random.choice([randomBackItem, randomRing, randomFaceItem])(owner, x, y)
+    return np.random.choice([randomBackItem, randomBelt, randomRing, randomFaceItem])(owner, x, y)
