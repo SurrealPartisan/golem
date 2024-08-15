@@ -479,8 +479,8 @@ class ZombieTorso(BodyPart):
             'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
-            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
             'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
@@ -621,7 +621,7 @@ class ZombieHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -2947,8 +2947,8 @@ class GhoulTorso(BodyPart):
             'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
-            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
             'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
@@ -3089,7 +3089,7 @@ class GhoulHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -4196,8 +4196,8 @@ class GhastTorso(BodyPart):
             'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
-            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
+            'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
             'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
             'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
             'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
@@ -4338,7 +4338,7 @@ class GhastHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
             }
         self._topheight = 30
         self._bottomheight = 0

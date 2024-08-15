@@ -309,8 +309,8 @@ def game():
                         win.putchars(' ', x=i, y=j, bgcolor=visiblebgcolor)
                         seen[cave_i][i][j] = (' ', (255, 255, 255), nonvisiblebgcolor, (0, 0, 0))
                 else:
-                    win.putchars(seen[cave_i][i][j][0], x=i, y=j, fgcolor=player.seen()[cave_i][i][j][1], bgcolor = seen[cave_i][i][j][2])
-                    win.settint(seen[cave_i][i][j][3][0], player.seen()[cave_i][i][j][3][1], seen[cave_i][i][j][3][2], (i,j,1,1))
+                    win.putchars(seen[cave_i][i][j][0], x=i, y=j, fgcolor=seen[cave_i][i][j][1], bgcolor = seen[cave_i][i][j][2])
+                    win.settint(seen[cave_i][i][j][3][0], seen[cave_i][i][j][3][1], seen[cave_i][i][j][3][2], (i,j,1,1))
         i, j = cave.stairsdowncoords
         if fovmap[i,j]:
             win.putchars('>', x=i, y=j, bgcolor=(64,64,64), fgcolor='white')
@@ -763,6 +763,7 @@ def game():
         elif gamestate == 'undress':
             choosemessage = 'Choose the item to take off:'
             win.write(choosemessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
+            wornlist = [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
             logrows = min(logheight-1,len(wornlist))
             for i in range(logrows):
                 if len(wornlist) <= logheight-1:

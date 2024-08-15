@@ -767,6 +767,21 @@ class Creature():
                                 adjacentparts.append(targetbodypart.parentalconnection.parent)
                             if len(adjacentparts) > 0:
                                 targetbodypart = np.random.choice(adjacentparts)
+                                if not thrown and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                                    upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
+                                    upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
+                                    lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
+                                    lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - attack.weaponlength
+                                    if upperfinelimit >= targetbodypart.topheight() >= lowerfinelimit or upperfinelimit >= targetbodypart.bottomheight() >= lowerfinelimit or targetbodypart.topheight() >= upperfinelimit >= targetbodypart.bottomheight():
+                                        heightcoefficient = 1
+                                    elif targetbodypart.bottomheight() >= upperpoorlimit or targetbodypart.topheight() <= lowerpoorlimit:
+                                        heightcoefficient = 0.5
+                                    elif upperpoorlimit > targetbodypart.bottomheight() > upperfinelimit:
+                                        heightcoefficient = 0.5 + 0.5*(upperpoorlimit - targetbodypart.bottomheight())/(upperpoorlimit - upperfinelimit)
+                                    elif lowerpoorlimit < targetbodypart.topheight() < lowerfinelimit:
+                                        heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                                else:
+                                    heightcoefficient = 1
                                 if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                                     hit = True
                                 else:
@@ -3167,7 +3182,7 @@ enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy ty
     [(Wolf, 10), (Drillbot, 5), (Lobgoblin, 5)],
     [(Drillbot, 5), (Lobgoblin, 5), (Ghoul, 10)],
     [(Ghoul, 10), (SmallFireElemental, 5), (Mobgoblin, 5)],
-    [(SmallFireElemental, 10), (DireWolf, 10)],
+    [(SmallFireElemental, 5), (Mobgoblin, 5), (DireWolf, 10)],
     [(DireWolf, 10), (Jobgoblin, 10)],
     [(Jobgoblin, 10), (Ghast, 10)],
     [(Ghast, 10), (Nobgoblin, 10)],
