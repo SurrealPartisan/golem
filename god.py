@@ -16,7 +16,7 @@ class God(creature.Creature):
     def __init__(self, world, world_i, sin):
         super().__init__(world, world_i)
         self.sin = sin
-        self.faction = np.random.choice(utils.enemyfactions)
+        self.factions = [np.random.choice(utils.enemyfactions)]
         self.firstname = utils.unpronounceablename(np.random.randint(2,11))
         self.nickname = 'The ' + np.random.choice(utils.godlynicknames[self.sin])
         self.name = self.firstname + ' ' + self.nickname

@@ -2,7 +2,7 @@
 
 Minor
 * Solve the multiple brains problem
-* Different blessings and smites to different gods
+* Even more different blessings and smites to different gods
 
 Major
 * Sense of hearing

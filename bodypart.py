@@ -94,7 +94,7 @@ class BodyPart(item.Item):
             return self.parentalconnection.vital
 
     def incapacitated(self):
-        if hasattr(self.owner, 'owner') and self.owner.owner.faction != 'player':
+        if hasattr(self.owner, 'owner') and not 'player' in self.owner.owner.factions:
             return self.damagetaken >= difficulty*self.maxhp
         else:
             return False
@@ -2935,6 +2935,251 @@ class LobgoblinStomach(BodyPart):
             'undead flesh': (-1,)
             }
         self._info = 'A stomach consisting of living flesh.'
+
+
+
+class RevenantOctopusHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus head', '*', (255, 0, 255))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(35)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(35)),
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(40), defensecoefficient=0.8, armorapplies=True),
+            'central heart': BodyPartConnection(self, ['heart'], False, 'central ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
+            'left heart': BodyPartConnection(self, ['heart'], False, 'left ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
+            'right heart': BodyPartConnection(self, ['heart'], False, 'right ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
+            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
+            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
+            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
+            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(35), defensecoefficient=0.8, armorapplies=True),
+            'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
+            'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left ', constantfunction(0)),
+            'center-back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back left ', constantfunction(0)),
+            'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left ', constantfunction(0)),
+            'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right ', constantfunction(0)),
+            'center-front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front right ', constantfunction(0)),
+            'center-back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back right ', constantfunction(0)),
+            'back right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back right ', constantfunction(0))
+            }
+        self._topheight = 50
+        self.upperpoorlimit = 50
+        self.upperfinelimit = 30
+        self.lowerfinelimit = 0
+        self.lowerpoorlimit = 0
+        self.maxhp = 160
+        self.material = "undead flesh"
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 40000
+        self.carryingcapacity = 20000
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.smell = 2
+        self._info = 'A torso (despite being called head!) consisting of undead flesh. Need neither brain nor hearts. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.5, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class RevenantOctopusTentacle(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus tentacle', '~', (255, 0, 255))
+        self.categories = ['arm', 'leg', 'tentacle']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -10
+        self.upperpoorlimit = 100
+        self.upperfinelimit = 65
+        self.lowerfinelimit = -65
+        self.lowerpoorlimit = -100
+        self.maxheight = 120
+        self.minheight = 10
+        self.maxhp = 30
+        self.material = "undead flesh"
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.95
+        self.throwspeed = 0.75
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'tentacle'
+        self.worn = {'tentacle armor': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 10000
+        self.carryingcapacity = 10000
+        self.carefulness = 0.4
+        self.maxrunstamina = 2.5
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.carefulness = 0.3
+        self.smell = 2
+        self._info = 'A tentacle consisting of undead flesh. Works both as an arm and as a leg. Slow at moving, but faster if there are more of them. Also faster at attacking if there are more of them. Slow and rather inaccurate at throwing. Individually very low running stamina, collectively average. Slightly clumsy. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def standingheight(self):
+        legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        tentacles = [part for part in self.owner if 'tentacle' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legsnotentacles) > 0:
+            legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+            return min([leg.maxheight for leg in legs])
+        else:
+            return max([tentacle.minheight for tentacle in tentacles])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if 'leg' in self.parentalconnection.categories:
+                return 0.1*len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())])
+            elif 'arm' in self.parentalconnection.categories:
+                return 0.1*len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())])
+            else:
+                return 0.1*len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.9, timetaken, 1, 25, 'blunt', 0, [], [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class RevenantOctopusEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 20
+        self.material = "undead flesh"
+        self.weight = 10
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.detectiondistance = 2.9
+        self.detectionprobability = 0.2
+        self._info = 'An eye consisting of undead flesh. Can detect traps from farther away than most. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class RevenantOctopusBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 6
+        self._bottomheight = -6
+        self.maxhp = 30
+        self.material = "undead flesh"
+        self.weight = 2000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+class RevenantOctopusHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 30
+        self.material = "undead flesh"
+        self.weight = 500
+        self.bravery = 0.25
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A heart consisting of undead flesh. Individually easily scared (luckily the octopus has three of them). Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+class RevenantOctopusGills(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus gills', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 30
+        self.material = 'undead flesh'
+        self.weight = 500
+        self.breathepoisonresistance = 0.5
+        self.runstaminarecoveryspeed = 0.5
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A lung-like organ consisting of undead flesh. Protects living bodyparts from poison gas quite well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+class RevenantOctopusMetanephridium(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus metanephridium', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 30
+        self.material = 'undead flesh'
+        self.weight = 100
+        self._attackpoisonresistance = 1
+        self.endotoxicity = -0.5
+        self._resistances['sharp'] = -0.2
+        self._info = 'A kidney-like organ consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage.'
+
+class RevenantOctopusStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'revenant cave octopus stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 10
+        self.material = 'undead flesh'
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'vegetables': (-1,),
+            'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
+            }
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A hypercarnivorous stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 

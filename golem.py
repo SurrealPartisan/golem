@@ -215,7 +215,7 @@ def game():
 
             for creat in cave.creatures:
                 for gd in gods:
-                    if creat.faction == gd.faction:
+                    if gd.factions[0] in creat.factions:
                         creat.godsknown().append(gd)
 
             caves.append(cave)
@@ -239,7 +239,7 @@ def game():
         player.bodyparts[-2].connect('left eye', bodypart.HumanEye(player.bodyparts, 0, 0))
         player.bodyparts[-3].connect('right eye', bodypart.HumanEye(player.bodyparts, 0, 0))
         #item.Backpack(player.torso.worn['backpack'], 0, 0)
-        player.faction = 'player'
+        player.factions = ['player']
         player.x = cave.stairsupcoords[0]
         player.y = cave.stairsupcoords[1]
         cave.creatures.append(player)
@@ -343,7 +343,7 @@ def game():
                     seen[cave_i][it.x][it.y] = ('?', (128, 128, 128), nonvisiblebgcolor, (0, 0, 0))
 
         # Creatures
-        for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
+        for npc in [creature for creature in cave.creatures if not 'player' in creature.factions]:
             if fovmap[npc.x, npc.y]:
                 if cave.lavapits[npc.x,npc.y]:
                         bgcolor = (255, 0, 0)
@@ -1166,12 +1166,12 @@ def game():
                     num = ''
                 if j != chosen:
                     if j < len(player.godsknown()):
-                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].factions[0] + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                     else:
                         win.write(num + 'whomever listens', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
                     if j < len(player.godsknown()):
-                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].faction + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].factions[0] + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
                     else:
                         win.write(num + 'whomever listens', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
@@ -1247,7 +1247,7 @@ def game():
         for gd in gods:
             for creat in gd.prayerclocks:
                 gd.prayerclocks[creat] += time
-        for npc in [creature for creature in cave.creatures if creature.faction != 'player']:
+        for npc in [creature for creature in cave.creatures if not 'player' in creature.factions]:
             fovmap = fov(cave.walls, player.x, player.y, player.sight())
             seenbefore = fovmap[npc.x, npc.y]
             npc.update(time)
@@ -1436,7 +1436,7 @@ def game():
                         if player.causeofdeath[0] == 'attack':
                             deathmessage = 'killed by a ' + player.causeofdeath[1].name
                         elif player.causeofdeath[0] == 'smite':
-                            deathmessage = 'smitten to death by ' + player.causeofdeath[1].name+ ', the ' + player.causeofdeath[1].faction + '-god of ' + player.causeofdeath[1].sin
+                            deathmessage = 'smitten to death by ' + player.causeofdeath[1].name+ ', the ' + player.causeofdeath[1].factions[0] + '-god of ' + player.causeofdeath[1].sin
                         elif player.causeofdeath[0] == 'bloodloss':
                             deathmessage = 'bled to death after being attacked by a ' + ' and a '.join([creat.name for creat in player.causeofdeath[1]])
                         elif player.causeofdeath[0] == 'starvation':
@@ -2720,7 +2720,7 @@ def game():
                                         gd = np.random.choice([gd for gd in gods if not gd in player.godsknown()])
                                         player.log().append('You prayed, and someone answered!')
                                         player.godsknown().append(gd)
-                                        player.log().append('You learn the ways of ' + gd.name + ', the ' + gd.faction + '-god of ' + gd.sin + '.')
+                                        player.log().append('You learn the ways of ' + gd.name + ', the ' + gd.factions[0] + '-god of ' + gd.sin + '.')
                                         player.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
                                         player.pray(gd)
                                     else:

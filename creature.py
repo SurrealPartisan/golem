@@ -20,7 +20,7 @@ class Creature():
         self.world = world
         self.world_i = world_i
         self.max_world_i = world_i
-        self.faction = ''
+        self.factions = []
         self.char = '@'
         self.color = 'white'
         self.name = 'golem'
@@ -176,7 +176,7 @@ class Creature():
         multiplier = 1
         for m in itemmultipliers:
             multiplier *= m
-        if self.faction == 'player':
+        if 'player' in self.factions:
             self.hunger += livingmass*time*multiplier*1e-06
         if self.vomitclock > 0:
             self.hunger += livingmass*min(time, self.vomitclock)*multiplier*1e-05
@@ -478,7 +478,7 @@ class Creature():
                 self.log().append('There is an altar of ' + gd.name + ' here.')
                 if not gd in self.godsknown():
                     self.godsknown().append(gd)
-                    self.log().append('You learn the ways of ' + gd.name + ', the ' + gd.faction + '-god of ' + gd.sin + '.')
+                    self.log().append('You learn the ways of ' + gd.name + ', the ' + gd.factions[0] + '-god of ' + gd.sin + '.')
                     self.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
         if self.senseofsmell() > 0:
             for creat in self.world.smells[self.x][self.y]:
@@ -559,7 +559,7 @@ class Creature():
 
     def dying(self):
         maxtotalhp = sum([part.maxhp for part in self.bodyparts])/2
-        if self.faction != 'player':
+        if not 'player' in self.factions:
             maxtotalhp *= difficulty
         return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= maxtotalhp or np.any([part.vital() and (part.destroyed() or part.incapacitated()) for part in self.bodyparts])
 
@@ -607,7 +607,7 @@ class Creature():
         if self.scariness() > 0:
             targets = []
             for creat in self.world.creatures:
-                if creat != self and not self in creat.frightenedby() and (creat.faction == 'player' or self.faction == 'player'):
+                if creat != self and not self in creat.frightenedby() and ('player' in creat.factions or 'player' in self.factions):
                     fovmap = fov(creat.world.walls, creat.x, creat.y, creat.sight())
                     if fovmap[self.x, self.y]:
                         targets.append(creat)
@@ -831,6 +831,8 @@ class Creature():
                                 sneak = True
                             else:
                                 sneak = False
+                            if self.weakened():
+                                totaldamage //= 2
                             if targetbodypart.armor() != None:
                                 armor = targetbodypart.armor()
                                 armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
@@ -838,7 +840,7 @@ class Creature():
                             else:
                                 armor = None
                                 armordamage = 0
-                            if target.faction in attack.bane:
+                            if np.any(faction in attack.bane for faction in target.factions):
                                 banemultiplier = 2
                             else:
                                 banemultiplier = 1
@@ -850,7 +852,7 @@ class Creature():
                                     targetbodypart.bleedclocks.append((int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), 0, self))
                             damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), targetbodypart.hp())
                             alreadyincapacitated = targetbodypart.incapacitated()
-                            if target.faction == 'player':
+                            if 'player' in target.factions:
                                 targetparthalfhp = targetbodypart.maxhp / 2
                                 totalthreequartershp = sum([part.maxhp for part in target.bodyparts])/2*3/4
                             else:
@@ -1268,7 +1270,7 @@ class Creature():
 class Zombie(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'undead'
+        self.factions = ['undead']
         self.char = 'z'
         self.color = (191, 255, 128)
         self.name = np.random.choice(['zombie', 'headless zombie', 'one-armed zombie', 'crawler zombie'], p=[0.7, 0.1, 0.1, 0.1])
@@ -1305,8 +1307,8 @@ class Zombie(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and not self in player.frightenedby():
@@ -1367,7 +1369,7 @@ class Zombie(Creature):
 class MolePerson(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'mole'
+        self.factions = ['mole']
         self.char = 'm'
         self.color = (186, 100, 13)
         self.name = 'mole person'
@@ -1395,8 +1397,8 @@ class MolePerson(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -1463,7 +1465,7 @@ class MolePerson(Creature):
 class Goblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'g'
         self.color = (0, 255, 0)
         self.name = 'goblin'
@@ -1491,8 +1493,8 @@ class Goblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -1549,7 +1551,7 @@ class Goblin(Creature):
 class CaveOctopus(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'octopus'
+        self.factions = ['octopus']
         self.char = 'o'
         self.color = (255, 0, 255)
         self.name = 'cave octopus'
@@ -1582,8 +1584,8 @@ class CaveOctopus(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -1640,7 +1642,7 @@ class CaveOctopus(Creature):
 class Dog(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'canine'
+        self.factions = ['canine']
         self.char = 'd'
         self.color = (170, 130, 70)
         self.name = 'dog'
@@ -1669,8 +1671,8 @@ class Dog(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -1738,7 +1740,7 @@ class Dog(Creature):
 class Hobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'h'
         self.color = (0, 255, 0)
         self.name = 'hobgoblin'
@@ -1766,8 +1768,8 @@ class Hobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -1824,7 +1826,7 @@ class Hobgoblin(Creature):
 class MoleMonk(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'mole'
+        self.factions = ['mole']
         self.char = 'M'
         self.color = (186, 100, 13)
         self.name = 'mole monk'
@@ -1853,8 +1855,8 @@ class MoleMonk(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -1921,7 +1923,7 @@ class MoleMonk(Creature):
 class Wolf(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'canine'
+        self.factions = ['canine']
         self.char = 'w'
         self.color = (100, 100, 150)
         self.name = 'wolf'
@@ -1950,8 +1952,8 @@ class Wolf(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2019,7 +2021,7 @@ class Wolf(Creature):
 class Drillbot(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'robot'
+        self.factions = ['robot']
         self.char = 'd'
         self.color = (150, 150, 150)
         self.name = 'drillbot'
@@ -2045,8 +2047,8 @@ class Drillbot(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2103,7 +2105,7 @@ class Drillbot(Creature):
 class Lobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'l'
         self.color = (0, 255, 0)
         self.name = 'lobgoblin'
@@ -2131,8 +2133,8 @@ class Lobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2186,10 +2188,101 @@ class Lobgoblin(Creature):
         else:
             return(['wait', 1])
 
+class RevenantCaveOctopus(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.factions = ['octopus', 'undead']
+        self.char = 'r'
+        self.color = (255, 0, 255)
+        self.name = 'revenant cave octopus'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.OctopusHead(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('center-front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('center-back left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('center-front right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('center-back right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('central heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left gills', bodypart.RevenantOctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right gills', bodypart.RevenantOctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left metanephridium', bodypart.RevenantOctopusMetanephridium(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right metanephridium', bodypart.RevenantOctopusMetanephridium(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.RevenantOctopusStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('brain', bodypart.RevenantOctopusBrain(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        
+    def ai(self):
+        disoriented = False
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
+            disoriented = True
+            self.log().append('You stumble around.')
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            elif not disoriented:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0):
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    if not self.world.walls[self.x+dx, self.y+dy]:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['bump', time/2])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
 class Ghoul(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'undead'
+        self.factions = ['undead']
         self.char = 'g'
         self.color = (191, 255, 255)
         self.name = np.random.choice(['ghoul', 'headless ghoul', 'one-armed ghoul', 'crawler ghoul'], p=[0.7, 0.1, 0.1, 0.1])
@@ -2226,8 +2319,8 @@ class Ghoul(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and not self in player.frightenedby():
@@ -2288,7 +2381,7 @@ class Ghoul(Creature):
 class SmallFireElemental(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'elemental'
+        self.factions = ['elemental']
         self.char = 'f'
         self.color = (255, 204, 0)
         self.name = 'small fire elemental'
@@ -2312,8 +2405,8 @@ class SmallFireElemental(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2370,7 +2463,7 @@ class SmallFireElemental(Creature):
 class Mobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'm'
         self.color = (0, 255, 0)
         self.name = 'mobgoblin'
@@ -2398,8 +2491,8 @@ class Mobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2456,7 +2549,7 @@ class Mobgoblin(Creature):
 class DireWolf(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'canine'
+        self.factions = ['canine']
         self.char = 'd'
         self.color = (100, 100, 150)
         self.name = 'dire wolf'
@@ -2485,8 +2578,8 @@ class DireWolf(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2554,7 +2647,7 @@ class DireWolf(Creature):
 class Jobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'j'
         self.color = (0, 255, 0)
         self.name = 'jobgoblin'
@@ -2582,8 +2675,8 @@ class Jobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2640,7 +2733,7 @@ class Jobgoblin(Creature):
 class Ghast(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'undead'
+        self.factions = ['undead']
         self.char = 'g'
         self.color = (191, 255, 255)
         self.name = np.random.choice(['ghast', 'headless ghast', 'one-armed ghast', 'crawler ghast'], p=[0.7, 0.1, 0.1, 0.1])
@@ -2677,8 +2770,8 @@ class Ghast(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and not self in player.frightenedby():
@@ -2739,7 +2832,7 @@ class Ghast(Creature):
 class Nobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'n'
         self.color = (0, 255, 0)
         self.name = 'nobgoblin'
@@ -2767,8 +2860,8 @@ class Nobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2825,7 +2918,7 @@ class Nobgoblin(Creature):
 class Warg(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'canine'
+        self.factions = ['canine']
         self.char = 'W'
         self.color = (150, 150, 1200)
         self.name = 'warg'
@@ -2854,8 +2947,8 @@ class Warg(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2923,7 +3016,7 @@ class Warg(Creature):
 class Fobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'f'
         self.color = (0, 255, 0)
         self.name = 'fobgoblin'
@@ -2951,8 +3044,8 @@ class Fobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3009,7 +3102,7 @@ class Fobgoblin(Creature):
 class LargeFireElemental(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'elemental'
+        self.factions = ['elemental']
         self.char = 'F'
         self.color = (255, 204, 0)
         self.name = 'large fire elemental'
@@ -3036,8 +3129,8 @@ class LargeFireElemental(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3094,7 +3187,7 @@ class LargeFireElemental(Creature):
 class Dobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
-        self.faction = 'goblinoid'
+        self.factions = ['goblinoid']
         self.char = 'f'
         self.color = (0, 255, 0)
         self.name = 'dobgoblin'
@@ -3122,8 +3215,8 @@ class Dobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumble around.')
-        if len([creature for creature in self.world.creatures if creature.faction == 'player']) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if creature.faction == 'player'][0]
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = fov(self.world.walls, self.x, self.y, self.sight())
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3184,8 +3277,8 @@ enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy ty
     [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (CaveOctopus, 15), (Dog, 15)],
     [(CaveOctopus, 10), (Dog, 10), (Hobgoblin, 10), (MoleMonk, 10)],
     [(Hobgoblin, 5), (MoleMonk, 5), (Wolf, 10)],
-    [(Wolf, 10), (Drillbot, 5), (Lobgoblin, 5)],
-    [(Drillbot, 5), (Lobgoblin, 5), (Ghoul, 10)],
+    [(Wolf, 15), (Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5)],
+    [(Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5), (Ghoul, 15)],
     [(Ghoul, 10), (SmallFireElemental, 5), (Mobgoblin, 5)],
     [(SmallFireElemental, 5), (Mobgoblin, 5), (DireWolf, 10)],
     [(DireWolf, 10), (Jobgoblin, 10)],

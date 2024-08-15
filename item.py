@@ -499,7 +499,7 @@ class Caltrops(Item):
         self._info = 'A trap made of ' + material + '.'
 
     def entrap(self, creat, part):
-        if creat.faction in self.bane:
+        if np.any(faction in self.bane for faction in creat.factions):
             banemultiplier = 2
         else:
             banemultiplier = 1
