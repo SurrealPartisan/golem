@@ -1897,6 +1897,13 @@ def game():
                             logback = 0
 
                         if event.key == pygame.locals.K_ESCAPE:
+                            win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight))
+                            for i in range(mapwidth + hpbarwidth + hpmargin):
+                                for j in range(mapheight + statuslines + logheight):
+                                    win.putchars(' ', x=i, y=j, bgcolor='black')
+                            text = 'Saving the game. Please wait.'
+                            win.putchars(text, x=(mapwidth + hpmargin + hpbarwidth)//2 - len(text)//2, y = ( mapheight + statuslines + logheight)//2, fgcolor = 'white')
+                            win.update()
                             with open('savegame.pickle', 'wb') as f:
                                 pickle.dump((caves, player, gods), f)
                             gamegoeson = False
@@ -2745,6 +2752,13 @@ def game():
                     draw()
                 if event.type == pygame.QUIT:
                     if gamestate != 'dead':
+                        win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight))
+                        for i in range(mapwidth + hpbarwidth + hpmargin):
+                            for j in range(mapheight + statuslines + logheight):
+                                win.putchars(' ', x=i, y=j, bgcolor='black')
+                        text = 'Saving the game. Please wait.'
+                        win.putchars(text, x=(mapwidth + hpmargin + hpbarwidth)//2 - len(text)//2, y = ( mapheight + statuslines + logheight)//2, fgcolor = 'white')
+                        win.update()
                         with open('savegame.pickle', 'wb') as f:
                             pickle.dump((caves, player, gods), f)
                     pygame.quit()
