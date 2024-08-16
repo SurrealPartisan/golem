@@ -873,7 +873,7 @@ def game():
                     heightcoefficient = 0.5 + 0.5*(upperpoorlimit - targetbodypart.bottomheight())/(upperpoorlimit - upperfinelimit)
                 elif lowerpoorlimit < targetbodypart.topheight() < lowerfinelimit:
                     heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
-                speedcoefficient = 1/np.sqrt(target.speed()+0.1)
+                speedcoefficient = 1/np.sqrt(target.speed()/(1 + target.slowed())+0.1)
                 if target.imbalanced():
                     imbalancedcoefficient = 1.25
                 else:
@@ -1166,12 +1166,12 @@ def game():
                     num = ''
                 if j != chosen:
                     if j < len(player.godsknown()):
-                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].factions[0] + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
+                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].factions[0] + '-god of ' + player.godsknown()[j].sin + ' (' + player.godsknown()[j].power + ', ' + player.godsknown()[j].attitude + ')', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                     else:
                         win.write(num + 'whomever listens', x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
                 if j == chosen:
                     if j < len(player.godsknown()):
-                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].factions[0] + '-god of ' + player.godsknown()[j].sin, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
+                        win.write(num + player.godsknown()[j].name + ', the ' + player.godsknown()[j].factions[0] + '-god of ' + player.godsknown()[j].sin + ' (' + player.godsknown()[j].power + ', ' + player.godsknown()[j].attitude + ')', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
                     else:
                         win.write(num + 'whomever listens', x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 

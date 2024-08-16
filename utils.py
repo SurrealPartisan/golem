@@ -11,7 +11,7 @@ import pygame.locals as lc
 
 mapwidth, mapheight = 100, 40
 numlevels = 15
-difficulty = 0.75
+difficulty = 2/3
 smellhalflife = 5
 smellmin = 0.01
 
