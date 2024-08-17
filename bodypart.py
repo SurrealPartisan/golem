@@ -1299,7 +1299,7 @@ class GlassElementalTorso(BodyPart):
             'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
             'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
             'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(90), defensecoefficient=0.8, armorapplies=True),
-            'left arm': BodyPartConnection(self, ['arm'], False, 'feft ', constantfunction(145)),
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', constantfunction(145)),
             'right arm': BodyPartConnection(self, ['arm'], False, 'right ', constantfunction(145)),
             'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(2))
             }
