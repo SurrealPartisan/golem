@@ -248,6 +248,7 @@ class Dagger(Item):
         name = enchaname + banename + material + ' dagger'
         color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
+        self.material = material
         self.wieldable = True
         self.weapon = True
         self.throwable = True
@@ -287,6 +288,7 @@ class Spear(Item):
         name = enchaname + banename + material + ' spear'
         color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
+        self.material = material
         self.wieldable = True
         self.weapon = True
         self.throwable = True
@@ -329,6 +331,7 @@ class Mace(Item):
         name = enchaname + banename + material + ' mace'
         color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
+        self.material = material
         self.wieldable = True
         self.weapon = True
         self.bane = bane
@@ -366,6 +369,7 @@ class Sword(Item):
         name = enchaname + banename + material + ' sword'
         color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
+        self.material = material
         self.wieldable = True
         self.weapon = True
         self.bane = bane
@@ -403,6 +407,7 @@ class PickAxe(Item):
         name = enchaname + banename + material + ' pickaxe'
         color = materials[material].color
         super().__init__(owner, x, y, name, '/', color)
+        self.material = material
         self.wieldable = True
         self.weapon = True
         self.bane = bane
@@ -477,6 +482,76 @@ class Torch(Item):
         else:
             return 0
 
+class GlassShards(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass shards', ',', (0, 255, 255))
+        self.material = 'glass'
+        self.trap = True
+        self.mindamage = 1
+        self.maxdamage = 5
+        self.weight = 50
+        self._info = 'A trap made of glass.'
+
+    def entrap(self, creat, part):
+        resistancemultiplier = 1 - part.resistance('sharp')
+        totaldamage = np.random.randint(self.mindamage, self.maxdamage+1)
+        if part.armor() != None:
+            armor = part.armor()
+            armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+            armor.damagetaken += armordamage
+        else:
+            armor = None
+            armordamage = 0
+        damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        alreadyincapacitated = part.incapacitated()
+        part.damagetaken += damage
+        alreadyimbalanced = creat.imbalanced()
+        if 'leg' in part.categories:
+            numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+            if np.random.rand() < 0.5 - 0.05*numlegs:
+                part.imbalanceclock += 10*damage/part.maxhp
+        if creat.imbalanced() and not alreadyimbalanced:
+            imbalancedtext = ', imbalancing you'
+        else:
+            imbalancedtext = ''
+        if part.parentalconnection != None:
+            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+        elif part == creat.torso:
+            partname = 'torso'
+        if not creat.dying():
+            if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
+                creat.log().append('You stepped on ' + self.name + '. They incapacitated your ' + partname + imbalancedtext + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was destroyed!')
+                        armor.owner.remove(armor)
+            elif not part.destroyed():
+                creat.log().append('You stepped on ' + self.name + '. They dealt ' + repr(damage) + ' damage to your ' + partname + imbalancedtext + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was destroyed!')
+                        armor.owner.remove(armor)
+            else:
+                creat.log().append('You stepped on ' + self.name + '. They destroyed your ' + partname + imbalancedtext + '.')
+                if armordamage > 0:
+                    if not armor.destroyed():
+                        creat.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                    else:
+                        creat.log().append('Your ' + armor.name + ' was also destroyed!')
+                        armor.owner.remove(armor)
+                part.on_destruction(False)
+        else:
+            creat.log().append('You stepped on ' + self.name + '. They killed you.')
+            creat.log().append('You are dead!')
+            if part.destroyed():
+                part.on_destruction(True)
+            creat.die()
+            creat.causeofdeath = ('step', self)
+
 class Caltrops(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
         if enchantment == 0:
@@ -489,6 +564,7 @@ class Caltrops(Item):
         name = enchaname + banename + material + ' caltrops'
         color = materials[material].color
         super().__init__(owner, x, y, name, ',', color)
+        self.material = material
         self.hidden = True
         self.trap = True
         self.bane = bane

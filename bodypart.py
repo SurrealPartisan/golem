@@ -1287,6 +1287,271 @@ class GoblinStomach(BodyPart):
 
 
 
+class GlassElementalTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass elemental torso', '*', (0, 255, 255))
+        self.categories = ['torso']
+        self.childconnections = {
+            'head': BodyPartConnection(self, ['head'], True, '', constantfunction(150)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(90), defensecoefficient=0.8, armorapplies=True),
+            'left arm': BodyPartConnection(self, ['arm'], False, 'feft ', constantfunction(145)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', constantfunction(145)),
+            'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(2))
+            }
+        self._topheight = 150
+        self.maxhp = 25
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 10000
+        self.carryingcapacity = 40000
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self.maxrunstamina = 20
+        self._attackpoisonresistance = 1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self._info = 'A snake-like torso consisting of elemental glass. Has very good carrying capacity. Doesn\'t have leg slots, but has a movement speed itself. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. No smell. Breaks into glass shards when destroyed.'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 1
+        else:
+            return 0
+
+    def baseheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+class GlassElementalHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass elemental head', '*', (0, 255, 255))
+        self.categories = ['head']
+        self.childconnections = {
+            'upper left eye': BodyPartConnection(self, ['eye'], False, 'upper left ', constantfunction(20)),
+            'upper right eye': BodyPartConnection(self, ['eye'], False, 'upper right ', constantfunction(20)),
+            'center left eye': BodyPartConnection(self, ['eye'], False, 'center left ', constantfunction(18)),
+            'center right eye': BodyPartConnection(self, ['eye'], False, 'center right ', constantfunction(18)),
+            'lower left eye': BodyPartConnection(self, ['eye'], False, 'lower left ', constantfunction(16)),
+            'lower right eye': BodyPartConnection(self, ['eye'], False, 'lower right ', constantfunction(16)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True)
+            }
+        self._topheight = 10
+        self._bottomheight = 0
+        self.maxhp = 55
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 1000
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self._info = 'A head consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. No smell. Breaks into glass shards when destroyed.'
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+class GlassElementalEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass eye', '*', (0, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 5
+        self.weight = 10
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
+        self._info = 'An eye consisting of elemental fire. Very short-sighted on its own. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 1
+        else:
+            return 0
+
+class GlassElementalBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass elemental brain', '*', (0, 255, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 5
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 100
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self._attackpoisonresistance = 1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self._info = 'A brain consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. Breaks into glass shards when destroyed.'
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+class GlassElementalHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass heart', '*', (0, 255, 255))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 5
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 100
+        self.bravery = 0.5
+        self._attackpoisonresistance = 1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. Breaks into glass shards when destroyed.'
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+class GlassElementalLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass elemental lung', '*', (0, 255, 255))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 5
+        self.material = 'elemental'
+        self.weight = 600
+        self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self._info = 'A lung consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Very weak against blunt and rough damage. Breaks into glass shards when destroyed.'
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+class GlassElementalArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass elemental arm', '~', (0, 255, 255))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
+        self.maxhp = 10
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.97
+        self.throwspeed = 1
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 1000
+        self._attackpoisonresistance = 1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self.carefulness = 0.5
+        self._info = 'An arm consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. No smell. Breaks into glass shards when destroyed.'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 25, 'sharp', 0, [], [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+class GlassElementalTail(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass elemental tail', '~', (0, 255, 255))
+        self.categories = ['tail']
+        self.childconnections = {}
+        self._bottomheight = -2
+        self.maxhp = 5
+        self.weight = 100
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self._info = 'A tail consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. No smell. Breaks into glass shards when destroyed.'
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+
+
 class OctopusHead(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'cave octopus head', '*', (255, 0, 255))
@@ -3499,7 +3764,7 @@ class SmallFireElementalTorso(BodyPart):
         self._topheight = 100
         self.maxhp = 200
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
-        self._wearwieldname = 'head'
+        self._wearwieldname = 'torso'
         self.weight = 400
         self.carryingcapacity = 60000
         self.material = 'elemental'
@@ -3528,7 +3793,7 @@ class SmallFireElementalHead(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A head consisting of elemental fire.Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
+        self._info = 'A head consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
 
 class SmallFireElementalEye(BodyPart):
     def __init__(self, owner, x, y):
@@ -5491,7 +5756,7 @@ class LargeFireElementalTorso(BodyPart):
         self._topheight = 150
         self.maxhp = 375
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
-        self._wearwieldname = 'head'
+        self._wearwieldname = 'torso'
         self.weight = 800
         self.carryingcapacity = 60000
         self.material = 'elemental'

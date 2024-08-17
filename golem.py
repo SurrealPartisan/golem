@@ -1856,12 +1856,12 @@ def game():
                         # Help
                         if (event.key == keybindings['help'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][0][1])) or (event.key == keybindings['help'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][1][1])):
                             player.log().append('Default keybindings (change in options):')
-                            player.log().append('  - page up, page down, home, end: explore the log')
+                            player.log().append('  - page up, page down, home, end: explore the log (including this help message)')
                             player.log().append('  - arrows or numpad: move or attack')
                             player.log().append('  - period or numpad 5: wait a moment')
                             player.log().append('  - < or >: go up or down')
-                            player.log().append('  - r: repeat last attack')
-                            player.log().append('  - R: repeat second last attack')
+                            player.log().append('  - r: repeat last melee attack')
+                            player.log().append('  - R: repeat second last melee attack')
                             player.log().append('  - l: look')
                             player.log().append('  - m: mine')
                             player.log().append('  - comma: pick up an item')
@@ -2749,7 +2749,8 @@ def game():
                             logback = 0
 
                     # Update window after any command or keypress
-                    draw()
+                    if gamegoeson:
+                        draw()
                 if event.type == pygame.QUIT:
                     if gamestate != 'dead':
                         win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth + hpmargin, mapheight + statuslines + logheight))
