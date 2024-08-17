@@ -3084,7 +3084,7 @@ def credits():
         win.write(' ', x=x0+24+4, y=y0+4, bgcolor='red')
         
         win.write('A Self-Made Person!', x=x0+5, y=y0+6, fgcolor='red')
-        win.write('Alpha 2', x=x0+11, y=y0+8, fgcolor='red')
+        win.write('Alpha 3', x=x0+11, y=y0+8, fgcolor='red')
 
         credlist = ['Programmer and main innovator:',
                     'Mieli "SurrealPartisan" Luukinen',
@@ -3184,7 +3184,7 @@ def mainmenu():
         win.write(' ', x=x0+24+4, y=y0+4, bgcolor='red')
         
         win.write('A Self-Made Person!', x=x0+5, y=y0+6, fgcolor='red')
-        win.write('Alpha 2', x=x0+11, y=y0+8, fgcolor='red')
+        win.write('Alpha 3', x=x0+11, y=y0+8, fgcolor='red')
 
         for i in range(len(buttontexts)):
             y = 30+2*i
