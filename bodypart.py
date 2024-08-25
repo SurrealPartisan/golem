@@ -293,7 +293,7 @@ class HumanArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 5, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -342,7 +342,7 @@ class HumanLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -370,7 +370,7 @@ class HumanHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 5, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -381,7 +381,7 @@ class HumanEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 10
+        self.maxhp = 5
         self.weight = 8
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -557,7 +557,7 @@ class ZombieArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 5, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -601,7 +601,7 @@ class ZombieLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -643,7 +643,7 @@ class ZombieHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 10, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 5, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -654,7 +654,7 @@ class ZombieEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 10
+        self.maxhp = 5
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -845,7 +845,7 @@ class MolePersonArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'rough', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 5, 'rough', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -894,7 +894,7 @@ class MolePersonLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -923,7 +923,7 @@ class MolePersonHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 15, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 1, 1, 7, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -934,7 +934,7 @@ class MolePersonEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 10
+        self.maxhp = 5
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
@@ -1106,7 +1106,7 @@ class GoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 10, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 10, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 5, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 5, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1157,7 +1157,7 @@ class GoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 15, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -1187,7 +1187,7 @@ class GoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 15, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 1, 1, 7, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1198,7 +1198,7 @@ class GoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 10
+        self.maxhp = 5
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -1350,7 +1350,7 @@ class GlassElementalHead(BodyPart):
             }
         self._topheight = 10
         self._bottomheight = 0
-        self.maxhp = 55
+        self.maxhp = 10
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 1000
@@ -1518,7 +1518,7 @@ class GlassElementalArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 25, 'sharp', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.8, 1, 1, 12, 'sharp', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1592,7 +1592,7 @@ class OctopusHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.42, 1, 1, 30, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.42, 1, 1, 15, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1663,7 +1663,7 @@ class OctopusTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.82, timetaken, 1, 5, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.82, timetaken, 1, 3, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1676,7 +1676,7 @@ class OctopusEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 10
+        self.maxhp = 7
         self.weight = 10
         self.detectiondistance = 2.9
         self.detectionprobability = 0.2
@@ -1838,7 +1838,7 @@ class DogLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.72, 1, 1, 5, 'sharp', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.72, 1, 1, 2, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -1867,7 +1867,7 @@ class DogHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.82, 1, 1, 20, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.82, 1, 1, 10, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -1878,7 +1878,7 @@ class DogEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 15
+        self.maxhp = 7
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -2062,7 +2062,7 @@ class HobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.84, 1, 1, 30, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.84, 1, 1, 30, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.84, 1, 1, 15, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.84, 1, 1, 15, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -2113,7 +2113,7 @@ class HobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.64, 1, 1, 45, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.64, 1, 1, 22, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -2143,7 +2143,7 @@ class HobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.64, 1, 1, 45, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.64, 1, 1, 22, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -2154,7 +2154,7 @@ class HobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 20
+        self.maxhp = 10
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -2322,7 +2322,7 @@ class MoleMonkArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.84, 1, 1, 30, 'rough', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.84, 1, 1, 15, 'rough', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -2371,7 +2371,7 @@ class MoleMonkLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.64, 1, 1, 45, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.64, 1, 1, 22, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -2400,7 +2400,7 @@ class MoleMonkHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.44, 1, 1, 45, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.44, 1, 1, 22, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -2411,7 +2411,7 @@ class MoleMonkEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 20
+        self.maxhp = 10
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
@@ -2573,7 +2573,7 @@ class WolfLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.76, 1, 1, 10, 'sharp', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.76, 1, 1, 5, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -2602,7 +2602,7 @@ class WolfHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.86, 1, 1, 40, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.86, 1, 1, 20, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -2613,7 +2613,7 @@ class WolfEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 20
+        self.maxhp = 12
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -2813,7 +2813,7 @@ class DrillArm(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.88, 1, 1, 50, 'rough', 0, [], [('bleed', 0.2)], self)]
+            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.88, 1, 1, 25, 'rough', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -2824,7 +2824,7 @@ class DrillbotCamera(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 20
+        self.maxhp = 15
         self.weight = 20
         self.material = 'electronics'
         self.consumable = False
@@ -3022,7 +3022,7 @@ class LobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.9, 1, 1, 50, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.9, 1, 1, 50, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.9, 1, 1, 25, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.9, 1, 1, 25, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -3073,7 +3073,7 @@ class LobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.7, 1, 1, 75, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.7, 1, 1, 37, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -3103,7 +3103,7 @@ class LobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.7, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.7, 1, 1, 37, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3114,7 +3114,7 @@ class LobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 30
+        self.maxhp = 15
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -3247,7 +3247,7 @@ class RevenantOctopusHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.5, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.5, 1, 1, 37, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3323,7 +3323,7 @@ class RevenantOctopusTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.9, timetaken, 1, 25, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', '', '', 0.9, timetaken, 1, 13, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -3336,7 +3336,7 @@ class RevenantOctopusEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 20
+        self.maxhp = 15
         self.material = "undead flesh"
         self.weight = 10
         self._attackpoisonresistance = 1
@@ -3535,7 +3535,7 @@ class GhoulArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.92, 1, 1, 60, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.92, 1, 1, 30, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -3579,7 +3579,7 @@ class GhoulLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.72, 1, 1, 90, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.72, 1, 1, 45, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -3621,7 +3621,7 @@ class GhoulHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.52, 2, 1, 60, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.52, 2, 1, 30, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3632,7 +3632,7 @@ class GhoulEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 25
+        self.maxhp = 17
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -3948,7 +3948,7 @@ class SmallFireElementalTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.94, timetaken, 1, 35, 'fire', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 0.94, timetaken, 1, 17, 'fire', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -4039,7 +4039,7 @@ class MobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.94, 1, 1, 70, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.94, 1, 1, 70, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.94, 1, 1, 35, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.94, 1, 1, 35, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -4090,7 +4090,7 @@ class MobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.74, 1, 1, 105, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.74, 1, 1, 52, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -4120,7 +4120,7 @@ class MobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.74, 1, 1, 105, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.74, 1, 1, 52, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -4131,7 +4131,7 @@ class MobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 40
+        self.maxhp = 20
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -4293,7 +4293,7 @@ class DireWolfLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.86, 1, 1, 20, 'sharp', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.86, 1, 1, 10, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -4322,7 +4322,7 @@ class DireWolfHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.96, 1, 1, 80, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.96, 1, 1, 40, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -4333,7 +4333,7 @@ class DireWolfEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 45
+        self.maxhp = 22
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -4516,7 +4516,7 @@ class JobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.98, 1, 1, 90, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.98, 1, 1, 90, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.98, 1, 1, 45, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.98, 1, 1, 45, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -4567,7 +4567,7 @@ class JobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.78, 1, 1, 135, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.78, 1, 1, 67, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -4597,7 +4597,7 @@ class JobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.78, 1, 1, 135, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.78, 1, 1, 67, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -4608,7 +4608,7 @@ class JobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 50
+        self.maxhp = 25
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -4784,7 +4784,7 @@ class GhastArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.0, 1, 1, 100, 'blunt', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.0, 1, 1, 50, 'blunt', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -4828,7 +4828,7 @@ class GhastLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.8, 1, 1, 150, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.8, 1, 1, 75, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -4870,7 +4870,7 @@ class GhastHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 2, 1, 100, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.6, 2, 1, 50, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -4881,7 +4881,7 @@ class GhastEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 55
+        self.maxhp = 27
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -5076,7 +5076,7 @@ class NobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.02, 1, 1, 110, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.02, 1, 1, 110, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.02, 1, 1, 55, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.02, 1, 1, 55, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -5127,7 +5127,7 @@ class NobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.82, 1, 1, 165, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.82, 1, 1, 82, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -5157,7 +5157,7 @@ class NobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.82, 1, 1, 165, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.82, 1, 1, 82, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -5168,7 +5168,7 @@ class NobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 60
+        self.maxhp = 30
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -5330,7 +5330,7 @@ class WargLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.86, 1, 1, 20, 'sharp', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.86, 1, 1, 12, 'sharp', 0, [], [], self)]
         else:
             return []
 
@@ -5359,7 +5359,7 @@ class WargHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.96, 1, 1, 80, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.96, 1, 1, 60, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -5370,7 +5370,7 @@ class WargEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 65
+        self.maxhp = 32
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -5553,7 +5553,7 @@ class FobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.06, 1, 1, 130, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.06, 1, 1, 130, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.06, 1, 1, 65, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.06, 1, 1, 65, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -5604,7 +5604,7 @@ class FobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.86, 1, 1, 195, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.86, 1, 1, 97, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -5634,7 +5634,7 @@ class FobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.86, 1, 1, 195, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.86, 1, 1, 97, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -5645,7 +5645,7 @@ class FobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 70
+        self.maxhp = 35
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -5815,7 +5815,7 @@ class LargeFireElementalArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist burn', 'burned', 'burned', '', '', 1.08, 1, 1, 140, 'fire', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist burn', 'burned', 'burned', '', '', 1.08, 1, 1, 70, 'fire', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -5850,7 +5850,7 @@ class LargeFireElementalEye(BodyPart):
         self.childconnections = {}
         self._topheight = 3
         self._bottomheight = -3
-        self.maxhp = 75
+        self.maxhp = 37
         self.weight = 0
         self.material = 'elemental'
         self.consumable = False
@@ -5996,7 +5996,7 @@ class LargeFireElementalTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 1.08, timetaken, 1, 70, 'fire', 0, [], [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', '', '', 1.08, timetaken, 1, 35, 'fire', 0, [], [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -6087,7 +6087,7 @@ class DobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.10, 1, 1, 150, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.10, 1, 1, 150, 'sharp', 0, [], [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 1.10, 1, 1, 75, 'blunt', 0, [], [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 1.10, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -6138,7 +6138,7 @@ class DobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.90, 1, 1, 225, 'blunt', 0, [], [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.90, 1, 1, 112, 'blunt', 0, [], [], self)]
         else:
             return []
 
@@ -6168,7 +6168,7 @@ class DobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.90, 1, 1, 225, 'sharp', 0, [], [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.90, 1, 1, 112, 'sharp', 0, [], [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -6179,7 +6179,7 @@ class DobgoblinEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 80
+        self.maxhp = 40
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -6300,7 +6300,7 @@ class VelociraptorSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 0.9, 1, 1, 50, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 0.9, 1, 1, 25, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -6336,7 +6336,7 @@ class DeinonychusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 100, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.0, 1, 1, 50, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -6372,7 +6372,7 @@ class CeratosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 150, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.1, 1, 1, 75, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -6408,7 +6408,7 @@ class AllosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 200, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.2, 1, 1, 100, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -6444,6 +6444,6 @@ class TyrannosaurusSkull(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 250, 'sharp', 0, [], [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', '', '', 1.3, 1, 1, 125, 'sharp', 0, [], [('bleed', 0.2)], self)]
         else:
             return []

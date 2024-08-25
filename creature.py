@@ -249,7 +249,7 @@ class Creature():
                         adjacentparts.append(part.parentalconnection.parent)
                     if np.random.rand() > 0.75 and len(adjacentparts) > 0:
                         part = np.random.choice(adjacentparts)
-                    totaldamage = np.random.randint(1, 21)
+                    totaldamage = np.random.randint(1, 11)
                     resistancemultiplier = 1 - part.resistance('fire')
                     damage = min(int(resistancemultiplier*totaldamage), part.hp())
                     alreadyincapacitated = part.incapacitated()
@@ -258,7 +258,7 @@ class Creature():
                     if 'leg' in part.categories:
                         numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
                         if np.random.rand() < 0.5 - 0.05*numlegs:
-                            part.imbalanceclock += 10*damage/part.maxhp
+                            part.imbalanceclock += 20*damage/part.maxhp
                     if damage > 0:
                         if part.parentalconnection != None:
                             partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
@@ -290,7 +290,7 @@ class Creature():
                 self.burnclock += time
                 for i in range(int(self.burnclock // 1)):
                     for part in self.bodyparts:
-                        totaldamage = np.random.randint(1, 41)
+                        totaldamage = np.random.randint(1, 21)
                         resistancemultiplier = 1 - part.resistance('fire')
                         damage = min(int(resistancemultiplier*totaldamage), part.hp())
                         alreadyincapacitated = part.incapacitated()
@@ -299,7 +299,7 @@ class Creature():
                         if 'leg' in part.categories:
                             numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
                             if np.random.rand() < 0.5 - 0.05*numlegs:
-                                part.imbalanceclock += 10*damage/part.maxhp
+                                part.imbalanceclock += 20*damage/part.maxhp
                         if damage > 0:
                             if part.parentalconnection != None:
                                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
@@ -876,13 +876,13 @@ class Creature():
                                         if np.random.rand() < bravery:
                                             panic = False
                                     if panic:
-                                        target.panickedclock += damage
+                                        target.panickedclock += 2*damage
                                     else:
-                                        target.scaredclock += damage
+                                        target.scaredclock += 2*damage
                             if 'leg' in targetbodypart.categories:
                                 numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()])
                                 if np.random.rand() < 0.5 - 0.05*numlegs:
-                                    targetbodypart.imbalanceclock += 10*damage/targetbodypart.maxhp
+                                    targetbodypart.imbalanceclock += 20*damage/targetbodypart.maxhp
                             if targetbodypart.parentalconnection != None:
                                 partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                             elif targetbodypart == target.torso:
@@ -1054,7 +1054,7 @@ class Creature():
                 if 'leg' in part.categories:
                     numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
                     if np.random.rand() < 0.5 - 0.05*numlegs:
-                        part.imbalanceclock += 10*damage/part.maxhp
+                        part.imbalanceclock += 20*damage/part.maxhp
                 if self.imbalanced() and not alreadyimbalanced:
                     imbalancedtext = ', imbalancing you'
                 else:

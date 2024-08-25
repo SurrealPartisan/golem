@@ -74,9 +74,9 @@ class God(creature.Creature):
             targetbodypart = np.random.choice([part for part in target.bodyparts if not part.destroyed() and not part.incapacitated()])
             target.lasthitter = self
             if self.power == 'powerful':
-                totaldamage = np.random.randint(1, 40*(target.world_i+1) + 1)
-            else:
                 totaldamage = np.random.randint(1, 20*(target.world_i+1) + 1)
+            else:
+                totaldamage = np.random.randint(1, 10*(target.world_i+1) + 1)
             damage = min(totaldamage, targetbodypart.hp())
             targetbodypart.damagetaken += damage
             if targetbodypart.parentalconnection != None:
@@ -87,7 +87,7 @@ class God(creature.Creature):
             if 'leg' in targetbodypart.categories:
                 numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
                 if np.random.rand() < 0.5 - 0.05*numlegs:
-                    targetbodypart.imbalanceclock += 10*damage/targetbodypart.maxhp
+                    targetbodypart.imbalanceclock += 20*damage/targetbodypart.maxhp
             if not target.dying():
                 if not targetbodypart.destroyed() and not targetbodypart.incapacitated():
                     if target.imbalanced() and not alreadyimbalanced:

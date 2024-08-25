@@ -13,61 +13,61 @@ import utils
 Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'weaponlength', 'bane', 'special', 'weapon'])
 
 Material = namedtuple('Material', ['damage', 'hitbonus', 'minespeed', 'armor', 'hp', 'density', 'color'])
-materials = {'leather': Material(None, None, None, 5, 100, 4, (186, 100, 13)),
-             'wood': Material(10, 0, 0.25, None, 100, 5, (164,116,73)),
-             'bone': Material(15, 0, 0.25, 10, 100, 20, (255, 255, 204)),
-             'chitin': Material(15, 0, 0.25, 10, 150, 20, (0, 102, 0)),
-             'silver': Material(20, 0.02, 0.26, 10, 150, 105, (192, 192, 192)),
-             'bronze': Material(20, 0.02, 0.26, 10, 200, 75, (150,116,68)),
-             'iron': Material(25, 0.03, 0.27, 15, 300, 79, (200, 200, 200)),
-             'steel': Material(30, 0.04, 0.27, 20, 400, 79, (210, 210, 210)),
-             'elven steel': Material(30, 0.05, 0.27, 20, 400, 60, (210, 210, 210)),
-             'dwarven steel': Material(32, 0.04, 0.30, 22, 440, 80, (210, 210, 210)),
-             'titanium': Material(35, 0.06, 0.28, 25, 500, 45, (135, 134, 129)),
-             'orichalcum': Material(40, 0.08, 0.29, 30, 500, 75, (255, 102, 102)),
-             'nanotube': Material(40, 0.08, 0.29, 30, 500, 10, (51, 0, 0)),
-             'neutronium': Material(45, 0.1, 0.29, 35, 600, 1000, (0, 255, 255)),
-             'angelbone': Material(45, 0.1, 0.3, 35, 600, 20, (204, 255, 255)),
-             'duranium': Material(50, 0.12, 0.31, 40, 700, 30, (200, 200, 200)),
-             'tungsten carbide': Material(50, 0.12, 0.33, 40, 650, 156, (180, 180, 180)),
-             'tritanium': Material(55, 0.14, 0.32, 45, 800, 50, (135, 134, 129)),
-             'yggdrasilwood':Material(55, 0.14, 0.32, 45, 800, 5, (164,116,73)),
-             'octiron': Material(60, 0.16, 0.33, 50, 900, 85, (0, 0, 0)),
-             'zzzilver': Material(60, 0.16, 0.33, 50, 900, 85, (192, 192, 192)),
-             'diamond': Material(65, 0.18, 0.34, 55, 1000, 35, (200, 200, 255)),
-             'frankensteinium': Material(65, 0.18, 0.34, 55, 1000, 66, (0, 200, 0)),
-             'alicorn': Material(70, 0.2, 0.35, 60, 1100, 30, (150, 150, 255)),
-             'titantooth': Material(70, 0.2, 0.35, 62, 1200, 30, (150, 150, 255)),
-             'impervium': Material(75, 0.22, 0.36, 65, 1200, 80, (150, 150, 150)),
-             'lonsdaleite': Material(75, 0.22, 0.36, 65, 1200, 35, (200, 200, 255)),
-             'dragonbone': Material(80, 0.24, 0.37, 70, 1300, 20, (255, 255, 204)),
-             'wraithbone': Material(80, 0.24, 0.37, 70, 1300, 10, (255, 204, 255)),
-             'devilbone': Material(85, 0.26, 0.38, 75, 1400, 20, (255, 204, 204)),
-             'dark matter': Material(85, 0.26, 0.38, 75, 1400, 50, (0, 0, 0)),
-             'mithril': Material(90, 0.28, 0.39, 80, 1500, 10, (192, 192, 192)),
-             'vampiric gold': Material(90, 0.28, 0.39, 80, 1500, 10, (255, 0, 0)),
-             'infernal steel': Material(95, 0.3, 0.4, 85, 1600, 79, (255, 0, 0)),
-             'soulmetal': Material(95, 0.3, 0.4, 85, 1600, 30, (255, 255, 255)),
-             'kryptonite': Material(100, 0.32, 0.41, 90, 1700, 32, (0, 255, 0)),
-             'administratium': Material(100, 0.32, 0.41, 90, 1700, 32, (255, 255, 0)),
-             'corbomite': Material(105, 0.34, 0.42, 95, 1800, 50, (0, 150, 0)),
-             'unbihexium-354': Material(105, 0.34, 0.42, 95, 1800, 100, (0, 150, 150)),
-             'tachyonite': Material(110, 0.36, 0.43, 100, 1900, -10, (0, 0, 255)),
-             'mithril carbide': Material(110, 0.36, 0.43, 100, 1900, 15, (200, 200, 200)),
-             'vibranium': Material(115, 0.38, 0.44, 105, 2000, 100, (200, 200, 255)),
-             'energy': Material(115, 0.38, 0.44, 105, 2000, 0, (0, 255, 255)),
-             'forbidium': Material(120, 0.4, 0.45, 110, 2100, 200, (200, 200, 200)),
-             'artefact': Material(120, 0.4, 0.45, 110, 2200, 100, (204, 204, 0)),
-             'starmetal': Material(125, 0.42, 0.46, 115, 2200, 150, (255, 255, 255)),
-             'galvorn': Material(125, 0.42, 0.46, 115, 2200, 15, (0, 0, 0)),
-             'phlebotinum': Material(130, 0.44, 0.47, 120, 2300, 40, (255, 255, 0)),
-             'hihi\'irokane': Material(130, 0.44, 0.47, 120, 2300, 75, (255, 153, 0)),
-             'beskar': Material(135, 0.46, 0.48, 125, 2400, 80, (210, 210, 210)),
-             'dark energy': Material(135, 0.47, 0.48, 125, 2300, 0, (204, 0, 153)),
-             'unobtainium': Material(140, 0.48, 0.49, 130, 2500, 10, (255, 0, 255)),
-             'indestructium': Material(140, 0.48, 0.49, 132, 2600, 60, (51, 102, 255)),
-             'adamantine': Material(145, 0.5, 0.5, 135, 2600, 100, (0, 0, 0)),
-             'eternium': Material(145, 0.5, 0.5, 135, 2600, 50, (255, 255, 255))}
+materials = {'leather': Material(None, None, None, 3, 25, 4, (186, 100, 13)),
+             'wood': Material(5, 0, 0.25, None, 25, 5, (164,116,73)),
+             'bone': Material(8, 0, 0.25, 5, 25, 20, (255, 255, 204)),
+             'chitin': Material(8, 0, 0.25, 5, 35, 20, (0, 102, 0)),
+             'silver': Material(10, 0.02, 0.26, 5, 35, 105, (192, 192, 192)),
+             'bronze': Material(10, 0.02, 0.26, 5, 50, 75, (150,116,68)),
+             'iron': Material(13, 0.03, 0.27, 8, 75, 79, (200, 200, 200)),
+             'steel': Material(15, 0.04, 0.27, 10, 100, 79, (210, 210, 210)),
+             'elven steel': Material(15, 0.05, 0.27, 10, 100, 60, (210, 210, 210)),
+             'dwarven steel': Material(16, 0.04, 0.30, 11, 110, 80, (210, 210, 210)),
+             'titanium': Material(18, 0.06, 0.28, 13, 125, 45, (135, 134, 129)),
+             'orichalcum': Material(20, 0.08, 0.29, 15, 125, 75, (255, 102, 102)),
+             'nanotube': Material(20, 0.08, 0.29, 15, 125, 10, (51, 0, 0)),
+             'neutronium': Material(23, 0.1, 0.29, 18, 150, 1000, (0, 255, 255)),
+             'angelbone': Material(23, 0.1, 0.3, 18, 150, 20, (204, 255, 255)),
+             'duranium': Material(25, 0.12, 0.31, 20, 175, 30, (200, 200, 200)),
+             'tungsten carbide': Material(25, 0.12, 0.33, 20, 175, 156, (180, 180, 180)),
+             'tritanium': Material(28, 0.14, 0.32, 23, 200, 50, (135, 134, 129)),
+             'yggdrasilwood':Material(28, 0.14, 0.32, 23, 200, 5, (164,116,73)),
+             'octiron': Material(30, 0.16, 0.33, 25, 225, 85, (0, 0, 0)),
+             'zzzilver': Material(30, 0.16, 0.33, 25, 225, 85, (192, 192, 192)),
+             'diamond': Material(33, 0.18, 0.34, 28, 250, 35, (200, 200, 255)),
+             'frankensteinium': Material(33, 0.18, 0.34, 28, 250, 66, (0, 200, 0)),
+             'alicorn': Material(35, 0.2, 0.35, 30, 275, 30, (150, 150, 255)),
+             'titantooth': Material(35, 0.2, 0.35, 31, 300, 30, (150, 150, 255)),
+             'impervium': Material(38, 0.22, 0.36, 33, 300, 80, (150, 150, 150)),
+             'lonsdaleite': Material(38, 0.22, 0.36, 33, 300, 35, (200, 200, 255)),
+             'dragonbone': Material(40, 0.24, 0.37, 35, 325, 20, (255, 255, 204)),
+             'wraithbone': Material(40, 0.24, 0.37, 35, 325, 10, (255, 204, 255)),
+             'devilbone': Material(43, 0.26, 0.38, 38, 350, 20, (255, 204, 204)),
+             'dark matter': Material(43, 0.26, 0.38, 38, 350, 50, (0, 0, 0)),
+             'mithril': Material(45, 0.28, 0.39, 40, 375, 10, (192, 192, 192)),
+             'vampiric gold': Material(45, 0.28, 0.39, 40, 375, 10, (255, 0, 0)),
+             'infernal steel': Material(48, 0.3, 0.4, 43, 400, 79, (255, 0, 0)),
+             'soulmetal': Material(48, 0.3, 0.4, 43, 400, 30, (255, 255, 255)),
+             'kryptonite': Material(50, 0.32, 0.41, 45, 425, 32, (0, 255, 0)),
+             'administratium': Material(50, 0.32, 0.41, 45, 425, 32, (255, 255, 0)),
+             'corbomite': Material(53, 0.34, 0.42, 48, 450, 50, (0, 150, 0)),
+             'unbihexium-354': Material(53, 0.34, 0.42, 48, 450, 100, (0, 150, 150)),
+             'tachyonite': Material(55, 0.36, 0.43, 50, 475, -10, (0, 0, 255)),
+             'mithril carbide': Material(55, 0.36, 0.43, 50, 475, 15, (200, 200, 200)),
+             'vibranium': Material(58, 0.38, 0.44, 53, 500, 100, (200, 200, 255)),
+             'energy': Material(58, 0.38, 0.44, 53, 500, 0, (0, 255, 255)),
+             'forbidium': Material(60, 0.4, 0.45, 55, 525, 200, (200, 200, 200)),
+             'artefact': Material(60, 0.4, 0.45, 55, 550, 100, (204, 204, 0)),
+             'starmetal': Material(63, 0.42, 0.46, 58, 550, 150, (255, 255, 255)),
+             'galvorn': Material(63, 0.42, 0.46, 58, 575, 15, (0, 0, 0)),
+             'phlebotinum': Material(65, 0.44, 0.47, 60, 575, 40, (255, 255, 0)),
+             'hihi\'irokane': Material(65, 0.44, 0.47, 60, 600, 75, (255, 153, 0)),
+             'beskar': Material(68, 0.46, 0.48, 63, 600, 80, (210, 210, 210)),
+             'dark energy': Material(68, 0.47, 0.48, 63, 625, 0, (204, 0, 153)),
+             'unobtainium': Material(70, 0.48, 0.49, 65, 625, 10, (255, 0, 255)),
+             'indestructium': Material(70, 0.48, 0.49, 66, 650, 60, (51, 102, 255)),
+             'adamantine': Material(73, 0.5, 0.5, 68, 650, 100, (0, 0, 0)),
+             'eternium': Material(73, 0.5, 0.5, 68, 675, 50, (255, 255, 255))}
 armormaterials = [material for material in materials if not materials[material].armor == None]
 weaponmaterials = [material for material in materials if not materials[material].damage == None]
 likeliestmaterialbylevel = ['bone',           # 1
@@ -452,7 +452,7 @@ class Stone(Item):
         self.throwrange = 5
         self.hitpropability = 0.75
         self.mindamage = 1
-        self.maxdamage = 15
+        self.maxdamage = 8
         self.weight = 1000
         self._info = 'A blunt improvised weapon. Can be thrown up to five paces.'
 
@@ -469,7 +469,7 @@ class Torch(Item):
         self.weapon = True
         self.hitpropability = 0.75
         self.mindamage = 1
-        self.maxdamage = 15
+        self.maxdamage = 8
         self.weight = 700
         self._info = 'A light source and an improvised weapon. When wielded, increases your range of vision, as long as you have eyes. Deals fire damage.'
 
@@ -509,7 +509,7 @@ class GlassShards(Item):
         if 'leg' in part.categories:
             numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
             if np.random.rand() < 0.5 - 0.05*numlegs:
-                part.imbalanceclock += 10*damage/part.maxhp
+                part.imbalanceclock += 20*damage/part.maxhp
         if creat.imbalanced() and not alreadyimbalanced:
             imbalancedtext = ', imbalancing you'
         else:
@@ -595,7 +595,7 @@ class Caltrops(Item):
         if 'leg' in part.categories:
             numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
             if np.random.rand() < 0.5 - 0.05*numlegs:
-                part.imbalanceclock += 10*damage/part.maxhp
+                part.imbalanceclock += 20*damage/part.maxhp
         if creat.imbalanced() and not alreadyimbalanced:
             imbalancedtext = ', imbalancing you'
         else:
@@ -676,7 +676,7 @@ class LooseRoundPebbles(Item):
         if 'leg' in part.categories:
             numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
             if np.random.rand() < 0.5 - 0.05*numlegs:
-                part.imbalanceclock += 10*damage/part.maxhp
+                part.imbalanceclock += 20*damage/part.maxhp
         if creat.imbalanced() and not alreadyimbalanced:
             imbalancedtext = ', imbalancing you'
         else:

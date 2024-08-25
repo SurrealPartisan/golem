@@ -1330,7 +1330,7 @@ def game():
                     if 'leg' in part.categories:
                         numlegs = len([p for p in player.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
                         if np.random.rand() < 0.5 - 0.05*numlegs:
-                            part.imbalanceclock += 10*damage/part.maxhp
+                            part.imbalanceclock += 20*damage/part.maxhp
                     if player.imbalanced() and not alreadyimbalanced:
                         imbalancedtext = ', imbalancing you'
                     else:
