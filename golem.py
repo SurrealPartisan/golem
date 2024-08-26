@@ -823,6 +823,8 @@ def game():
                         attackdescription += ', knockback ' + repr(int(special[1] * 100)) + '%'
                     if special[0] == 'charge':
                         attackdescription += ', charge'
+                    if special[0] == 'internals-seeking':
+                        attackdescription += ', directly target internal organs'
                 attackdescription += ')'
                 if j != chosen:
                     win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
@@ -832,19 +834,19 @@ def game():
         elif gamestate == 'choosetargetbodypart':
             attackmessage = 'Choose where to attack the ' + target.name + ':'
             win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            logrows = min(logheight-1,len([part for part in target.bodyparts if not part.destroyed()]))
+            logrows = min(logheight-1,len(targetbodypartlist))
             for i in range(logrows):
-                if len([part for part in target.bodyparts if not part.destroyed()]) <= logheight-1:
+                if len(targetbodypartlist) <= logheight-1:
                     j = i
                 else:
-                    j = len([part for part in target.bodyparts if not part.destroyed()])+i-logrows-logback
+                    j = len(targetbodypartlist)+i-logrows-logback
                 if j < 9:
                     num = repr(j + 1) + ': '
                 elif j == 9:
                     num = '0: '
                 else:
                     num = ''
-                targetbodypart = [part for part in target.bodyparts if not part.destroyed()][j]
+                targetbodypart = targetbodypartlist[j]
                 if targetbodypart.parentalconnection != None:
                     partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                 elif targetbodypart == target.torso:
@@ -920,6 +922,8 @@ def game():
                         attackdescription += ', knockback ' + repr(int(special[1] * 100)) + '%'
                     if special[0] == 'charge':
                         attackdescription += ', charge'
+                    if special[0] == 'internals-seeking':
+                        attackdescription += ', directly target internal organs'
                 attackdescription += ')'
                 if j != chosen:
                     win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
@@ -941,19 +945,19 @@ def game():
         elif gamestate == 'throwchoosetargetbodypart':
             attackmessage = 'Choose where to attack the ' + target.name + ':'
             win.write(attackmessage, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            logrows = min(logheight-1,len([part for part in target.bodyparts if not part.destroyed()]))
+            logrows = min(logheight-1,len(targetbodypartlist))
             for i in range(logrows):
-                if len([part for part in target.bodyparts if not part.destroyed()]) <= logheight-1:
+                if len(targetbodypartlist) <= logheight-1:
                     j = i
                 else:
-                    j = len([part for part in target.bodyparts if not part.destroyed()])+i-logrows-logback
+                    j = len(targetbodypartlist)+i-logrows-logback
                 if j < 9:
                     num = repr(j + 1) + ': '
                 elif j == 9:
                     num = '0: '
                 else:
                     num = ''
-                targetbodypart = [part for part in target.bodyparts if not part.destroyed()][j]
+                targetbodypart = targetbodypartlist[j]
                 if targetbodypart.parentalconnection != None:
                     partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                 elif targetbodypart == target.torso:
@@ -1314,7 +1318,7 @@ def game():
                 if player.stance != 'running':
                     player.log().append("You bumped into a wall.")
                 else:
-                    part = np.random.choice([part for part in player.bodyparts if not part.destroyed()])
+                    part = np.random.choice([part for part in player.bodyparts if not part.internal() and not part.destroyed()])
                     resistancemultiplier = 1 - part.resistance('blunt')
                     totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
                     if part.armor() != None:
@@ -2344,7 +2348,11 @@ def game():
                             selectedattack = player.attackslist()[chosen]
                             gamestate = 'choosetargetbodypart'
                             numchosen = False
-                            logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
+                            if np.any([special[0] == 'internals-seeking' for special in selectedattack.special]):
+                                targetbodypartlist = [part for part in target.bodyparts if not part.destroyed()]
+                            else:
+                                targetbodypartlist = [part for part in target.bodyparts if not part.internal() and not part.destroyed()]
+                            logback = len(targetbodypartlist) - logheight + 1
                             chosen = 0
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
                             logback = 0
@@ -2354,18 +2362,18 @@ def game():
                     elif gamestate == 'choosetargetbodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
-                            if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback - (logheight - 1) - 1:
+                            if chosen == len(targetbodypartlist) - logback - (logheight - 1) - 1:
                                 logback += 1
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([part for part in target.bodyparts if not part.destroyed()])-1, chosen+1)
-                            if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback:
+                            chosen = min(len(targetbodypartlist)-1, chosen+1)
+                            if chosen == len(targetbodypartlist) - logback:
                                 logback -= 1
                         for i in range(10):
-                            if event.key in numkeys[i] and i < len([part for part in target.bodyparts if not part.destroyed()]):
+                            if event.key in numkeys[i] and i < len(targetbodypartlist):
                                 chosen = i
                                 numchosen = True
                         if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            selected = [part for part in target.bodyparts if not part.destroyed()][chosen]
+                            selected = targetbodypartlist[chosen]
                             secondlastattack = lastattack
                             lastattack = (target, selected, selectedattack)
                             if player.previousaction[0] == 'fight' and player.previousaction[1] == selectedattack.weapon and player.previousaction[2] == selected:
@@ -2457,7 +2465,11 @@ def game():
                                     targetingcreature = True
                             if targetingcreature:
                                 gamestate = 'throwchoosetargetbodypart'
-                                logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
+                                if np.any([special[0] == 'internals-seeking' for special in selectedattack.special]):
+                                    targetbodypartlist = [part for part in target.bodyparts if not part.destroyed()]
+                                else:
+                                    targetbodypartlist = [part for part in target.bodyparts if not part.internal() and not part.destroyed()]
+                                logback = len(targetbodypartlist) - logheight + 1
                             else:
                                 gamestate = 'throwchooselimb'
                                 limblist = [part for part in player.bodyparts if part.capableofwielding and part.capableofthrowing and len(part.wielded) == 0]
@@ -2474,23 +2486,23 @@ def game():
                     elif gamestate == 'throwchoosetargetbodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
-                            if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback - (logheight - 1) - 1:
+                            if chosen == len(targetbodypartlist) - logback - (logheight - 1) - 1:
                                 logback += 1
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([part for part in target.bodyparts if not part.destroyed()])-1, chosen+1)
-                            if chosen == len([part for part in target.bodyparts if not part.destroyed()]) - logback:
+                            chosen = min(len(targetbodypartlist)-1, chosen+1)
+                            if chosen == len(targetbodypartlist) - logback:
                                 logback -= 1
                         for i in range(10):
-                            if event.key in numkeys[i] and i < len([part for part in target.bodyparts if not part.destroyed()]):
+                            if event.key in numkeys[i] and i < len(targetbodypartlist):
                                 chosen = i
                                 numchosen = True
                         if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            selectedbodypart = [part for part in target.bodyparts if not part.destroyed()][chosen]
+                            selectedbodypart = targetbodypartlist[chosen]
                             gamestate = 'throwchooselimb'
                             limblist = [part for part in player.bodyparts if part.capableofwielding and part.capableofthrowing and len(part.wielded) == 0]
                             if selectedattack.weapon.owner != player.inventory:
                                 limblist = [selectedattack.weapon.owner.owner] + limblist
-                            logback = len([part for part in target.bodyparts if not part.destroyed()]) - logheight + 1
+                            logback = len(targetbodypartlist) - logheight + 1
                             numchosen = False
                             chosen = 0
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -2630,7 +2642,8 @@ def game():
                                     while len(connectionstoremove) > 0:
                                         cnn = connectionstoremove[0]
                                         connectioncandidates.remove(cnn)
-                                        bodypartcandidates.remove(cnn[1])
+                                        if cnn[1] != None:
+                                            bodypartcandidates.remove(cnn[1])
                                         connectionstoremove.remove(cnn)
                                         connectionstoremove += [cn for cn in connectioncandidates if cn != None and cn[0].parent == cnn[1]]
                                 if selected != None:

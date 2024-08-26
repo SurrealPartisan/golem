@@ -244,7 +244,7 @@ class Creature():
                 self.burnclock += time
                 for i in range(int(self.burnclock // 1)):
                     part = self.approxfastestpart()
-                    adjacentparts = [connection.child for connection in part.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
+                    adjacentparts = [connection.child for connection in part.childconnections.values() if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
                     if part.parentalconnection != None and not part.parentalconnection.parent.destroyed():
                         adjacentparts.append(part.parentalconnection.parent)
                     if np.random.rand() > 0.75 and len(adjacentparts) > 0:
@@ -289,7 +289,7 @@ class Creature():
             if not self.dying():
                 self.burnclock += time
                 for i in range(int(self.burnclock // 1)):
-                    for part in self.bodyparts:
+                    for part in [part for part in self.bodyparts if not part.internal()]:
                         totaldamage = np.random.randint(1, 21)
                         resistancemultiplier = 1 - part.resistance('fire')
                         damage = min(int(resistancemultiplier*totaldamage), part.hp())
@@ -759,10 +759,33 @@ class Creature():
                             imbalancedcoefficient = 1.25
                         else:
                             imbalancedcoefficient = 1
+                        secondarytargetbodypart = None
                         if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                             hit = True
+                            if targetbodypart.internal():
+                                secondarytargetbodypart = targetbodypart.parentalconnection.parent
+                            elif len([connection for connection in targetbodypart.childconnections if targetbodypart.childconnections[connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()]) > 0 and np.random.rand() < 0.5:
+                                internaltarget = np.random.choice([targetbodypart.childconnections[connection].child for connection in targetbodypart.childconnections if targetbodypart.childconnections[connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()])
+                                if not thrown and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                                    upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
+                                    upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
+                                    lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
+                                    lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - attack.weaponlength
+                                    if upperfinelimit >= internaltarget.topheight() >= lowerfinelimit or upperfinelimit >= internaltarget.bottomheight() >= lowerfinelimit or internaltarget.topheight() >= upperfinelimit >= internaltarget.bottomheight():
+                                        heightcoefficient = 1
+                                    elif internaltarget.bottomheight() >= upperpoorlimit or internaltarget.topheight() <= lowerpoorlimit:
+                                        heightcoefficient = 0.5
+                                    elif upperpoorlimit > internaltarget.bottomheight() > upperfinelimit:
+                                        heightcoefficient = 0.5 + 0.5*(upperpoorlimit - internaltarget.bottomheight())/(upperpoorlimit - upperfinelimit)
+                                    elif lowerpoorlimit < internaltarget.topheight() < lowerfinelimit:
+                                        heightcoefficient = 0.5 + 0.5*(internaltarget.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                                else:
+                                    heightcoefficient = 1
+                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
+                                    secondarytargetbodypart = targetbodypart
+                                    targetbodypart = internaltarget
                         else:
-                            adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed()]
+                            adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
                             if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
                                 adjacentparts.append(targetbodypart.parentalconnection.parent)
                             if len(adjacentparts) > 0:
@@ -844,24 +867,45 @@ class Creature():
                                 banemultiplier = 2
                             else:
                                 banemultiplier = 1
+                            armorpassingdamage = banemultiplier*(totaldamage - armordamage)
+                            if secondarytargetbodypart != None and armorpassingdamage > 1:
+                                _secondarydamage = np.random.randint(1, armorpassingdamage)
+                                secondaryresistancemultiplier = 1 - secondarytargetbodypart.resistance(attack.damagetype)
+                                secondarydamage = min(int(secondaryresistancemultiplier*_secondarydamage), secondarytargetbodypart.hp())
+                            elif secondarytargetbodypart != None and armorpassingdamage < 2:
+                                targetbodypart = secondarytargetbodypart
+                                secondarytargetbodypart = None
+                                _secondarydamage = 0
+                                secondarydamage = 0
+                            else:
+                                _secondarydamage = 0
+                                secondarydamage = 0
                             resistancemultiplier = 1 - targetbodypart.resistance(attack.damagetype)
+                            damage = min(int(resistancemultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
                             bleed = False
                             for special in attack.special:
                                 if special[0] == 'bleed' and np.random.rand() < special[1]:
                                     bleed = True
-                                    targetbodypart.bleedclocks.append((int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), 0, self))
-                            damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), targetbodypart.hp())
+                                    targetbodypart.bleedclocks.append((damage, 0, self))
                             alreadyincapacitated = targetbodypart.incapacitated()
+                            if secondarytargetbodypart != None:
+                                secondaryalreadyincapacitated = secondarytargetbodypart.incapacitated()
                             if 'player' in target.factions:
                                 targetparthalfhp = targetbodypart.maxhp / 2
+                                if secondarytargetbodypart != None:
+                                    secondarytargetparthalfhp = secondarytargetbodypart.maxhp / 2
                                 totalthreequartershp = sum([part.maxhp for part in target.bodyparts])/2*3/4
                             else:
                                 targetparthalfhp = targetbodypart.maxhp * difficulty / 2
+                                if secondarytargetbodypart != None:
+                                    secondarytargetparthalfhp = secondarytargetbodypart.maxhp * difficulty / 2
                                 totalthreequartershp = sum([part.maxhp for part in target.bodyparts])/2*3/4*difficulty
-                            vitalalreadyunderhalf = targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp
+                            vitalalreadyunderhalf = (targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (secondarytargetbodypart != None and secondarytargetbodypart.vital() and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp)
                             totalalreadyunderquarter = sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp
                             targetbodypart.damagetaken += damage
-                            reasontopanic = (not vitalalreadyunderhalf and targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (not totalalreadyunderquarter and sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp)
+                            if secondarytargetbodypart != None:
+                                secondarytargetbodypart.damagetaken += secondarydamage
+                            reasontopanic = (not vitalalreadyunderhalf and ((targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (secondarytargetbodypart != None and secondarytargetbodypart.vital() and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp))) or (not totalalreadyunderquarter and sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp)
                             panic = False
                             scared = False
                             if reasontopanic:
@@ -876,77 +920,167 @@ class Creature():
                                         if np.random.rand() < bravery:
                                             panic = False
                                     if panic:
-                                        target.panickedclock += 2*damage
+                                        target.panickedclock += 2*(damage+secondarydamage)
                                     else:
-                                        target.scaredclock += 2*damage
+                                        target.scaredclock += 2*(damage+secondarydamage)
                             if 'leg' in targetbodypart.categories:
                                 numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()])
                                 if np.random.rand() < 0.5 - 0.05*numlegs:
                                     targetbodypart.imbalanceclock += 20*damage/targetbodypart.maxhp
+                            if secondarytargetbodypart != None and 'leg' in secondarytargetbodypart.categories:
+                                numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()])
+                                if np.random.rand() < 0.5 - 0.05*numlegs:
+                                    secondarytargetbodypart.imbalanceclock += 20*secondarydamage/secondarytargetbodypart.maxhp
                             if targetbodypart.parentalconnection != None:
                                 partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                             elif targetbodypart == target.torso:
                                 partname = 'torso'
+                            if secondarytargetbodypart != None and secondarytargetbodypart.parentalconnection != None:
+                                secondarypartname = list(secondarytargetbodypart.parentalconnection.parent.childconnections.keys())[list(secondarytargetbodypart.parentalconnection.parent.childconnections.values()).index(secondarytargetbodypart.parentalconnection)]
+                            elif secondarytargetbodypart == target.torso:
+                                secondarypartname = 'torso'
+                            else:
+                                secondarypartname = ''
                             if not target.dying():
-                                if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
+                                if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed() and secondarytargetbodypart != None and secondarytargetbodypart.incapacitated() and not secondaryalreadyincapacitated and not secondarytargetbodypart.destroyed():
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + ' and your ' + secondarypartname + attack.post3rd + '!')
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you back!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you back!')
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
                                             target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
                                         else:
                                             target.log().append('Your ' + armor.name + ' was destroyed!')
                                             armor.owner.remove(armor)
+                                elif targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
+                                    if secondarytargetbodypart != None and not secondarytargetbodypart.destroyed():
+                                        secondarymessage1 = ', dealing ' + repr(secondarydamage) + ' damage to its ' + secondarypartname
+                                        secondarymessage2 = ', dealing ' + repr(secondarydamage) + ' damage to your ' + secondarypartname
+                                        commaorand = ' and'
+                                    elif secondarytargetbodypart != None and secondarytargetbodypart.destroyed():
+                                        secondarymessage1 = 'destroying its ' + secondarypartname
+                                        secondarymessage2 = 'destroying your ' + secondarypartname
+                                        commaorand = ' and'
+                                    else:
+                                        secondarymessage1 = ''
+                                        secondarymessage2 = ''
+                                        commaorand = ','
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + secondarymessage2 + '!')
+                                    elif knocked_back:
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you back!')
+                                    elif knocked_to_obstacle:
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you against the ' + knocked_to_obstacle + '!')
+                                    if armordamage > 0:
+                                        if not armor.destroyed():
+                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                        else:
+                                            target.log().append('Your ' + armor.name + ' was destroyed!')
+                                            armor.owner.remove(armor)
+                                    if secondarytargetbodypart != None and secondarytargetbodypart.destroyed():
+                                        secondarytargetbodypart.on_destruction(False)
                                 elif not targetbodypart.destroyed():
+                                    if secondarytargetbodypart != None and not (secondarytargetbodypart.incapacitated() and not secondaryalreadyincapacitated) and not secondarytargetbodypart.destroyed():
+                                        secondarymessage1 = '(' + repr(secondarydamage) + ' to the ' + secondarypartname + ')'
+                                        secondarymessage2 = '(' + repr(secondarydamage) + ' to the ' + secondarypartname + ')'
+                                        andorspace = ' '
+                                        commaorspace = ' '
+                                    elif secondarytargetbodypart != None and not secondarytargetbodypart.destroyed():
+                                        secondarymessage1 = ' incapacitating its ' + secondarypartname
+                                        secondarymessage2 = ' incapacitating your ' + secondarypartname
+                                        andorspace = ' and '
+                                        commaorspace = ', '
+                                    elif secondarytargetbodypart != None:  # destroyed
+                                        secondarymessage1 = ' destroying its ' + secondarypartname
+                                        secondarymessage2 = ' destroying your ' + secondarypartname
+                                        andorspace = ' and '
+                                        commaorspace = ', '
+                                    else:
+                                        secondarymessage1 = ''
+                                        secondarymessage2 = ''
+                                        andorspace = ''
+                                        commaorspace = ''
                                     if not thrown:
                                         if not bleed and not knocked_back and not knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + '!')
                                         elif bleed:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and making it bleed!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and making you bleed!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and making it bleed!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and making you bleed!')
                                         elif knocked_back:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it back!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you back!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and knocking it back!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and knocking you back!')
                                         elif knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
                                     else:
                                         if not bleed and not knocked_back and not knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + '!')
                                         elif bleed:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage and making it bleed!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage and making you bleed!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and making it bleed!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and making you bleed!')
                                         elif knocked_back:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage and knocking it back!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage and knocking you back!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it back!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you back!')
                                         elif knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage and knocking it against the ' + knocked_to_obstacle + '!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage and knocking you against the ' + knocked_to_obstacle + '!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
                                             target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
                                         else:
                                             target.log().append('Your ' + armor.name + ' was destroyed!')
                                             armor.owner.remove(armor)
-                                else:
+                                elif secondarytargetbodypart != None and secondarytargetbodypart.destroyed():
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + ' and your ' + secondarypartname + attack.post3rd + '!')
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you back!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you back!')
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                    if armordamage > 0:
+                                        if not armor.destroyed():
+                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                        else:
+                                            target.log().append('Your ' + armor.name + ' was also destroyed!')
+                                            armor.owner.remove(armor)
+                                    targetbodypart.on_destruction(False)
+                                    secondarytargetbodypart.on_destruction(False)
+                                else:
+                                    if secondarytargetbodypart != None and not (secondarytargetbodypart.incapacitated() and not secondaryalreadyincapacitated):
+                                        secondarymessage1 = ', dealing ' + repr(secondarydamage) + ' damage to its ' + secondarypartname
+                                        secondarymessage2 = ', dealing ' + repr(secondarydamage) + ' damage to your ' + secondarypartname
+                                        commaorand = ' and'
+                                    elif secondarytargetbodypart != None:
+                                        secondarymessage1 = 'incapacitating its ' + secondarypartname
+                                        secondarymessage2 = 'incapacitating your ' + secondarypartname
+                                        commaorand = ' and'
+                                    else:
+                                        secondarymessage1 = ''
+                                        secondarymessage2 = ''
+                                        commaorand = ','
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + secondarymessage2 + '!')
+                                    elif knocked_back:
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you back!')
+                                    elif knocked_to_obstacle:
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
                                             target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
@@ -1037,7 +1171,7 @@ class Creature():
         elif self.nextaction[0] == 'bump':
             if self.stance == 'running':
                 self.runstaminaused += self.nextaction[-1]*(1 + self.slowed())
-                part = np.random.choice([part for part in self.bodyparts if not part.destroyed()])
+                part = np.random.choice([part for part in self.bodyparts if not part.internal() and not part.destroyed()])
                 resistancemultiplier = 1 - part.resistance('blunt')
                 totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
                 if part.armor() != None:
@@ -1322,7 +1456,7 @@ class Zombie(Creature):
                 if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                     i = np.random.choice(range(len(self.attackslist())))
                     atk = self.attackslist()[i]
-                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
                 elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                     # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                     # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -1420,7 +1554,7 @@ class MolePerson(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -1508,7 +1642,7 @@ class Goblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -1596,7 +1730,7 @@ class GlassElemental(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -1689,7 +1823,7 @@ class CaveOctopus(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -1789,7 +1923,7 @@ class Dog(Creature):
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -1877,7 +2011,7 @@ class Hobgoblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -1976,7 +2110,7 @@ class MoleMonk(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2076,7 +2210,7 @@ class Wolf(Creature):
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2250,7 +2384,7 @@ class Lobgoblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2343,7 +2477,7 @@ class RevenantCaveOctopus(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2444,7 +2578,7 @@ class Ghoul(Creature):
                 if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                     i = np.random.choice(range(len(self.attackslist())))
                     atk = self.attackslist()[i]
-                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
                 elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                     # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                     # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2528,7 +2662,7 @@ class SmallFireElemental(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2616,7 +2750,7 @@ class Mobgoblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2716,7 +2850,7 @@ class DireWolf(Creature):
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2804,7 +2938,7 @@ class Jobgoblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2905,7 +3039,7 @@ class Ghast(Creature):
                 if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                     i = np.random.choice(range(len(self.attackslist())))
                     atk = self.attackslist()[i]
-                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
                 elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                     # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                     # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -2993,7 +3127,7 @@ class Nobgoblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -3093,7 +3227,7 @@ class Warg(Creature):
                 maxdmglist = [atk[8] for atk in self.attackslist()]
                 i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -3181,7 +3315,7 @@ class Fobgoblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -3268,7 +3402,7 @@ class LargeFireElemental(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -3356,7 +3490,7 @@ class Dobgoblin(Creature):
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
-                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.destroyed()]), atk, atk[6]])
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))

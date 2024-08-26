@@ -375,16 +375,16 @@ class Sword(Item):
         self.bane = bane
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
-        self.maxdamage = int(materials[material].damage*1.25) + enchantment
+        self.maxdamage = int(materials[material].damage*1.2) + enchantment
         density = materials[material].density
         self.weight = 50*density
-        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding).'
+        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Because of its long sharp blade, can directly attack internal organs.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 50, self.bane, [], self)]
+            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 50, self.bane, [('internals-seeking',)], self)]
         else:
-            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 50, self.bane, [], self)]
+            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 50, self.bane, [('internals-seeking',)], self)]
 
 def randomsword(owner, x, y, level):
     enchantment = 0
@@ -659,7 +659,7 @@ class LooseRoundPebbles(Item):
         return Stone(None, self.x, self.y)
 
     def entrap(self, creat, part):
-        part = np.random.choice([part for part in creat.bodyparts if not part.destroyed()])
+        part = np.random.choice([part for part in creat.bodyparts if not part.internal() and not part.destroyed()])
         resistancemultiplier = 1 - part.resistance('blunt')
         totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
         if part.armor() != None:

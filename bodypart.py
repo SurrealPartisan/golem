@@ -12,7 +12,7 @@ from item import Attack
 from utils import constantfunction, listwithowner, loglist, mapwidth, mapheight, numlevels, difficulty
 
 class BodyPartConnection():
-    def __init__(self, parent, categories, vital, prefix, heightfunc, defensecoefficient=1, armorapplies=False):
+    def __init__(self, parent, categories, vital, prefix, heightfunc, defensecoefficient=1, armorapplies=False, internal=False):
         self.parent = parent
         self.categories = categories
         self.vital = vital
@@ -21,6 +21,7 @@ class BodyPartConnection():
         self.heightfunc = heightfunc
         self.defensecoefficient = defensecoefficient
         self.armorapplies = armorapplies
+        self.internal = internal
     
     def connect(self, child):
         if np.any([category in child.categories for category in self.categories]) and self.child == None:
@@ -98,6 +99,12 @@ class BodyPart(item.Item):
             return self.damagetaken >= difficulty*self.maxhp
         else:
             return False
+
+    def internal(self):
+        if 'torso' in self.categories:
+            return False
+        else:
+            return self.parentalconnection.internal and not self.parentalconnection.parent.destroyed()
 
     def speed(self):
         return 0
@@ -224,12 +231,12 @@ class HumanTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 60
         self._pronetopheight = 30
@@ -353,7 +360,7 @@ class HumanHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -480,12 +487,12 @@ class ZombieTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 60
         self._pronetopheight = 30
@@ -621,7 +628,7 @@ class ZombieHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -776,12 +783,12 @@ class MolePersonTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 60
         self._pronetopheight = 30
@@ -905,7 +912,7 @@ class MolePersonHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -1033,12 +1040,12 @@ class GoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 40, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 30, 12), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 20, 12), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 30, 12), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 20, 12), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 40
         self._pronetopheight = 25
@@ -1168,7 +1175,7 @@ class GoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -1293,12 +1300,12 @@ class GlassElementalTorso(BodyPart):
         self.categories = ['torso']
         self.childconnections = {
             'head': BodyPartConnection(self, ['head'], True, '', constantfunction(150)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(90), defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(100), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(100), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(100), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(90), defensecoefficient=0.8, armorapplies=True, internal=True),
             'left arm': BodyPartConnection(self, ['arm'], False, 'left ', constantfunction(145)),
             'right arm': BodyPartConnection(self, ['arm'], False, 'right ', constantfunction(145)),
             'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(2))
@@ -1346,7 +1353,7 @@ class GlassElementalHead(BodyPart):
             'center right eye': BodyPartConnection(self, ['eye'], False, 'center right ', constantfunction(18)),
             'lower left eye': BodyPartConnection(self, ['eye'], False, 'lower left ', constantfunction(16)),
             'lower right eye': BodyPartConnection(self, ['eye'], False, 'lower right ', constantfunction(16)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 10
         self._bottomheight = 0
@@ -1559,15 +1566,15 @@ class OctopusHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(35)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(35)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(40), defensecoefficient=0.8, armorapplies=True),
-            'central heart': BodyPartConnection(self, ['heart'], True, 'central ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
-            'left heart': BodyPartConnection(self, ['heart'], True, 'left ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
-            'right heart': BodyPartConnection(self, ['heart'], True, 'right ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
-            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
-            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
-            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
-            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(35), defensecoefficient=0.8, armorapplies=True),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(40), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'central heart': BodyPartConnection(self, ['heart'], True, 'central ', constantfunction(25), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left heart': BodyPartConnection(self, ['heart'], True, 'left ', constantfunction(20), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right heart': BodyPartConnection(self, ['heart'], True, 'right ', constantfunction(20), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(25), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(25), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(35), defensecoefficient=0.8, armorapplies=True, internal=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
             'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left ', constantfunction(0)),
             'center-back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back left ', constantfunction(0)),
@@ -1775,12 +1782,12 @@ class DogTorso(BodyPart):
             'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
             'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', constantfunction(10)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(9), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(9), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(9), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(9), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True, internal=True),
             'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(13))
             }
         self._topheight = 18
@@ -1849,7 +1856,7 @@ class DogHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(13)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(13)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(22), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(22), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 27
         self._bottomheight = 0
@@ -1989,12 +1996,12 @@ class HobgoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 45, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 35, 14), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 25, 14), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 35, 14), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 30, 14), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 20, 14), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 25, 14), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 45
         self._pronetopheight = 27
@@ -2124,7 +2131,7 @@ class HobgoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -2253,12 +2260,12 @@ class MoleMonkTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 60
         self._pronetopheight = 30
@@ -2382,7 +2389,7 @@ class MoleMonkHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -2510,12 +2517,12 @@ class WolfTorso(BodyPart):
             'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
             'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', constantfunction(12)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(10), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(10), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(10), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(10), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True, internal=True),
             'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(15))
             }
         self._topheight = 20
@@ -2584,7 +2591,7 @@ class WolfHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(15)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(15)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(24), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(24), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -2723,13 +2730,13 @@ class DrillbotChassis(BodyPart):
             'back left wheel': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
             'back right wheel': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
             'arm': BodyPartConnection(self, ['arm'], False, '', constantfunction(50)),
-            'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
-            'coolant aerator system': BodyPartConnection(self, ['lung'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
-            'coolant filtering system': BodyPartConnection(self, ['kidney'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
-            'biomass processor': BodyPartConnection(self, ['stomach'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True),
+            'coolant pumping system': BodyPartConnection(self, ['heart'], True, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'coolant aerator system': BodyPartConnection(self, ['lung'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'coolant filtering system': BodyPartConnection(self, ['kidney'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'biomass processor': BodyPartConnection(self, ['stomach'], False, '', constantfunction(25), defensecoefficient=0.5, armorapplies=True, internal=True),
             'left camera': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(45)),
             'right camera': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(45)),
-            'central processor': BodyPartConnection(self, ['brain'], True, '', constantfunction(30), defensecoefficient=0.5, armorapplies=True)
+            'central processor': BodyPartConnection(self, ['brain'], True, '', constantfunction(30), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 50
         self.maxhp = 150
@@ -2806,14 +2813,14 @@ class DrillArm(BodyPart):
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A dual-purpose pneumatic drill arm consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage. Can be used for mining. No smell.'
+        self._info = 'A dual-purpose pneumatic drill arm consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage. Can directly attack internal organs. Can be used for mining. No smell.'
 
     def minespeed(self):
         return 0.5
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.88, 1, 1, 25, 'rough', 0, [], [('bleed', 0.2)], self)]
+            return [Attack(self.parentalconnection.prefix + 'drill', 'drilled', 'drilled', '', '', 0.88, 1, 1, 25, 'rough', 0, [], [('bleed', 0.2), ('internals-seeking',)], self)]
         else:
             return []
 
@@ -2949,12 +2956,12 @@ class LobgoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 50, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 35, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 35, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 35, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 35, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 50
         self._pronetopheight = 30
@@ -3084,7 +3091,7 @@ class LobgoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -3210,15 +3217,15 @@ class RevenantOctopusHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(35)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(35)),
-            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(40), defensecoefficient=0.8, armorapplies=True),
-            'central heart': BodyPartConnection(self, ['heart'], False, 'central ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
-            'left heart': BodyPartConnection(self, ['heart'], False, 'left ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
-            'right heart': BodyPartConnection(self, ['heart'], False, 'right ', constantfunction(20), defensecoefficient=0.8, armorapplies=True),
-            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
-            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(15), defensecoefficient=0.8, armorapplies=True),
-            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
-            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(25), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(35), defensecoefficient=0.8, armorapplies=True),
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(40), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'central heart': BodyPartConnection(self, ['heart'], False, 'central ', constantfunction(25), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left heart': BodyPartConnection(self, ['heart'], False, 'left ', constantfunction(20), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right heart': BodyPartConnection(self, ['heart'], False, 'right ', constantfunction(20), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left gills': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right gills': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left metanephridium': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(25), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right metanephridium': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(25), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(35), defensecoefficient=0.8, armorapplies=True, internal=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
             'center-front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-front left ', constantfunction(0)),
             'center-back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'center-back left ', constantfunction(0)),
@@ -3458,12 +3465,12 @@ class GhoulTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 60
         self._pronetopheight = 30
@@ -3599,7 +3606,7 @@ class GhoulHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -3750,12 +3757,12 @@ class SmallFireElementalTorso(BodyPart):
         self.categories = ['torso']
         self.childconnections = {
             'head': BodyPartConnection(self, ['head'], True, '', constantfunction(100)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(50), defensecoefficient=0.8, armorapplies=True),
-            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
-            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(30), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(30), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(60), defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(50), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(30), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(30), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(60), defensecoefficient=0.8, armorapplies=True, internal=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
             'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left ', constantfunction(0)),
             'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right ', constantfunction(0)),
@@ -3780,7 +3787,7 @@ class SmallFireElementalHead(BodyPart):
         self.categories = ['head']
         self.childconnections = {
             'eye': BodyPartConnection(self, ['eye'], False, '', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -3966,12 +3973,12 @@ class MobgoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 55, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 45, 16), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 40, 16), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 40, 16), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 30, 16), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 30, 16), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 35, 16), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 45, 16), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 40, 16), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 40, 16), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 30, 16), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 30, 16), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 35, 16), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 55
         self._pronetopheight = 32
@@ -4101,7 +4108,7 @@ class MobgoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -4230,12 +4237,12 @@ class DireWolfTorso(BodyPart):
             'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
             'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', constantfunction(13)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(11), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(11), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-5), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(11), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(11), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True, internal=True),
             'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(17))
             }
         self._topheight = 22
@@ -4304,7 +4311,7 @@ class DireWolfHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(17)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(17)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(27), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(27), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 33
         self._bottomheight = 0
@@ -4443,12 +4450,12 @@ class JobgoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 50, 17), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 17), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 17), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 35, 17), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 35, 17), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 40, 17), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 50, 17), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 17), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 17), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 35, 17), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 35, 17), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 40, 17), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 60
         self._pronetopheight = 34
@@ -4578,7 +4585,7 @@ class JobgoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -4707,12 +4714,12 @@ class GhastTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
-            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 60
         self._pronetopheight = 30
@@ -4848,7 +4855,7 @@ class GhastHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -5003,12 +5010,12 @@ class NobgoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 65, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 55, 18), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 50, 18), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 50, 18), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 40, 18), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 40, 18), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 45, 18), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 55, 18), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 50, 18), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 50, 18), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 40, 18), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 40, 18), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 45, 18), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 65
         self._pronetopheight = 36
@@ -5138,7 +5145,7 @@ class NobgoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -5267,12 +5274,12 @@ class WargTorso(BodyPart):
             'back left leg': BodyPartConnection(self, ['leg'], False, 'back left ', constantfunction(0)),
             'back right leg': BodyPartConnection(self, ['leg'], False, 'back right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', constantfunction(15)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-6), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(13), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(13), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(-6), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(2), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(13), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(13), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(0), defensecoefficient=0.8, armorapplies=True, internal=True),
             'tail': BodyPartConnection(self, ['tail'], False, '', constantfunction(20))
             }
         self._topheight = 25
@@ -5341,7 +5348,7 @@ class WargHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(31), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(31), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 38
         self._bottomheight = 0
@@ -5480,12 +5487,12 @@ class FobgoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 70, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 60, 19), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 55, 19), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 55, 19), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 45, 19), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 45, 19), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 50, 19), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 60, 19), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 55, 19), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 55, 19), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 45, 19), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 45, 19), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 50, 19), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 70
         self._pronetopheight = 38
@@ -5615,7 +5622,7 @@ class FobgoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -5742,12 +5749,12 @@ class LargeFireElementalTorso(BodyPart):
             'left arm': BodyPartConnection(self, ['arm'], False, 'left ', constantfunction(145)),
             'right arm': BodyPartConnection(self, ['arm'], False, 'right ', constantfunction(145)),
             'head': BodyPartConnection(self, ['head'], True, '', constantfunction(150)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
-            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
-            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(100), defensecoefficient=0.8, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(90), defensecoefficient=0.8, armorapplies=True),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(100), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left bellows': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(100), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right bellows': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(100), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(70), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(70), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(90), defensecoefficient=0.8, armorapplies=True, internal=True),
             'front left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front left ', constantfunction(0)),
             'back left limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'back left ', constantfunction(0)),
             'front right limb': BodyPartConnection(self, ['tentacle', 'arm', 'leg'], False, 'front right ', constantfunction(0)),
@@ -5828,7 +5835,7 @@ class LargeFireElementalHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -6014,12 +6021,12 @@ class DobgoblinTorso(BodyPart):
             'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
             'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
             'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 75, 20)),
-            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 65, 20), defensecoefficient=0.5, armorapplies=True),
-            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 60, 20), defensecoefficient=0.5, armorapplies=True),
-            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 60, 20), defensecoefficient=0.5, armorapplies=True),
-            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 50, 20), defensecoefficient=0.8, armorapplies=True),
-            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 50, 20), defensecoefficient=0.8, armorapplies=True),
-            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 55, 20), defensecoefficient=0.8, armorapplies=True)
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 65, 20), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 60, 20), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 60, 20), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 50, 20), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 50, 20), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 55, 20), defensecoefficient=0.8, armorapplies=True, internal=True)
             }
         self._topheight = 75
         self._pronetopheight = 40
@@ -6149,7 +6156,7 @@ class DobgoblinHead(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 30
         self._bottomheight = 0
@@ -6275,7 +6282,7 @@ class VelociraptorSkull(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(6)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(6)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(5), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(5), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 8
         self._bottomheight = 0
@@ -6311,7 +6318,7 @@ class DeinonychusSkull(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(15)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(15)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(15), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(15), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 20
         self._bottomheight = 0
@@ -6347,7 +6354,7 @@ class CeratosaurusSkull(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(30)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(30)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(30), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(30), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 40
         self._bottomheight = 0
@@ -6383,7 +6390,7 @@ class AllosaurusSkull(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(40)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(40)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(40), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(40), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 50
         self._bottomheight = 0
@@ -6419,7 +6426,7 @@ class TyrannosaurusSkull(BodyPart):
         self.childconnections = {
             'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(80)),
             'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(80)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(80), defensecoefficient=0.5, armorapplies=True)
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(80), defensecoefficient=0.5, armorapplies=True, internal=True)
             }
         self._topheight = 100
         self._bottomheight = 0
