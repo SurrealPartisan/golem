@@ -875,15 +875,24 @@ def game():
                     heightcoefficient = 0.5 + 0.5*(upperpoorlimit - targetbodypart.bottomheight())/(upperpoorlimit - upperfinelimit)
                 elif lowerpoorlimit < targetbodypart.topheight() < lowerfinelimit:
                     heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                if hasattr(targetbodypart, 'protectiveness'):
+                    protectioncoefficient = 1 + targetbodypart.protectiveness
+                else:
+                    protectioncoefficient = 1
+                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed()]:
+                        upperlimit = part.baseheight() + part.upperpoorlimit
+                        lowerlimit = part.baseheight() + part.lowerpoorlimit
+                        if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
+                            protectioncoefficient *= (1 - part.protectiveness)
                 speedcoefficient = 1/np.sqrt(target.speed()/(1 + target.slowed())+0.1)
                 if target.imbalanced():
                     imbalancedcoefficient = 1.25
                 else:
                     imbalancedcoefficient = 1
                 if player.previousaction[0] == 'fight' and player.previousaction[1] == selectedattack.weapon and player.previousaction[2] == targetbodypart:
-                    targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%, time x1.5)'
+                    targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*heightcoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%, time x1.5)'
                 else:
-                    targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%)'
+                    targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*heightcoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%)'
                 if targetbodypart.incapacitated():
                     targetdescription += ' [INCAPACITATED]'
                 if j != chosen:
@@ -970,12 +979,21 @@ def game():
                     defenderstancecoefficient = 1.222
                 else:
                     defenderstancecoefficient = 1
+                if hasattr(targetbodypart, 'protectiveness'):
+                    protectioncoefficient = 1 + targetbodypart.protectiveness
+                else:
+                    protectioncoefficient = 1
+                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                        upperlimit = part.baseheight() + part.upperpoorlimit
+                        lowerlimit = part.baseheight() + part.lowerpoorlimit
+                        if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
+                            protectioncoefficient *= (1 - part.protectiveness)
                 speedcoefficient = 1/np.sqrt(target.speed()+0.1)
                 if target.imbalanced():
                     imbalancedcoefficient = 1.25
                 else:
                     imbalancedcoefficient = 1
-                targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%)'
+                targetdescription = num + partname + ' (' + repr(int(defenderstancecoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient*targetbodypart.defensecoefficient() * 100)) + '%)'
                 if targetbodypart.incapacitated():
                     targetdescription += ' [INCAPACITATED]'
                 if j != chosen:
@@ -1758,7 +1776,7 @@ def game():
                                 numchosen = False
 
                         if (event.key == keybindings['wield'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wield'][0][1])) or (event.key == keybindings['wield'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wield'][1][1])):
-                            if len([item for item in player.inventory if item.wieldable]) > 0 and len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0]) > 0:
+                            if len([item for item in player.inventory if item.wieldable]) > 0 and len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) > 0:
                                 gamestate = 'wieldchooseitem'
                                 logback = len([item for item in player.inventory if item.wieldable]) - logheight + 1
                                 chosen = 0

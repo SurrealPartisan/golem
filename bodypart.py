@@ -270,6 +270,7 @@ class HumanArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.99
         self.throwspeed = 1
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -277,7 +278,7 @@ class HumanArm(BodyPart):
         self.weight = 5000
         self.carefulness = 0.5
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Accurate at throwing.'
+        self._info = 'An arm consisting of living flesh. Accurate at throwing. Protects other bodyparts quite well.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -531,6 +532,7 @@ class ZombieArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 0.75
+        self.protectiveness = 0.1
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -541,7 +543,7 @@ class ZombieArm(BodyPart):
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -822,6 +824,7 @@ class MolePersonArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
+        self.protectiveness = 0.3
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -829,7 +832,7 @@ class MolePersonArm(BodyPart):
         self.weight = 6000
         self.carefulness = 0.5
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Can be used for mining.'
+        self._info = 'An arm consisting of living flesh. Can be used for mining. Protects other bodyparts very well.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1081,6 +1084,7 @@ class GoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -1090,7 +1094,7 @@ class GoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1490,6 +1494,7 @@ class GlassElementalArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -1502,7 +1507,7 @@ class GlassElementalArm(BodyPart):
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self.carefulness = 0.5
-        self._info = 'An arm consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. No smell. Breaks into glass shards when destroyed.'
+        self._info = 'An arm consisting of elemental glass. Protects other bodyparts quite well. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. No smell. Breaks into glass shards when destroyed.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2037,6 +2042,7 @@ class HobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -2046,7 +2052,7 @@ class HobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2299,6 +2305,7 @@ class MoleMonkArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.99
         self.throwspeed = 1
+        self.protectiveness = 0.3
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -2306,7 +2313,7 @@ class MoleMonkArm(BodyPart):
         self.weight = 7000
         self.carefulness = 0.5
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Accurate at throwing. Can be used for mining.'
+        self._info = 'An arm consisting of living flesh. Accurate at throwing. Can be used for mining. Protects other bodyparts very well.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2997,6 +3004,7 @@ class LobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -3006,7 +3014,7 @@ class LobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3509,6 +3517,7 @@ class GhoulArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 0.75
+        self.protectiveness = 0.1
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -3519,7 +3528,7 @@ class GhoulArm(BodyPart):
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4014,6 +4023,7 @@ class MobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -4023,7 +4033,7 @@ class MobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4491,6 +4501,7 @@ class JobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -4500,7 +4511,7 @@ class JobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4758,6 +4769,7 @@ class GhastArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 0.75
+        self.protectiveness = 0.1
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -4768,7 +4780,7 @@ class GhastArm(BodyPart):
         self._resistances['sharp'] = -0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5051,6 +5063,7 @@ class NobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -5060,7 +5073,7 @@ class NobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5528,6 +5541,7 @@ class FobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -5537,7 +5551,7 @@ class FobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5788,6 +5802,7 @@ class LargeFireElementalArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -5799,7 +5814,7 @@ class LargeFireElementalArm(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
         self.carefulness = 0.5
-        self._info = 'An arm consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
+        self._info = 'An arm consisting of elemental fire. Protects other bodyparts quite well. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage. No smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -6062,6 +6077,7 @@ class DobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -6071,7 +6087,7 @@ class DobgoblinArm(BodyPart):
         self._resistances['blunt'] = -0.2
         self.carefulness = 0.75
         self.smell = 1
-        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
+        self._info = 'An arm consisting of living flesh. Quick but rather inaccurate at throwing. Protects other bodyparts quite well. Good at avoiding traps when crawling. Tough skin (resistant against sharp damage) but weak bones (weak against blunt damage).'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):

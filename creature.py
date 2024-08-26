@@ -754,13 +754,22 @@ class Creature():
                                 heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
                         else:
                             heightcoefficient = 1
+                        if hasattr(targetbodypart, 'protectiveness'):
+                            protectioncoefficient = 1 + targetbodypart.protectiveness
+                        else:
+                            protectioncoefficient = 1
+                            for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                                upperlimit = part.baseheight() + part.upperpoorlimit
+                                lowerlimit = part.baseheight() + part.lowerpoorlimit
+                                if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
+                                    protectioncoefficient *= (1 - part.protectiveness)
                         speedcoefficient = 1/np.sqrt(target.speed()/(1 + target.slowed())+0.1)
                         if target.imbalanced():
                             imbalancedcoefficient = 1.25
                         else:
                             imbalancedcoefficient = 1
                         secondarytargetbodypart = None
-                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
+                        if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                             hit = True
                             if targetbodypart.internal():
                                 secondarytargetbodypart = targetbodypart.parentalconnection.parent
@@ -781,13 +790,25 @@ class Creature():
                                         heightcoefficient = 0.5 + 0.5*(internaltarget.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
                                 else:
                                     heightcoefficient = 1
-                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
+                                if hasattr(internaltarget, 'protectiveness'):
+                                    protectioncoefficient = 1 + internaltarget.protectiveness
+                                else:
+                                    protectioncoefficient = 1
+                                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                                        upperlimit = part.baseheight() + part.upperpoorlimit
+                                        lowerlimit = part.baseheight() + part.lowerpoorlimit
+                                        if upperlimit >= internaltarget.topheight() >= lowerlimit or upperlimit >= internaltarget.bottomheight() >= lowerlimit or internaltarget.topheight() >= upperlimit >= internaltarget.bottomheight():
+                                            protectioncoefficient *= (1 - part.protectiveness)
+                                if np.random.rand() < max(min(attack.hitprobability*internaltarget.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                                     secondarytargetbodypart = targetbodypart
                                     targetbodypart = internaltarget
                         else:
                             adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
                             if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
                                 adjacentparts.append(targetbodypart.parentalconnection.parent)
+                            for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                                if not part in adjacentparts:
+                                    adjacentparts.append(part)
                             if len(adjacentparts) > 0:
                                 targetbodypart = np.random.choice(adjacentparts)
                                 if not thrown and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
@@ -805,7 +826,16 @@ class Creature():
                                         heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
                                 else:
                                     heightcoefficient = 1
-                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
+                                if hasattr(targetbodypart, 'protectiveness'):
+                                    protectioncoefficient = 1 + targetbodypart.protectiveness
+                                else:
+                                    protectioncoefficient = 1
+                                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                                        upperlimit = part.baseheight() + part.upperpoorlimit
+                                        lowerlimit = part.baseheight() + part.lowerpoorlimit
+                                        if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
+                                            protectioncoefficient *= (1 - part.protectiveness)
+                                if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                                     hit = True
                                 else:
                                     hit = False
