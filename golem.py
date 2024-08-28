@@ -2209,13 +2209,16 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
+                            selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()][chosen]
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
-                                selected = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()][chosen]
-                                player.inventory.remove(selecteditem)
-                                selected.wielded.append(selecteditem)
-                                selecteditem.owner = selected.wielded
-                                player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                                if not selected.destroyed():
+                                    player.inventory.remove(selecteditem)
+                                    selected.wielded.append(selecteditem)
+                                    selecteditem.owner = selected.wielded
+                                    player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                                else:
+                                    player.log().append('Your ' + selected.wearwieldname() + ' was destroyed before you could wield the ' + selecteditem.name + '!')
                                 detecthiddenitems()
                                 player.previousaction = ('wield',)
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -2240,14 +2243,15 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
+                            part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
+                            selected = part.wielded[0]
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
-                                part = [part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0][chosen]
-                                selected = part.wielded[0]
-                                part.wielded.remove(selected)
-                                player.inventory.append(selected)
-                                selected.owner = player.inventory
-                                player.log().append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
+                                if not part.destroyed():
+                                    part.wielded.remove(selected)
+                                    player.inventory.append(selected)
+                                    selected.owner = player.inventory
+                                    player.log().append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('unwield',)
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -2303,13 +2307,16 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
+                            selected = partlist[chosen]
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
-                                selected = partlist[chosen]
-                                player.inventory.remove(selecteditem)
-                                selected.worn[selecteditem.wearcategory].append(selecteditem)
-                                selecteditem.owner = selected.worn[selecteditem.wearcategory]
-                                player.log().append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                                if not selected.destroyed():
+                                    player.inventory.remove(selecteditem)
+                                    selected.worn[selecteditem.wearcategory].append(selecteditem)
+                                    selecteditem.owner = selected.worn[selecteditem.wearcategory]
+                                    player.log().append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                                else:
+                                    player.log().append('Your ' + selected.wearwieldname() + ' was destroyed before you could wear the ' + selecteditem.name + '!')
                                 detecthiddenitems()
                                 player.previousaction = ('wear',)
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -2334,14 +2341,15 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
+                            selected = wornlist[chosen]
                             updatetime(1 * (1 + player.slowed()))
                             if not player.dying():
-                                selected = wornlist[chosen]
-                                partname = selected.owner.owner.wearwieldname()
-                                selected.owner.remove(selected)
-                                player.inventory.append(selected)
-                                selected.owner = player.inventory
-                                player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
+                                if not selected.owner.owner.destroyed():
+                                    partname = selected.owner.owner.wearwieldname()
+                                    selected.owner.remove(selected)
+                                    player.inventory.append(selected)
+                                    selected.owner = player.inventory
+                                    player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
                                 detecthiddenitems()
                                 player.previousaction = ('undress',)
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -2699,9 +2707,9 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
+                            selected = player.stancesknown()[chosen]
                             updatetime(0.5)
                             if not player.dying():
-                                selected = player.stancesknown()[chosen]
                                 oldstance = player.stance
                                 player.stance = selected
                                 player.preferredstance = selected
