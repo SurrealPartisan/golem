@@ -199,7 +199,7 @@ class Creature():
             else:
                 self.log().append('Your ' + partname + ' was destroyed by starvation.')
                 part.on_destruction(self.dying())
-            if self.dying():
+            if self.dying() and not self.dead:
                 self.log().append("You are dead!")
                 self.die()
                 self.causeofdeath = ('starvation',)
@@ -233,7 +233,7 @@ class Creature():
                             self.log().append('Your ' + partname + ' was destroyed by suffocation.')
                             part.on_destruction(self.dying())
                 self.suffocationclock = self.suffocationclock % 1
-                if self.dying():
+                if self.dying() and not self.dead:
                     self.log().append("You are dead!")
                     self.die()
                     self.causeofdeath = ('suffocation',)
@@ -281,7 +281,7 @@ class Creature():
                                 self.log().append('The campfire burned and destroyed your ' + partname + '.')
                             part.on_destruction(self.dying())
                 self.burnclock = self.burnclock % 1
-                if self.dying():
+                if self.dying() and not self.dead:
                     self.log().append("You are dead!")
                     self.die()
                     self.causeofdeath = ('burning', 'in a campfire')
@@ -322,7 +322,7 @@ class Creature():
                                     self.log().append('The lava burned and destroyed your ' + partname + '.')
                                 part.on_destruction(self.dying())
                 self.burnclock = self.burnclock % 1
-                if self.dying():
+                if self.dying() and not self.dead:
                     self.log().append("You are dead!")
                     self.die()
                     self.causeofdeath = ('burning', 'in a lava pit')
@@ -347,7 +347,7 @@ class Creature():
                     part.on_destruction(self.dying())
                 else:
                     self.log().append('Your ' + partname + ' took ' + repr(bled) + ' damage from bleeding.')
-        if self.dying():
+        if self.dying() and not self.dead:
             self.log().append('You are dead!')
             for creat in self.world.creatures:
                 fovmap = fov(creat.world.walls, creat.x, creat.y, creat.sight())
@@ -551,7 +551,7 @@ class Creature():
             else:
                 self.log().append('Your ' + partname + ' was destroyed.')
                 part.on_destruction(self.dying())
-            if self.dying():
+            if self.dying() and not self.dead:
                 self.log().append("You are dead!")
                 self.die()
         else:
@@ -806,7 +806,7 @@ class Creature():
                             adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
                             if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
                                 adjacentparts.append(targetbodypart.parentalconnection.parent)
-                            for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                            for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and part != targetbodypart and not part.destroyed() and not part.incapacitated()]:
                                 if not part in adjacentparts:
                                     adjacentparts.append(part)
                             if len(adjacentparts) > 0:
@@ -893,7 +893,7 @@ class Creature():
                             else:
                                 armor = None
                                 armordamage = 0
-                            if np.any(faction in attack.bane for faction in target.factions):
+                            if np.any([faction in attack.bane for faction in target.factions]):
                                 banemultiplier = 2
                             else:
                                 banemultiplier = 1
