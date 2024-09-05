@@ -122,6 +122,8 @@ class Item():
         self.bodypart = False
         self.wearable = False
         self.isarmor = False
+        self.readable = False # If True, must have the read(creature) method
+        self.writable = False # If True, must have the write(creature, content) method
         self.hidden = False
         self.trap = False  # If True, must have the entrap(creature, bodypart) method
         self._info = 'No information available.'
@@ -235,6 +237,56 @@ class Cure(Item):
         else:
             user.log().append('You were unaffected.')
         self.owner.remove(self)
+
+class ManaPotion(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'mana potion', '!', (0, 0, 255))
+        self.consumable = True
+        self.material = 'chemical'
+        self.weight = 100
+        self._info = 'A potion to restore your mana to full.'
+
+    def consume(self, user):
+        user.manaused = 0
+        user.log().append('Your mana was restored.')
+        self.owner.remove(self)
+
+class Spellbooklet(Item):
+    def __init__(self, owner, x, y, spell):
+        if spell == None:
+            name = 'empty spellbooklet'
+        else:
+            name = 'spellbooklet of ' + spell.name
+        super().__init__(owner, x, y, name, '?', (252, 245, 229))
+        self.spell = spell
+        if spell == None:
+            self.writable = True
+        else:
+            self.readable = True
+        self.material = 'parchment'
+        self.weight = 100
+        self._info = 'A vessel for magical knowledge.'
+
+    def read(self, creature):
+        if self.spell == None:
+            creature.log().append('The booklet is empty. You learned nothing.')
+        elif creature.intelligence() < self.spell.intelligencerequirement:
+            creature.log().append('You are not intelligent enough to comprehend the spell in this booklet. You learned nothing.')
+        else:
+            creature.spellsknown().append(self.spell)
+            creature.log().append('You learned to cast ' + self.spell.name + '!')
+            creature.log().append('After you read it, the booklet disappeared into a puff of smoke!')
+            self.owner.remove(self)
+
+    def write(self, creature, content):
+        if not self.writable:
+            creature.log().append('The booklet already contains a spell.')
+        else:
+            creature.log().append('You wrote down the ' + content.name + ' spell to a booklet.')
+            self.spell = content
+            self.name = 'spellbooklet of ' + content.name
+            self.writable = False
+            self.readable = True
 
 class Dagger(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -440,7 +492,7 @@ def randompickaxe(owner, x, y, level):
         bane = [np.random.choice(utils.enemyfactions)]
     return PickAxe(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
-def randomweapon(owner, x, y, level):
+def randomweapon(owner, x, y, level): # If new weapon types are added here, also add them to magic.CreateWeapon!
     return np.random.choice([randomdagger, randomspear, randommace, randomsword, randompickaxe])(owner, x, y, level)
 
 class Stone(Item):
@@ -575,7 +627,7 @@ class Caltrops(Item):
         self._info = 'A trap made of ' + material + '.'
 
     def entrap(self, creat, part):
-        if np.any(faction in self.bane for faction in creat.factions):
+        if np.any([faction in self.bane for faction in creat.factions]):
             banemultiplier = 2
         else:
             banemultiplier = 1
@@ -752,11 +804,13 @@ class PieceOfArmor(Item):
 
         self._info = 'A piece of armor, made of ' + material + '.'
 
-def randomarmor(owner, x, y, level):
+def randomarmor(owner, x, y, level, armortype=None):
     enchantment = 0
     while np.random.rand() < 0.5 + level/100:
         enchantment += 1
-    return PieceOfArmor(owner, x, y, np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor']), np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment)
+    if armortype == None:
+        armortype = np.random.choice(['chest armor', 'barding', 'gauntlet', 'leg armor', 'wheel cover', 'helmet', 'tentacle armor'])
+    return PieceOfArmor(owner, x, y, armortype, np.random.choice(armormaterials, p=utils.normalish(len(armormaterials), armormaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment)
 
 class SchoolkidBackpack(Item):
     def __init__(self, owner, x, y):
@@ -835,12 +889,22 @@ class PriestlyChasuble(Item):
         super().__init__(owner, x, y, 'priestly chasuble', '(', (255, 255, 255))
         self.wearable = True
         self.wearcategory = 'back'
-        self.weight = 500
+        self.weight = 1000
         self.godlylove = 1
         self._info = 'A back slot item. When worn, reduces the waiting period between successful prayers.'
 
+class WizardlyRobe(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'wizardly robe', '(', (255, 0, 255))
+        self.wearable = True
+        self.wearcategory = 'back'
+        self.weight = 1000
+        self.intelligence = 1
+        self.manacapacity = 5
+        self._info = 'A back slot item. When worn, increases your intelligence by 1 and your mana capaciity by 5.'
+
 def randomBackItem(owner, x, y):
-    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying, CapeOfSmellNeutralizing, PriestlyChasuble])(owner, x, y)
+    return np.random.choice([SchoolkidBackpack, TouristBackpack, HikerBackpack, MilitaryBackpack, BackpackOfHolding, GreaterBackpackOfHolding, CapeOfFlying, CapeOfSmellNeutralizing, PriestlyChasuble, WizardlyRobe])(owner, x, y)
 
 class TouristFannyPack(Item):
     def __init__(self, owner, x, y):
@@ -946,8 +1010,26 @@ class RingOfBravery(Item):
         self.bravery = 0.5
         self._info = 'A magical ring. When worn, gives extra protection against fear.'
 
+class RingOfMana(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ring of mana', '=', (255, 255, 0))
+        self.wearable = True
+        self.wearcategory = 'ring'
+        self.weight = 5
+        self.manacapacity = 5
+        self._info = 'A magical ring. When worn, increases your mana capacity by 5.'
+
+class RingOfIntelligence(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'ring of intelligence', '=', (255, 255, 0))
+        self.wearable = True
+        self.wearcategory = 'ring'
+        self.weight = 5
+        self.intelligence = 1
+        self._info = 'A magical ring. When worn, increases your intelligence by 1.'
+
 def randomRing(owner, x, y):
-    return np.random.choice([RingOfCarrying, RingOfVision, RingOfSustenance, RingOfBravery])(owner, x, y)
+    return np.random.choice([RingOfCarrying, RingOfVision, RingOfSustenance, RingOfBravery, RingOfMana, RingOfIntelligence])(owner, x, y)
 
 class Eyeglasses(Item):
     def __init__(self, owner, x, y):
@@ -956,6 +1038,21 @@ class Eyeglasses(Item):
         self.wearcategory = 'face'
         self.weight = 9
         self._info = 'A face slot item. When worn, increases your range of vision, as long as you have eyes.'
+
+    def sight(self):
+        if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not (part.destroyed() or part.incapacitated())]) > 0:
+            return 1
+        else:
+            return 0
+
+class NerdyEyeglasses(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'nerdy eyeglasses', '(', (0, 255, 255))
+        self.wearable = True
+        self.wearcategory = 'face'
+        self.weight = 9
+        self.intelligence = 1
+        self._info = 'A face slot item. When worn, increases your range of vision, as long as you have eyes, and additionally increases your intelligence by 1.'
 
     def sight(self):
         if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not (part.destroyed() or part.incapacitated())]) > 0:
@@ -982,7 +1079,7 @@ class BerserkerMask(Item):
         self._info = 'A face slot item. When worn, enables the berserk stance.'
 
 def randomFaceItem(owner, x, y):
-    return np.random.choice([Eyeglasses, GasMask, BerserkerMask])(owner, x, y)
+    return np.random.choice([Eyeglasses, NerdyEyeglasses, GasMask, BerserkerMask])(owner, x, y)
 
 def randomUtilityItem(owner, x, y):
     return np.random.choice([randomBackItem, randomBelt, randomRing, randomFaceItem])(owner, x, y)

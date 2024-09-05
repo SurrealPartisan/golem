@@ -270,7 +270,7 @@ class HumanArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.99
         self.throwspeed = 1
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -420,7 +420,10 @@ class HumanBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 1
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 1, average mana capacity.'
 
 class HumanHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -699,10 +702,13 @@ class ZombieBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 0
+        self.manacapacity = 25
+        self.spellsknown = []
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 0, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class ZombieHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -824,7 +830,7 @@ class MolePersonArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
-        self.protectiveness = 0.3
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -975,7 +981,10 @@ class MolePersonBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 2
+        self.manacapacity = 15
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 2, low mana capacity.'
 
 class MolePersonHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1084,7 +1093,7 @@ class GoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -1240,7 +1249,10 @@ class GoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 1
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 1, average mana capacity.'
 
 class GoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1425,10 +1437,13 @@ class GlassElementalBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 1
+        self.manacapacity = 20
+        self.spellsknown = []
         self._attackpoisonresistance = 1
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
-        self._info = 'A brain consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. Breaks into glass shards when destroyed.'
+        self._info = 'A brain consisting of elemental glass. Intelligence 1, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage. Breaks into glass shards when destroyed.'
 
     def on_destruction(self, dead):
         if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
@@ -1494,7 +1509,7 @@ class GlassElementalArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -1719,7 +1734,10 @@ class OctopusBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 2
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 2, average mana capacity.'
 
 class OctopusHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -1921,7 +1939,10 @@ class DogBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 2
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 2, average mana capacity.'
 
 class DogHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -2042,7 +2063,7 @@ class HobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -2198,7 +2219,10 @@ class HobgoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 3
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 3, average mana capacity.'
 
 class HobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -2305,7 +2329,7 @@ class MoleMonkArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.99
         self.throwspeed = 1
-        self.protectiveness = 0.3
+        self.protectiveness = 0.2
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -2456,7 +2480,10 @@ class MoleMonkBrain(BodyPart):
         self.curesknown = []
         self.stances = ['fasting']
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh. Enables the fasting stance.'
+        self.intelligence = 4
+        self.manacapacity = 15
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 4, low mana capacity. Enables the fasting stance.'
 
 class MoleMonkHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -2658,7 +2685,10 @@ class WolfBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 4
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 4, average mana capacity.'
 
 class WolfHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -2922,12 +2952,15 @@ class DrillbotProcessor(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 6
+        self.manacapacity = 15
+        self.spellsknown = []
         self.material = 'electronics'
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
-        self._info = 'A brain consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage.'
+        self._info = 'A brain consisting of electronics. Intelligence 6, low mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage.'
 
 class DrillBotBiomassProcessor(BodyPart):
     def __init__(self, owner, x, y):
@@ -3004,7 +3037,7 @@ class LobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -3160,7 +3193,10 @@ class LobgoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 5
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 5, average mana capacity.'
 
 class LobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -3387,10 +3423,13 @@ class RevenantOctopusBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 4
+        self.manacapacity = 25
+        self.spellsknown = []
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 4, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class RevenantOctopusHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -3684,10 +3723,13 @@ class GhoulBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 5
+        self.manacapacity = 25
+        self.spellsknown = []
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 5, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhoulHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -3857,9 +3899,12 @@ class SmallFireElementalBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 7
+        self.manacapacity = 20
+        self.spellsknown = []
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A brain consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
+        self._info = 'A brain consisting of elemental fire. Intelligence 7, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
 
 class SmallFireElementalHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -4023,7 +4068,7 @@ class MobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -4179,7 +4224,10 @@ class MobgoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 7
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 7, average mana capacity.'
 
 class MobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -4381,7 +4429,10 @@ class DireWolfBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 8
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 8, average mana capacity.'
 
 class DireWolfHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -4501,7 +4552,7 @@ class JobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -4657,7 +4708,10 @@ class JobgoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 9
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 9, average mana capacity.'
 
 class JobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -4936,10 +4990,13 @@ class GhastBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 9
+        self.manacapacity = 25
+        self.spellsknown = []
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A brain consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 9, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 class GhastHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -5063,7 +5120,7 @@ class NobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -5219,7 +5276,10 @@ class NobgoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 11
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 11, average mana capacity.'
 
 class NobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -5421,7 +5481,10 @@ class WargBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 12
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 12, average mana capacity.'
 
 class WargHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -5541,7 +5604,7 @@ class FobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -5697,7 +5760,10 @@ class FobgoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 13
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 13, average mana capacity.'
 
 class FobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -5802,7 +5868,7 @@ class LargeFireElementalArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -5911,9 +5977,12 @@ class LargeFireElementalBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
+        self.intelligence = 14
+        self.manacapacity = 20
+        self.spellsknown = []
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
-        self._info = 'A brain consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
+        self._info = 'A brain consisting of elemental fire. Intelligence 14, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage.'
 
 class LargeFireElementalHeart(BodyPart):
     def __init__(self, owner, x, y):
@@ -6077,7 +6146,7 @@ class DobgoblinArm(BodyPart):
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
-        self.protectiveness = 0.2
+        self.protectiveness = 0.15
         self.capableofwielding = True
         self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
         self._wearwieldname = 'hand'
@@ -6233,7 +6302,10 @@ class DobgoblinBrain(BodyPart):
         self.curesknown = []
         self.stances = []
         self.frightenedby = []
-        self._info = 'A brain consisting of living flesh.'
+        self.intelligence = 15
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 15, average mana capacity.'
 
 class DobgoblinHeart(BodyPart):
     def __init__(self, owner, x, y):

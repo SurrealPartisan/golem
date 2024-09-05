@@ -51,6 +51,7 @@ class Creature():
         self.scaredclock = 0
         self.panickedclock = 0
         self.runstaminaused = 0
+        self.manaused = 0
         self.stance = 'neutral'
         self.preferredstance = 'neutral'
 
@@ -108,6 +109,24 @@ class Creature():
             return brains[0].itemsseen
         else:
             return []
+
+    def spellsknown(self):
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        if len(brains) > 0:
+            return brains[0].spellsknown
+        else:
+            return []
+
+    def manacapacity(self):
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        return sum([part.manacapacity for part in self.bodyparts if hasattr(part, 'manacapacity')]) + sum([it.manacapacity for it in wornlist if hasattr(it, 'manacapacity')])
+
+    def mana(self):
+        return self.manacapacity() - self.manaused
+
+    def intelligence(self):
+        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        return sum([part.intelligence for part in self.bodyparts if hasattr(part, 'intelligence')]) + sum([it.intelligence for it in wornlist if hasattr(it, 'intelligence')])
 
     def maxrunstamina(self):
         return sum([part.maxrunstamina for part in self.bodyparts])
@@ -705,17 +724,17 @@ class Creature():
         else:
             self.log().append('You were unable to finish your throw.')
 
-    def fight(self, target, targetbodypart, attack, thrown=False):
+    def fight(self, target, targetbodypart, attack, thrown=False, magical=False):
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
-        if attack.weapon in self.bodyparts:
+        if attack.weapon in self.bodyparts or attack.weapon == None:
             attackingpart = attack.weapon
         elif attack.weapon.owner != self.world.items:
             attackingpart = attack.weapon.owner.owner
         else:
             attackingpart = None
-        if thrown or (attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated())):
+        if thrown or magical or (attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated())):
             if targetbodypart in target.bodyparts and not targetbodypart.destroyed():
-                if thrown or (abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1):
+                if thrown or magical or (abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1):
                     if (not self.scared() or np.random.rand() < 0.5) and not self.panicked():
                         if self.stance == 'aggressive':
                             attackerstancecoefficient = 1.25
@@ -739,7 +758,7 @@ class Creature():
                             highgroundcoefficient = 0.95
                         else:
                             highgroundcoefficient = 1
-                        if not thrown and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                        if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
                             upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
                             upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
                             lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
@@ -758,7 +777,7 @@ class Creature():
                             protectioncoefficient = 1 + targetbodypart.protectiveness
                         else:
                             protectioncoefficient = 1
-                            for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                            for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and part != targetbodypart and not part.destroyed() and not part.incapacitated()]:
                                 upperlimit = part.baseheight() + part.upperpoorlimit
                                 lowerlimit = part.baseheight() + part.lowerpoorlimit
                                 if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
@@ -775,7 +794,7 @@ class Creature():
                                 secondarytargetbodypart = targetbodypart.parentalconnection.parent
                             elif len([connection for connection in targetbodypart.childconnections if targetbodypart.childconnections[connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()]) > 0 and np.random.rand() < 0.5:
                                 internaltarget = np.random.choice([targetbodypart.childconnections[connection].child for connection in targetbodypart.childconnections if targetbodypart.childconnections[connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()])
-                                if not thrown and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                                if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
                                     upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
                                     upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
                                     lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
@@ -794,7 +813,7 @@ class Creature():
                                     protectioncoefficient = 1 + internaltarget.protectiveness
                                 else:
                                     protectioncoefficient = 1
-                                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and part != internaltarget and not part.destroyed() and not part.incapacitated()]:
                                         upperlimit = part.baseheight() + part.upperpoorlimit
                                         lowerlimit = part.baseheight() + part.lowerpoorlimit
                                         if upperlimit >= internaltarget.topheight() >= lowerlimit or upperlimit >= internaltarget.bottomheight() >= lowerlimit or internaltarget.topheight() >= upperlimit >= internaltarget.bottomheight():
@@ -811,7 +830,7 @@ class Creature():
                                     adjacentparts.append(part)
                             if len(adjacentparts) > 0:
                                 targetbodypart = np.random.choice(adjacentparts)
-                                if not thrown and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                                if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
                                     upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
                                     upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
                                     lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
@@ -830,7 +849,7 @@ class Creature():
                                     protectioncoefficient = 1 + targetbodypart.protectiveness
                                 else:
                                     protectioncoefficient = 1
-                                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and not part.destroyed() and not part.incapacitated()]:
+                                    for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and part != targetbodypart and not part.destroyed() and not part.incapacitated()]:
                                         upperlimit = part.baseheight() + part.upperpoorlimit
                                         lowerlimit = part.baseheight() + part.lowerpoorlimit
                                         if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
@@ -871,7 +890,7 @@ class Creature():
                                 alreadyimbalanced = True
                             else:
                                 alreadyimbalanced = False
-                            if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2):
+                            if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2) and not magical:
                                 totaldamage = int(1.5*totaldamage)
                                 if not thrown:
                                     attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13])
@@ -1332,6 +1351,7 @@ class Creature():
                 self.panickedclock = max(0, self.panickedclock - time)
             elif self.scared():
                 self.scaredclock = max(0, self.scaredclock - time)
+            self.manaused = max(0, self.manaused - time)
         else:
             timeleft = time - timetoact
             self.bleed(timetoact)
@@ -1367,6 +1387,7 @@ class Creature():
                 self.panickedclock = max(0, self.panickedclock - timetoact)
             elif self.scared():
                 self.scaredclock = max(0, self.scaredclock - timetoact)
+            self.manaused = max(0, self.manaused - timetoact)
             if self.world.poisongas[self.x, self.y]:
                 livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
                 lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
@@ -3569,19 +3590,19 @@ class Dobgoblin(Creature):
 
 
 enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy type and a probability weight for its presence.
-    [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10)],
-    [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10), (CaveOctopus, 20), (Dog, 20)],
-    [(CaveOctopus, 10), (Dog, 10), (Hobgoblin, 10), (MoleMonk, 10)],
-    [(Hobgoblin, 5), (MoleMonk, 5), (Wolf, 10)],
-    [(Wolf, 15), (Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5)],
-    [(Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5), (Ghoul, 15)],
-    [(Ghoul, 10), (SmallFireElemental, 5), (Mobgoblin, 5)],
-    [(SmallFireElemental, 5), (Mobgoblin, 5), (DireWolf, 10)],
-    [(DireWolf, 10), (Jobgoblin, 10)],
-    [(Jobgoblin, 10), (Ghast, 10)],
-    [(Ghast, 10), (Nobgoblin, 10)],
-    [(Nobgoblin, 10), (Warg, 10)],
-    [(Warg, 10), (Fobgoblin, 10)],
-    [(Fobgoblin, 10), (LargeFireElemental, 10)],
-    [(LargeFireElemental, 10), (Dobgoblin, 10)]
+    [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10)], # 1
+    [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10), (CaveOctopus, 20), (Dog, 20)], # 2
+    [(CaveOctopus, 10), (Dog, 10), (Hobgoblin, 10), (MoleMonk, 10)], # 3
+    [(Hobgoblin, 5), (MoleMonk, 5), (Wolf, 10)], # 4
+    [(Wolf, 15), (Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5)], # 5
+    [(Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5), (Ghoul, 15)], # 6
+    [(Ghoul, 10), (SmallFireElemental, 5), (Mobgoblin, 5)], # 7
+    [(SmallFireElemental, 5), (Mobgoblin, 5), (DireWolf, 10)], # 8
+    [(DireWolf, 10), (Jobgoblin, 10)], # 9
+    [(Jobgoblin, 10), (Ghast, 10)], # 10
+    [(Ghast, 10), (Nobgoblin, 10)], # 11
+    [(Nobgoblin, 10), (Warg, 10)], # 12
+    [(Warg, 10), (Fobgoblin, 10)], # 13
+    [(Fobgoblin, 10), (LargeFireElemental, 10)], # 14
+    [(LargeFireElemental, 10), (Dobgoblin, 10)] # 15
     ]
