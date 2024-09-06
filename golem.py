@@ -15,6 +15,7 @@ import god
 import magic
 from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, numkeys, drugname, infusionname, bodypartshortnames, listwithowner
 
+pickle.settings['byref'] = True
 pygame.init()
 
 logheight = 8
@@ -1248,19 +1249,19 @@ def game():
 
         elif gamestate == 'spellmakechoice':
             win.write(selectedspell.choiceprompt, x=0, y=mapheight+statuslines, fgcolor=(0,255,255))
-            logrows = min(logheight-1,len(selectedspell.choices()))
+            logrows = min(logheight-1,len(selectedspell.choices(player)))
             for i in range(logrows):
-                if len(selectedspell.choices()) <= logheight-1:
+                if len(selectedspell.choices(player)) <= logheight-1:
                     j = i
                 else:
-                    j = len(selectedspell.choices())+i-logrows-logback
+                    j = len(selectedspell.choices(player))+i-logrows-logback
                 if j < 9:
                     num = repr(j + 1) + ': '
                 elif j == 9:
                     num = '0: '
                 else:
                     num = ''
-                choice = selectedspell.choices()[j]
+                choice = selectedspell.choices(player)[j]
                 choicedescription = num + selectedspell.choicedescription(player, choice)
                 if j != chosen:
                     win.write(choicedescription, x=0, y=mapheight+statuslines+i+1, fgcolor=(255,255,255))
@@ -2000,27 +2001,33 @@ def game():
                                 logback = 0
 
                         if (event.key == keybindings['read'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['read'][0][1])) or (event.key == keybindings['read'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['read'][1][1])):
-                            if len([it for it in player.inventory if it.readable]) > 0:
+                            if len([it for it in player.inventory if it.readable]) > 0 and player.sight() > 0:
                                 gamestate = 'read'
                                 readlist = [it for it in player.inventory if it.readable]
                                 logback = len(readlist) - logheight + 1
                                 chosen = 0
                                 numchosen = False
-                            else:
+                            elif player.sight() > 0:
                                 player.log().append("You have nothing to read.")
+                                logback = 0
+                            else:
+                                player.log().append("You can't read while you are blind.")
                                 logback = 0
 
                         if (event.key == keybindings['write'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['write'][0][1])) or (event.key == keybindings['write'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['write'][1][1])):
-                            if len([it for it in player.inventory if it.name == 'empty spellbooklet']) > 0 and len(player.spellsknown()) > 0:
+                            if len([it for it in player.inventory if it.name == 'empty spellbooklet']) > 0 and len(player.spellsknown()) > 0 and player.sight() > 0:
                                 gamestate = 'write'
                                 logback = len(player.spellsknown()) - logheight + 1
                                 chosen = 0
                                 numchosen = False
-                            elif len(player.spellsknown()) > 0:
+                            elif len(player.spellsknown()) > 0 and player.sight() > 0:
                                 player.log().append("You have no empty spellbooklets.")
                                 logback = 0
-                            else:
+                            elif player.sight() > 0:
                                 player.log().append("You don't know any spells to write.")
+                                logback = 0
+                            else:
+                                player.log().append("You can't write while you are blind.")
                                 logback = 0
 
                         # Stance:
@@ -2993,7 +3000,7 @@ def game():
                             selectedspell = spelllist[chosen]
                             if isinstance(selectedspell, magic.ChoiceSpell):
                                 gamestate = 'spellmakechoice'
-                                logback = len(selectedspell.choices()) - logheight + 1
+                                logback = len(selectedspell.choices(player)) - logheight + 1
                                 chosen = 0
                                 numchosen = False
                             elif isinstance(selectedspell, magic.AreaSpell):
@@ -3022,24 +3029,25 @@ def game():
                     elif gamestate == 'spellmakechoice':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                             chosen = max(0, chosen-1)
-                            if chosen == len(selectedspell.choices()) - logback - (logheight - 1) - 1:
+                            if chosen == len(selectedspell.choices(player)) - logback - (logheight - 1) - 1:
                                 logback += 1
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(selectedspell.choices())-1, chosen+1)
-                            if chosen == len(selectedspell.choices()) - logback:
+                            chosen = min(len(selectedspell.choices(player))-1, chosen+1)
+                            if chosen == len(selectedspell.choices(player)) - logback:
                                 logback -= 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(selectedspell.choices()):
                                 chosen = i
                                 numchosen = True
                         if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
-                            selected = selectedspell.choices()[chosen]
+                            selected = selectedspell.choices(player)[chosen]
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
                             updatetime(selectedspell.castingtime)
                             if not player.dying():
                                 selectedspell.cast(player, selected)
+                                player.previousaction = ('cast',)
                                 detecthiddenitems()
                             logback = 0
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -3085,6 +3093,7 @@ def game():
                                 updatetime(selectedspell.castingtime)
                                 if not player.dying():
                                     selectedspell.cast(player, cave, lookx, looky)
+                                    player.previousaction = ('cast',)
                                     detecthiddenitems()
                                 logback = 0
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -3132,6 +3141,7 @@ def game():
                                     updatetime(selectedspell.castingtime)
                                     if not player.dying():
                                         selectedspell.cast(player, target)
+                                        player.previousaction = ('cast',)
                                         detecthiddenitems()
                                     logback = 0
                                 elif isinstance(selectedspell, magic.BodypartTargetedSpell):
@@ -3169,6 +3179,7 @@ def game():
                             updatetime(selectedspell.castingtime)
                             if not player.dying():
                                 selectedspell.cast(player, target, targetbodypart)
+                                player.previousaction = ('cast',)
                                 detecthiddenitems()
                             logback = 0
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):

@@ -903,7 +903,7 @@ class Creature():
                                 sneak = True
                             else:
                                 sneak = False
-                            if self.weakened():
+                            if self.weakened() and not magical:
                                 totaldamage //= 2
                             if targetbodypart.armor() != None:
                                 armor = targetbodypart.armor()

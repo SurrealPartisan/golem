@@ -347,7 +347,7 @@ class CurseOfBleeding(BodypartTargetedSpell):
 
 class CreateSpiderweb(AreaSpell):
     def __init__(self):
-        super().__init__('Create Spiderweb', 1, 3, 1, False)
+        super().__init__('Create Spiderweb', 1, 10, 2, False)
         self.locationchoiceprompt = 'Choose the location where you want to create the spiderweb using the movement keys:'
         self.suitablelocationmessage = 'Press Return to create a spiderweb here.'
         self.unsuitablelocationmessage = 'You cannot create a spiderweb here.'
