@@ -7,8 +7,10 @@ Created on Thu Jun 15 21:26:04 2023
 """
 
 import numpy as np
+
 import item
 from item import Attack
+import magic
 from utils import constantfunction, listwithowner, loglist, mapwidth, mapheight, numlevels, difficulty
 
 class BodyPartConnection():
@@ -2538,6 +2540,306 @@ class MoleMonkStomach(BodyPart):
             'undead flesh': (-1,)
             }
         self._info = 'A stomach consisting of living flesh.'
+
+
+
+class ZombieZorcererTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer torso', '*', (191, 255, 128))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
+            }
+        self._topheight = 60
+        self._pronetopheight = 30
+        self.maxhp = 100
+        self.material = "undead flesh"
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 40000
+        self.carryingcapacity = 30000
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.smell = 2
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+class ZombieZorcererArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer arm', '~', (191, 255, 128))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
+        self.maxhp = 30
+        self.material = "undead flesh"
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.97
+        self.throwspeed = 0.75
+        self.protectiveness = 0.1
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 4000
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.carefulness = 0.3
+        self.smell = 2
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.1
+            else:
+                return 0.05
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', '', '', 0.8, 1, 1, 5, 'blunt', 0, [], [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class ZombieZorcererLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer leg', '~', (191, 255, 128))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
+        self.maxhp = 30
+        self.material = "undead flesh"
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 15000
+        self.carryingcapacity = 30000
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.carefulness = 0.3
+        self.maxrunstamina = 20
+        self.smell = 2
+        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], [], self)]
+        else:
+            return []
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.5
+            else:
+                return 0.25
+        else:
+            return 0
+
+class ZombieZorcererHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer head', '*', (191, 255, 128))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 30
+        self.material = "undead flesh"
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 7000
+        self.scariness = 5
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.smell = 2
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.4, 2, 1, 5, 'sharp', 0, [], [('bleed', 0.1)], self)]
+        else:
+            return []
+
+class ZombieZorcererEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer eye', '*', (155, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 10
+        self.material = "undead flesh"
+        self.weight = 7
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class ZombieZorcererBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer brain', '*', (150, 178, 82))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 20
+        self.material = "undead flesh"
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.stances = []
+        self.frightenedby = []
+        self.intelligence = 2
+        self.manacapacity = 25
+        self.spellsknown = [np.random.choice([magic.SharpMissile, magic.BluntMissile, magic.RoughMissile, magic.FireMissile])(np.random.randint(1,3)), np.random.choice([magic.CurseOfSlowness, magic.CurseOfWeakness])(np.random.randint(1,3)), magic.HealThyself(np.random.randint(1,3))]
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A brain consisting of undead flesh. Intelligence 2, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+class ZombieZorcererHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer heart', '*', (150, 178, 82))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 20
+        self.material = "undead flesh"
+        self.weight = 250
+        self.bravery = 0.5
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+class ZombieZorcererLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer lung', '*', (150, 178, 82))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 20
+        self.material = 'undead flesh'
+        self.weight = 500
+        self.runstaminarecoveryspeed = 0.25
+        self.breathepoisonresistance = 0.5
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+
+class ZombieZorcererKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer kidney', '*', (150, 178, 82))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 20
+        self.material = 'undead flesh'
+        self.weight = 100
+        self._attackpoisonresistance = 1
+        self.endotoxicity = -0.5
+        self._resistances['sharp'] = -0.2
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage.'
+
+class ZombieZorcererStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'zombie zorcerer stomach', '*', (150, 178, 82))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 20
+        self.material = "undead flesh"
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
+            }
+        self._attackpoisonresistance = 1
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 

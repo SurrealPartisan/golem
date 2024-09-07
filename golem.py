@@ -1987,47 +1987,56 @@ def game():
 
                         # Magic:
                         if (event.key == keybindings['cast a spell'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['cast a spell'][0][1])) or (event.key == keybindings['cast a spell'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['cast a spell'][1][1])):
-                            if len([spell for spell in player.spellsknown() if player.mana() >= spell.manarequirement]) > 0:
+                            if len([spell for spell in player.spellsknown() if player.mana() >= spell.manarequirement]) > 0 and not player.panicked():
                                 gamestate = 'choosespell'
                                 spelllist = [spell for spell in player.spellsknown() if player.mana() >= spell.manarequirement]
                                 logback = len(spelllist) - logheight + 1
                                 chosen = 0
                                 numchosen = False
-                            elif len(player.spellsknown()) > 0:
+                            elif len(player.spellsknown()) > 0 and not player.panicked():
                                 player.log().append("You don't have enough mana for any of your spells.")
+                                logback = 0
+                            elif player.panicked():
+                                player.log().append("You can't cast spells while panicked.")
                                 logback = 0
                             else:
                                 player.log().append("You don't know any spells.")
                                 logback = 0
 
                         if (event.key == keybindings['read'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['read'][0][1])) or (event.key == keybindings['read'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['read'][1][1])):
-                            if len([it for it in player.inventory if it.readable]) > 0 and player.sight() > 0:
+                            if len([it for it in player.inventory if it.readable]) > 0 and player.sight() > 0 and not player.panicked():
                                 gamestate = 'read'
                                 readlist = [it for it in player.inventory if it.readable]
                                 logback = len(readlist) - logheight + 1
                                 chosen = 0
                                 numchosen = False
-                            elif player.sight() > 0:
+                            elif player.sight() > 0 and not player.panicked():
                                 player.log().append("You have nothing to read.")
                                 logback = 0
-                            else:
+                            elif not player.panicked():
                                 player.log().append("You can't read while you are blind.")
+                                logback = 0
+                            else:
+                                player.log().append("You can't read while you are panicked.")
                                 logback = 0
 
                         if (event.key == keybindings['write'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['write'][0][1])) or (event.key == keybindings['write'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['write'][1][1])):
-                            if len([it for it in player.inventory if it.name == 'empty spellbooklet']) > 0 and len(player.spellsknown()) > 0 and player.sight() > 0:
+                            if len([it for it in player.inventory if it.name == 'empty spellbooklet']) > 0 and len(player.spellsknown()) > 0 and player.sight() > 0 and not player.panicked():
                                 gamestate = 'write'
                                 logback = len(player.spellsknown()) - logheight + 1
                                 chosen = 0
                                 numchosen = False
-                            elif len(player.spellsknown()) > 0 and player.sight() > 0:
+                            elif len(player.spellsknown()) > 0 and player.sight() > 0 and not player.panicked():
                                 player.log().append("You have no empty spellbooklets.")
                                 logback = 0
-                            elif player.sight() > 0:
+                            elif player.sight() > 0 and not player.panicked():
                                 player.log().append("You don't know any spells to write.")
                                 logback = 0
-                            else:
+                            elif not player.panicked():
                                 player.log().append("You can't write while you are blind.")
+                                logback = 0
+                            else:
+                                player.log().append("You can't write while you are panicked.")
                                 logback = 0
 
                         # Stance:

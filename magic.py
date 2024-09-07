@@ -197,7 +197,7 @@ class CurseOfWeakness(TargetedSpell):
     def cast(self, caster, target):
         super().cast(caster, target)
         if not target.dead:
-            target.weakanedclock += np.random.randint(1, self.maxweakentime+1)
+            target.weakenedclock += np.random.randint(1, self.maxweakentime+1)
             caster.log().append('You cursed the ' + target.name + ' to be weakened!')
             target.log().append('The ' + caster.name + ' cursed you to be weakened!')
         else:
