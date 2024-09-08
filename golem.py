@@ -3045,7 +3045,7 @@ def game():
                             if chosen == len(selectedspell.choices(player)) - logback:
                                 logback -= 1
                         for i in range(10):
-                            if event.key in numkeys[i] and i < len(selectedspell.choices()):
+                            if event.key in numkeys[i] and i < len(selectedspell.choices(player)):
                                 chosen = i
                                 numchosen = True
                         if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):

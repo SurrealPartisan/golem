@@ -64,6 +64,7 @@ class BodyPart(item.Item):
         self.scariness = 0
         self.endotoxicity = 0
         self.smell = 0
+        self._stances = []
 
     def connect(self, connection_name, child):
         return self.childconnections[connection_name].connect(child)
@@ -111,6 +112,9 @@ class BodyPart(item.Item):
     def speed(self):
         return 0
 
+    def flyingspeed(self):
+        return 0
+
     def minespeed(self):
         return 0
 
@@ -146,6 +150,9 @@ class BodyPart(item.Item):
             return self.parentalconnection.parent.armor()
         else:
             return None
+
+    def stances(self):
+        return self._stances
 
     def bleed(self, time):
         newbleedclocklist = []
@@ -420,7 +427,6 @@ class HumanBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 1
         self.manacapacity = 20
@@ -702,7 +708,6 @@ class ZombieBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 0
         self.manacapacity = 25
@@ -981,7 +986,6 @@ class MolePersonBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 2
         self.manacapacity = 15
@@ -1249,7 +1253,6 @@ class GoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 1
         self.manacapacity = 20
@@ -1437,7 +1440,6 @@ class GlassElementalBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 1
         self.manacapacity = 20
@@ -1734,7 +1736,6 @@ class OctopusBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 2
         self.manacapacity = 20
@@ -1939,7 +1940,6 @@ class DogBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 2
         self.manacapacity = 20
@@ -2011,6 +2011,297 @@ class DogTail(BodyPart):
         self.weight = 400
         self.smell = 1
         self._info = 'A tail consisting of living flesh.'
+
+
+
+class ImpTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp torso', '*', (128, 0, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 35, 17)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 35, 17)),
+            'left wing': BodyPartConnection(self, ['wing'], False, 'left ', heightfuncuprightorprone(self, 35, 25)),
+            'right wing': BodyPartConnection(self, ['wing'], False, 'right ', heightfuncuprightorprone(self, 35, 25)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], True, '', heightfuncuprightorprone(self, 40, 20)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', heightfuncuprightorprone(self, 30, 12), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 25, 12), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 15, 12), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 20, 12), defensecoefficient=0.8, armorapplies=True, internal=True)
+            }
+        self._topheight = 40
+        self._pronetopheight = 25
+        self.maxhp = 75
+        self.worn = {'chest armor': listwithowner([], self), 'belt': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 25000
+        self.carryingcapacity = 20000
+        self._resistances['fire'] = 0.2
+        self.smell = 1
+        self._info = 'A torso consisting of living flesh. Resistant against fire damage.'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+class ImpArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp arm', '~', (128, 0, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
+        self.maxhp = 25
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.97
+        self.throwspeed = 1
+        self.protectiveness = 0.15
+        self.capableofwielding = True
+        self.wielded = listwithowner([], self)  # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner([], self), 'ring': listwithowner([], self)}
+        self.weight = 4000
+        self._resistances['fire'] = 0.2
+        self.carefulness = 0.5
+        self.smell = 1
+        self._info = 'An arm consisting of living flesh. Protects other bodyparts quite well. Resistant against fire damage.'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', '', '', 0.82, 1, 1, 10, 'sharp', 0, [], [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+class ImpWing(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp wing', '~', (128, 0, 0))
+        self.categories = ['wing']
+        self.childconnections = {}
+        self._topheight = 30
+        self._bottomheight = -20
+        self.maxhp = 20
+        self.weight = 5000
+        self._resistances['fire'] = 0.2
+        self.smell = 1
+        self._info = 'A wing consisting of living flesh. Enables flying at a quite fast speed if there are at least two wings. Resistant against fire damage.'
+
+    def stances(self):
+        if not (self.destroyed() or self.incapacitated()) and len([part for part in self.owner if 'wing' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+            return ['flying']
+        else:
+            return []
+
+    def flyingspeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 1.5
+        else:
+            return 0
+
+class ImpLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp leg', '~', (128, 0, 0))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -70
+        self.upperpoorlimit = 30
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -70
+        self.lowerpoorlimit = -70
+        self.maxheight = 70
+        self.maxhp = 25
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 10000
+        self.carryingcapacity = 20000
+        self._resistances['fire'] = 0.2
+        self.carefulness = 0.5
+        self.maxrunstamina = 10
+        self.smell = 1
+        self._info = 'A leg consisting of living flesh. Resistant against fire damage.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 1
+            else:
+                return 0.5
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', '', '', 0.62, 1, 1, 15, 'blunt', 0, [], [], self)]
+        else:
+            return []
+
+class ImpHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp head', '*', (128, 0, 0))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
+            }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 25
+        self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 6000
+        self.scariness = 7
+        self._resistances['fire'] = 0.2
+        self.smell = 1
+        self._info = 'A head consisting of living flesh. Can scare enemies for up to 7 s. Resistant against fire damage.'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', '', '', 0.62, 1, 1, 15, 'sharp', 0, [], [('bleed', 0.1)], self), Attack('horns', 'gored', 'gored', '', '', 0.82, 1, 1, 10, 'sharp', 0, [], [('charge', )], self)]
+        else:
+            return []
+
+class ImpEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp eye', '*', (255, 255, 0))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 7
+        self.weight = 5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.2
+        self._info = 'An eye consisting of living flesh.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+class ImpBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp brain', '*', (255, 0, 255))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 15
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.frightenedby = []
+        self.intelligence = 2
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._info = 'A brain consisting of living flesh. Intelligence 2, average mana capacity.'
+
+class ImpHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp heart', '*', (255, 0, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 15
+        self.weight = 250
+        self.bravery = 0.5
+        self._info = 'A heart consisting of living flesh. Average bravery.'
+
+class ImpLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp lung', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 15
+        self.weight = 600
+        self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
+        self._info = 'A lung consisting of living flesh.'
+
+class ImpKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 15
+        self.weight = 120
+        self.endotoxicity = -1
+        self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
+
+class ImpStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'imp stomach', '*', (255, 0, 0))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 15
+        self.weight = 1000
+        self.foodprocessing = { # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 1, None),
+            'vegetables': (1, 1, None),
+            'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
+            'undead flesh': (-1,)
+            }
+        self._info = 'A stomach consisting of living flesh.'
 
 
 
@@ -2219,7 +2510,6 @@ class HobgoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 3
         self.manacapacity = 20
@@ -2480,7 +2770,7 @@ class MoleMonkBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = ['fasting']
+        self._stances = ['fasting']
         self.frightenedby = []
         self.intelligence = 4
         self.manacapacity = 15
@@ -2708,12 +2998,12 @@ class ZombieZorcererHead(BodyPart):
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
         self.weight = 7000
-        self.scariness = 5
+        self.scariness = 7
         self._attackpoisonresistance = 1
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.smell = 2
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 7 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -2762,7 +3052,6 @@ class ZombieZorcererBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 2
         self.manacapacity = 25
@@ -2985,7 +3274,6 @@ class WolfBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 4
         self.manacapacity = 20
@@ -3252,7 +3540,6 @@ class DrillbotProcessor(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 6
         self.manacapacity = 15
@@ -3493,7 +3780,6 @@ class LobgoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 5
         self.manacapacity = 20
@@ -3723,7 +4009,6 @@ class RevenantOctopusBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 4
         self.manacapacity = 25
@@ -4023,7 +4308,6 @@ class GhoulBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 5
         self.manacapacity = 25
@@ -4199,7 +4483,6 @@ class SmallFireElementalBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 7
         self.manacapacity = 20
@@ -4524,7 +4807,6 @@ class MobgoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 7
         self.manacapacity = 20
@@ -4729,7 +5011,6 @@ class DireWolfBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 8
         self.manacapacity = 20
@@ -5008,7 +5289,6 @@ class JobgoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 9
         self.manacapacity = 20
@@ -5290,7 +5570,6 @@ class GhastBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 9
         self.manacapacity = 25
@@ -5576,7 +5855,6 @@ class NobgoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 11
         self.manacapacity = 20
@@ -5781,7 +6059,6 @@ class WargBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 12
         self.manacapacity = 20
@@ -6060,7 +6337,6 @@ class FobgoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 13
         self.manacapacity = 20
@@ -6277,7 +6553,6 @@ class LargeFireElementalBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 14
         self.manacapacity = 20
@@ -6602,7 +6877,6 @@ class DobgoblinBrain(BodyPart):
         self.itemsseen = []
         self.godsknown = []
         self.curesknown = []
-        self.stances = []
         self.frightenedby = []
         self.intelligence = 15
         self.manacapacity = 20

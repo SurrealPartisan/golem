@@ -15,7 +15,7 @@ difficulty = 2/3
 smellhalflife = 5
 smellmin = 0.01
 
-enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot', 'elemental']
+enemyfactions = ['undead', 'mole', 'octopus', 'goblinoid', 'canine', 'robot', 'elemental', 'demon']
 sins = ['pride', 'greed', 'wrath', 'envy', 'lust', 'gluttony', 'sloth']
 letters = 'abcdefghijklmnopqrstuvwxyz'
 consonants = 'bcdfghjklmnpqrstvwxyz'

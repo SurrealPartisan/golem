@@ -151,10 +151,9 @@ class Creature():
             else:
                 known = ['defensive']
         for part in self.bodyparts:
-            if hasattr(part, 'stances'):
-                for stance in part.stances:
-                    if (not self.panicked() and not self.scared()) or stance == 'flying':
-                        known.append(stance)
+            for stance in part.stances():
+                if (not self.panicked() and not self.scared()) or stance == 'flying':
+                    known.append(stance)
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         for it in wornlist:
             if hasattr(it, 'stances'):
@@ -433,7 +432,10 @@ class Creature():
         return int(self.world.spiderwebs[self.x, self.y]) + (self.slowedclock > 0)
     
     def speed(self):
-        basespeed = max([part.speed() for part in self.bodyparts])
+        if self.stance != 'flying':
+            basespeed = max([part.speed() for part in self.bodyparts])
+        else:
+            basespeed = max([part.flyingspeed() for part in self.bodyparts] + [it[0].flyingspeed for part in self.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'flyingspeed')])
         if self.stance == 'running':
             basespeed *= 2
         if self.overloaded():
@@ -1999,6 +2001,101 @@ class Dog(Creature):
                 dy = 0
                 repeats = 0
                 while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                    repeats += 1
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx,dy) == (0,0):
+                    dx = np.random.choice([-1,0,1])
+                    dy = np.random.choice([-1,0,1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    if not self.world.walls[self.x+dx, self.y+dy]:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['bump', time/2])
+                else:
+                    return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+class Imp(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.factions = ['demon']
+        self.char = 'i'
+        self.color = (128, 0, 0)
+        self.name = 'imp'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.ImpTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect('left arm', bodypart.ImpArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right arm', bodypart.ImpArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left wing', bodypart.ImpWing(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right wing', bodypart.ImpWing(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left leg', bodypart.ImpLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right leg', bodypart.ImpLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('heart', bodypart.ImpHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left lung', bodypart.ImpLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right lung', bodypart.ImpLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('left kidney', bodypart.ImpKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('right kidney', bodypart.ImpKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('stomach', bodypart.ImpStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('head', bodypart.ImpHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain', bodypart.ImpBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye', bodypart.ImpEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye', bodypart.ImpEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        self.stance = 'flying'
+        self.preferredstance = 'flying'
+        
+    def ai(self):
+        disoriented = False
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
+            disoriented = True
+            self.log().append('You stumble around.')
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
+            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                if self.stance == 'flying':
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                else:
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            elif not disoriented:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                repeats = 0
+                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or (self.world.lavapits[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (self.world.campfires[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or (len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0 and self.stance != 'flying'):
                     dx = np.random.choice([-1,0,1])
                     dy = np.random.choice([-1,0,1])
                     repeats += 1
@@ -3705,8 +3802,8 @@ class Dobgoblin(Creature):
 
 enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy type and a probability weight for its presence.
     [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10)], # 1
-    [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10), (CaveOctopus, 20), (Dog, 20)], # 2
-    [(CaveOctopus, 15), (Dog, 15), (Hobgoblin, 10), (MoleMonk, 10), (ZombieZorcerer, 10)], # 3
+    [(Zombie, 15), (MolePerson, 15), (Goblin, 15), (GlassElemental, 15), (CaveOctopus, 20), (Dog, 20), (Imp, 20)], # 2
+    [(CaveOctopus, 10), (Dog, 10), (Imp, 10), (Hobgoblin, 10), (MoleMonk, 10), (ZombieZorcerer, 10)], # 3
     [(Hobgoblin, 5), (MoleMonk, 5), (ZombieZorcerer, 5), (Wolf, 15)], # 4
     [(Wolf, 15), (Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5)], # 5
     [(Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5), (Ghoul, 15)], # 6

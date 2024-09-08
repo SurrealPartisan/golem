@@ -873,7 +873,8 @@ class CapeOfFlying(Item):
         self.wearcategory = 'back'
         self.weight = 500
         self.stances = ['flying']
-        self._info = 'A magical cape. When worn, enables the flying stance.'
+        self.flyingspeed = 1
+        self._info = 'A magical cape. When worn, enables the flying stance with average speed.'
 
 class CapeOfSmellNeutralizing(Item):
     def __init__(self, owner, x, y):
