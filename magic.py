@@ -294,6 +294,10 @@ class FireMissile(MissileSpell):
     def __init__(self, level):
         super().__init__(level, 'fire')
 
+class ElectricMissile(MissileSpell):
+    def __init__(self, level):
+        super().__init__(level, 'electric')
+
 
 
 class CurseOfBleeding(BodypartTargetedSpell):
@@ -363,5 +367,5 @@ class CreateSpiderweb(AreaSpell):
 
 
 def randomspell(level):
-    level2 = np.random.randint(max(1, level-3), level+4)
-    return np.random.choice([HealThyself(level2), CreateWeapon(level2), CreateArmor(level2), CurseOfSlowness(level2), CurseOfWeakness(level2), SharpMissile(level2), BluntMissile(level2), RoughMissile(level2), FireMissile(level2), CurseOfBleeding(level2), CreateSpiderweb()])
+    level2 = max(1, np.random.randint(level-3, level+4))
+    return np.random.choice([HealThyself(level2), CreateWeapon(level2), CreateArmor(level2), CurseOfSlowness(level2), CurseOfWeakness(level2), SharpMissile(level2), BluntMissile(level2), RoughMissile(level2), FireMissile(level2), ElectricMissile(level2), CurseOfBleeding(level2), CreateSpiderweb()])

@@ -771,6 +771,74 @@ class LooseRoundPebbles(Item):
             creat.die()
             creat.causeofdeath = ('trip', self)
 
+class ExposedWires(Item):
+    def __init__(self, owner, x, y, level):
+        super().__init__(owner, x, y, 'exposed ' + repr(50*level) + ' V wires', '_', (184, 115, 51))
+        self.hidden = True
+        self.trap = True
+        self.weight = 100
+        self.maxdamage = 5*level
+        self._info = 'An accidental trap, can shock you.'
+
+    def pickableinstance(self):
+        return None
+
+    def entrap(self, creat, part):
+        if part.nonconductive:
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == creat.torso:
+                partname = 'torso'
+            creat.log().append('You stepped on ' + self.name + ', but as your ' + partname + ' is nonconductive, you were not shocked.')
+        else:
+            dmglist = []
+            destroyedlist = []
+            alreadyimbalanced = creat.imbalanced()
+            for part in [part for part in creat.bodyparts if not part.destroyed()]:
+                resistancemultiplier = 1 - part.resistance('electric')
+                totaldamage = np.random.randint(0, int(self.maxdamage*(1/2)**part.bottomheight())+1)
+                damage = min(int(resistancemultiplier*totaldamage), part.hp())
+                alreadyincapacitated = part.incapacitated()
+                part.damagetaken += damage
+                if 'leg' in part.categories:
+                    numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                    if np.random.rand() < 0.5 - 0.05*numlegs:
+                        part.imbalanceclock += 20*damage/part.maxhp
+                if part.parentalconnection != None:
+                    partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                elif part == creat.torso:
+                    partname = 'torso'
+                if part.destroyed():
+                    dmglist.append('destroyed your ' + partname)
+                    destroyedlist.append(part)
+                elif not alreadyincapacitated and part.incapacitated():
+                    dmglist.append('incapacitated your ' + partname)
+                elif damage > 0:
+                    dmglist.append('dealt ' + repr(damage) + ' damage to your ' + partname)
+            if creat.imbalanced() and not alreadyimbalanced:
+                dmglist.append('imbalanced you')
+            if len(dmglist) > 1:
+                dmglist[-1] = 'and ' + dmglist[-1]
+            if len(dmglist) > 2:
+                joiner = ', '
+            else:
+                joiner = ' '
+            if not creat.dying():
+                creat.log().append('You stepped on ' + self.name + ', getting shocked. The shock ' + joiner.join(dmglist) + '.')
+                for part in destroyedlist:
+                    part.on_destruction(False)
+            else:
+                creat.log().append('You stepped on ' + self.name + ', getting shocked. It killed you.')
+                creat.log().append('You are dead!')
+                for part in destroyedlist:
+                    part.on_destruction(True)
+                creat.die()
+                creat.causeofdeath = ('step', self)
+
+def randomexposedwires(owner, x, y, level):
+    level2 = max(1, np.random.randint(level-3, level+4))
+    return ExposedWires(owner, x, y, level2)
+
 class PieceOfArmor(Item):
     def __init__(self, owner, x, y, wearcategory, material, enchantment):
         if enchantment == 0:

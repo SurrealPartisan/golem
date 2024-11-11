@@ -166,6 +166,15 @@ def game():
                 pebblescoords.append((x, y))
                 item.LooseRoundPebbles(cave.items, x, y)
 
+            wirescoords = []
+            for j in range(np.random.randint(11)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0 or (x, y) in caltropscoords or (x, y) in pebblescoords or (x,y) in wirescoords:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                wirescoords.append((x, y))
+                item.randomexposedwires(cave.items, x, y, i)
+
             for j in range(10):
                 x = y = 0
                 while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
@@ -1822,7 +1831,7 @@ def game():
 
                         # Items
                         if (event.key == keybindings['pick up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][0][1])) or (event.key == keybindings['pick up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['pick up'][1][1])):
-                            picklist = [it.pickableinstance() for it in cave.items if abs(it.x - player.x) <= 1 and abs(it.y - player.y) <= 1 and (it in player.itemsseen() or not it.hidden)]
+                            picklist = [it.pickableinstance() for it in cave.items if abs(it.x - player.x) <= 1 and abs(it.y - player.y) <= 1 and (it in player.itemsseen() or not it.hidden) and it.pickableinstance() != None]
                             torchdistance = np.inf
                             torchx = torchy = 0
                             for dx in [-1, 0, 1]:
