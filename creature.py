@@ -630,7 +630,7 @@ class Creature():
         if self.scariness() > 0:
             targets = []
             for creat in self.world.creatures:
-                if creat != self and not self in creat.frightenedby() and ('player' in creat.factions or 'player' in self.factions):
+                if creat != self and not self in creat.frightenedby() and ('player' in creat.factions or 'player' in self.factions) and creat.sight() > 1:
                     fovmap = fov(creat.world.walls, creat.x, creat.y, creat.sight())
                     if fovmap[self.x, self.y]:
                         targets.append(creat)
