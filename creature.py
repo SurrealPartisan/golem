@@ -74,7 +74,7 @@ class Creature():
         else:
             seenlist = []
             for i in range(numlevels):
-                seenlist.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+                seenlist.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
             return seenlist
 
     def godsknown(self):
@@ -1358,7 +1358,7 @@ class Creature():
                 self.panickedclock = max(0, self.panickedclock - time)
             elif self.scared():
                 self.scaredclock = max(0, self.scaredclock - time)
-            self.manaused = max(0, self.manaused - time)
+            self.manaused = max(0, self.manaused - time/2)
         else:
             timeleft = time - timetoact
             self.bleed(timetoact)
@@ -1394,7 +1394,7 @@ class Creature():
                 self.panickedclock = max(0, self.panickedclock - timetoact)
             elif self.scared():
                 self.scaredclock = max(0, self.scaredclock - timetoact)
-            self.manaused = max(0, self.manaused - timetoact)
+            self.manaused = max(0, self.manaused - timetoact/2)
             if self.world.poisongas[self.x, self.y]:
                 livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
                 lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
@@ -2925,6 +2925,12 @@ class SmallFireElemental(Creature):
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
+            elif fovmap[player.x, player.y] and (abs(self.x - player.x) > 1 or abs(self.y - player.y) > 1) and len([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement]) > 0 and not self.panicked():
+                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
+                if isinstance(spell, magic.TargetedSpell):
+                    return(['cast', spell, [self, player], spell.castingtime])
+                else:
+                    return(['cast', spell, [self, player, np.random.choice(spell.partchoices(player))], spell.castingtime])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
@@ -3665,6 +3671,12 @@ class LargeFireElemental(Creature):
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
+            elif fovmap[player.x, player.y] and (abs(self.x - player.x) > 1 or abs(self.y - player.y) > 1) and len([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement]) > 0 and not self.panicked():
+                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
+                if isinstance(spell, magic.TargetedSpell):
+                    return(['cast', spell, [self, player], spell.castingtime])
+                else:
+                    return(['cast', spell, [self, player, np.random.choice(spell.partchoices(player))], spell.castingtime])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))

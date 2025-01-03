@@ -423,7 +423,7 @@ class HumanBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -710,7 +710,7 @@ class ZombieBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -992,7 +992,7 @@ class MolePersonBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -1260,7 +1260,7 @@ class GoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -1454,7 +1454,7 @@ class GlassElementalBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -1760,7 +1760,7 @@ class OctopusBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -1965,7 +1965,7 @@ class DogBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -2269,7 +2269,7 @@ class ImpBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -2537,7 +2537,7 @@ class HobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -2798,7 +2798,7 @@ class MoleMonkBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -3086,7 +3086,7 @@ class ZombieZorcererBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -3312,7 +3312,7 @@ class WolfBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -3587,7 +3587,7 @@ class DrillbotProcessor(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -3829,7 +3829,7 @@ class LobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -4062,7 +4062,7 @@ class RevenantOctopusBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -4370,7 +4370,7 @@ class GhoulBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -4552,7 +4552,7 @@ class SmallFireElementalBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -4560,7 +4560,7 @@ class SmallFireElementalBrain(BodyPart):
         self.frightenedby = []
         self.intelligence = 7
         self.manacapacity = 20
-        self.spellsknown = []
+        self.spellsknown = [magic.FireMissile(np.random.randint(1, 8))]
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
@@ -4880,7 +4880,7 @@ class MobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -5085,7 +5085,7 @@ class DireWolfBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -5364,7 +5364,7 @@ class JobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -5651,7 +5651,7 @@ class GhastBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -5940,7 +5940,7 @@ class NobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -6145,7 +6145,7 @@ class WargBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -6424,7 +6424,7 @@ class FobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -6645,7 +6645,7 @@ class LargeFireElementalBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []
@@ -6653,7 +6653,7 @@ class LargeFireElementalBrain(BodyPart):
         self.frightenedby = []
         self.intelligence = 14
         self.manacapacity = 20
-        self.spellsknown = []
+        self.spellsknown = [magic.FireMissile(np.random.randint(8, 15))]
         self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
@@ -6973,7 +6973,7 @@ class DobgoblinBrain(BodyPart):
         self.log = loglist()
         self.seen = []
         for i in range(numlevels):
-            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for i in range(mapwidth)])
+            self.seen.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
         self.creaturesseen = []
         self.itemsseen = []
         self.godsknown = []

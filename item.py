@@ -272,6 +272,8 @@ class Spellbooklet(Item):
             creature.log().append('The booklet is empty. You learned nothing.')
         elif creature.intelligence() < self.spell.intelligencerequirement:
             creature.log().append('You are not intelligent enough to comprehend the spell in this booklet. You learned nothing.')
+        elif self.spell.name in [spell.name for spell in creature.spellsknown()]:
+            creature.log().append('You already know the spell in this booklet. You learned nothing.')
         else:
             creature.spellsknown().append(self.spell)
             creature.log().append('You learned to cast ' + self.spell.name + '!')

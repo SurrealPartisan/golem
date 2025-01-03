@@ -1425,7 +1425,7 @@ def game():
             player.panickedclock = max(0, player.panickedclock - time)
         elif player.scared():
             player.scaredclock = max(0, player.scaredclock - time)
-        player.manaused = max(0, player.manaused - time)
+        player.manaused = max(0, player.manaused - time/2)
         if cave.poisongas[player.x, player.y]:
             livingparts = [part for part in player.bodyparts if part.material == 'living flesh' and not part.destroyed()]
             lungs = [part for part in player.bodyparts if 'lung' in part.categories and not part.destroyed()]

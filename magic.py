@@ -10,6 +10,7 @@ import numpy as np
 from roman import toRoman
 
 import item
+from utils import numlevels, mapwidth, mapheight
 
 class Spell():
     def __init__(self, name, intelligencerequirement, manarequirement, castingtime, scalable):
@@ -205,6 +206,43 @@ class CurseOfWeakness(TargetedSpell):
 
 
 
+class ReadMemories(TargetedSpell):
+    def __init__(self):
+        super().__init__('Read Memories', 1, 20, 1, False)
+        self.targetchoiceprompt = 'Choose whose memories to read using movement keys:'
+        self.notargetmessage = 'No suitable targets observed here.'
+        self._info = 'Learn the religious rituals, spells, detected hidden items, and location history of the target.'
+
+    def suitabletargetmessage(self, target):
+        return 'Press Return to target the ' + target.name + '.'
+
+    def cast(self, caster, target):
+        super().cast(caster)
+        if not target.dead:
+            targetbrains = [part for part in target.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+            if len(targetbrains) > 0:
+                for gd in target.godsknown():
+                    if not gd in caster.godsknown():
+                        caster.godsknown().append(gd)
+                for spell in target.spellsknown():
+                    if not spell.name in [spll.name for spll in caster.spellsknown()]:
+                        caster.spellsknown().append(spell)
+                for it in target.itemsseen():
+                    if not it in caster.itemsseen():
+                        caster.itemsseen().append(it)
+                for z in range(numlevels):
+                    for x in range(mapwidth):
+                        for y in range(mapheight):
+                            if caster.seen()[z][x][y] == (' ', (255, 255, 255), (0, 0, 0), (0, 0, 0)) and target.seen()[z][x][y] != (' ', (255, 255, 255), (0, 0, 0), (0, 0, 0)):
+                                caster.seen()[z][x][y] = target.seen()[z][x][y]
+                caster.log().append('You successfully read the memories of the ' + target.name + '.')
+            else:
+                caster.log().append('The ' + target.name + ' has no working brain, so you were unable to read its memories.')
+        else:
+            caster.log().append('The ' + target.name + ' died while you were casting the spell.')
+
+
+
 class MissileSpell(BodypartTargetedSpell):
     def __init__(self, level, damagetype):
         super().__init__(damagetype.capitalize() + ' Missile', level, 10, 0.5, True)
@@ -368,4 +406,4 @@ class CreateSpiderweb(AreaSpell):
 
 def randomspell(level):
     level2 = max(1, np.random.randint(level-3, level+4))
-    return np.random.choice([HealThyself(level2), CreateWeapon(level2), CreateArmor(level2), CurseOfSlowness(level2), CurseOfWeakness(level2), SharpMissile(level2), BluntMissile(level2), RoughMissile(level2), FireMissile(level2), ElectricMissile(level2), CurseOfBleeding(level2), CreateSpiderweb()])
+    return np.random.choice([HealThyself(level2), CreateWeapon(level2), CreateArmor(level2), CurseOfSlowness(level2), CurseOfWeakness(level2), ReadMemories(), SharpMissile(level2), BluntMissile(level2), RoughMissile(level2), FireMissile(level2), ElectricMissile(level2), CurseOfBleeding(level2), CreateSpiderweb()])
