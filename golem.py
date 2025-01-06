@@ -2214,13 +2214,17 @@ def game():
 
                     elif gamestate == 'pick':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(picklist)
                             if chosen == len(picklist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(picklist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(picklist)-1, chosen+1)
+                            chosen = (chosen+1) % len(picklist)
                             if chosen == len(picklist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(picklist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(picklist):
                                 chosen = i
@@ -2246,13 +2250,17 @@ def game():
 
                     elif gamestate == 'drop':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(player.inventory)
                             if chosen == len(player.inventory) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(player.inventory) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(player.inventory)-1, chosen+1)
+                            chosen = (chosen+1) % len(player.inventory)
                             if chosen == len(player.inventory) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(player.inventory) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(player.inventory):
                                 chosen = i
@@ -2278,13 +2286,17 @@ def game():
 
                     elif gamestate == 'information':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(itemlist)
                             if chosen == len(itemlist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(itemlist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(itemlist)-1, chosen+1)
+                            chosen = (chosen+1) % len(itemlist)
                             if chosen == len(itemlist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(itemlist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(itemlist):
                                 chosen = i
@@ -2302,13 +2314,17 @@ def game():
 
                     elif gamestate == 'consume':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len([item for item in player.inventory if item.consumable])
                             if chosen == len([item for item in player.inventory if item.consumable]) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len([item for item in player.inventory if item.consumable]) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([item for item in player.inventory if item.consumable])-1, chosen+1)
+                            chosen = (chosen+1) % len([item for item in player.inventory if item.consumable])
                             if chosen == len([item for item in player.inventory if item.consumable]) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len([item for item in player.inventory if item.consumable]) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len([item for item in player.inventory if item.consumable]):
                                 chosen = i
@@ -2367,13 +2383,17 @@ def game():
 
                     elif gamestate == 'cook':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len([item for item in player.inventory if item.material == 'living flesh'])
                             if chosen == len([item for item in player.inventory if item.material == 'living flesh']) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len([item for item in player.inventory if item.material == 'living flesh']) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([item for item in player.inventory if item.material == 'living flesh'])-1, chosen+1)
+                            chosen = (chosen+1) % len([item for item in player.inventory if item.material == 'living flesh'])
                             if chosen == len([item for item in player.inventory if item.material == 'living flesh']) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len([item for item in player.inventory if item.material == 'living flesh']) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len([item for item in player.inventory if item.material == 'living flesh']):
                                 chosen = i
@@ -2400,13 +2420,17 @@ def game():
 
                     elif gamestate == 'wieldchooseitem':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len([item for item in player.inventory if item.wieldable])
                             if chosen == len([item for item in player.inventory if item.wieldable]) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len([item for item in player.inventory if item.wieldable]) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([item for item in player.inventory if item.wieldable])-1, chosen+1)
+                            chosen = (chosen+1) % len([item for item in player.inventory if item.wieldable])
                             if chosen == len([item for item in player.inventory if item.wieldable]) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len([item for item in player.inventory if item.wieldable]) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len([item for item in player.inventory if item.wieldable]):
                                 chosen = i
@@ -2424,13 +2448,17 @@ def game():
 
                     elif gamestate == 'wieldchoosebodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()])
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()])-1, chosen+1)
+                            chosen = (chosen+1) % len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()])
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) == 0 and not part.destroyed()]):
                                 chosen = i
@@ -2458,13 +2486,17 @@ def game():
 
                     elif gamestate == 'unwield':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0])
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0])-1, chosen+1)
+                            chosen = (chosen+1) % len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0])
                             if chosen == len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len([part for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0]):
                                 chosen = i
@@ -2491,13 +2523,17 @@ def game():
 
                     elif gamestate == 'wearchooseitem':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len([item for item in player.inventory if item.wearable])
                             if chosen == len([item for item in player.inventory if item.wearable]) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len([item for item in player.inventory if item.wearable]) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len([item for item in player.inventory if item.wearable])-1, chosen+1)
+                            chosen = (chosen+1) % len([item for item in player.inventory if item.wearable])
                             if chosen == len([item for item in player.inventory if item.wearable]) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len([item for item in player.inventory if item.wearable]) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len([item for item in player.inventory if item.wearable]):
                                 chosen = i
@@ -2522,13 +2558,17 @@ def game():
 
                     elif gamestate == 'wearchoosebodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(partlist)
                             if chosen == len(partlist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(partlist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(partlist)-1, chosen+1)
+                            chosen = (chosen+1) % len(partlist)
                             if chosen == len(partlist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(partlist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(partlist):
                                 chosen = i
@@ -2556,13 +2596,17 @@ def game():
 
                     elif gamestate == 'undress':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(wornlist)
                             if chosen == len(wornlist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(wornlist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(wornlist)-1, chosen+1)
+                            chosen = (chosen+1) % len(wornlist)
                             if chosen == len(wornlist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(wornlist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(wornlist):
                                 chosen = i
@@ -2589,13 +2633,17 @@ def game():
 
                     elif gamestate == 'chooseattack':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(player.attackslist())
                             if chosen == len(player.attackslist()) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(player.attackslist()) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(player.attackslist())-1, chosen+1)
+                            chosen = (chosen+1) % len(player.attackslist())
                             if chosen == len(player.attackslist()) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(player.attackslist()) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(player.attackslist()):
                                 chosen = i
@@ -2617,13 +2665,17 @@ def game():
 
                     elif gamestate == 'choosetargetbodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(targetbodypartlist)
                             if chosen == len(targetbodypartlist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(targetbodypartlist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(targetbodypartlist)-1, chosen+1)
+                            chosen = (chosen+1) % len(targetbodypartlist)
                             if chosen == len(targetbodypartlist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(targetbodypartlist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(targetbodypartlist):
                                 chosen = i
@@ -2656,13 +2708,17 @@ def game():
 
                     elif gamestate == 'throwchoosemissile':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(player.thrownattackslist())
                             if chosen == len(player.thrownattackslist()) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(player.thrownattackslist()) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(player.thrownattackslist())-1, chosen+1)
+                            chosen = (chosen+1) % len(player.thrownattackslist())
                             if chosen == len(player.thrownattackslist()) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(player.thrownattackslist()) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(player.thrownattackslist()):
                                 chosen = i
@@ -2741,13 +2797,17 @@ def game():
 
                     elif gamestate == 'throwchoosetargetbodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(targetbodypartlist)
                             if chosen == len(targetbodypartlist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(targetbodypartlist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(targetbodypartlist)-1, chosen+1)
+                            chosen = (chosen+1) % len(targetbodypartlist)
                             if chosen == len(targetbodypartlist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(targetbodypartlist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(targetbodypartlist):
                                 chosen = i
@@ -2768,13 +2828,17 @@ def game():
 
                     elif gamestate == 'throwchooselimb':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(limblist)
                             if chosen == len(limblist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(limblist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(limblist)-1, chosen+1)
+                            chosen = (chosen+1) % len(limblist)
                             if chosen == len(limblist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(limblist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(limblist):
                                 chosen = i
@@ -2803,13 +2867,17 @@ def game():
 
                     elif gamestate == 'choosebodypartconnection':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(connectioncandidates)
                             if chosen == len(connectioncandidates) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(connectioncandidates) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(connectioncandidates)-1, chosen+1)
+                            chosen = (chosen+1) % len(connectioncandidates)
                             if chosen == len(connectioncandidates) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(connectioncandidates) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(connectioncandidates):
                                 chosen = i
@@ -2875,13 +2943,17 @@ def game():
 
                     elif gamestate == 'choosebodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(partslist)
                             if chosen == len(partslist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(partslist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(partslist)-1, chosen+1)
+                            chosen = (chosen+1) % len(partslist)
                             if chosen == len(partslist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(partslist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(partslist):
                                 chosen = i
@@ -2922,13 +2994,17 @@ def game():
 
                     elif gamestate == 'choosestance':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(player.stancesknown())
                             if chosen == len(player.stancesknown()) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(player.stancesknown()) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(player.stancesknown())-1, chosen+1)
+                            chosen = (chosen+1) % len(player.stancesknown())
                             if chosen == len(player.stancesknown()) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(player.stancesknown()) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(player.stancesknown()):
                                 chosen = i
@@ -2964,13 +3040,17 @@ def game():
 
                     elif gamestate == 'pray':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % min(7, len(player.godsknown()) + 1)
                             if chosen == min(7, len(player.godsknown()) + 1) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == min(7, len(player.godsknown()) + 1) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(min(7, len(player.godsknown()) + 1)-1, chosen+1)
+                            chosen = (chosen+1) % min(7, len(player.godsknown()) + 1)
                             if chosen == min(7, len(player.godsknown()) + 1) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = min(7, len(player.godsknown()) + 1) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(player.godsknown()) + 1:
                                 chosen = i
@@ -3003,13 +3083,17 @@ def game():
 
                     elif gamestate == 'choosespell':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(spelllist)
                             if chosen == len(spelllist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(spelllist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(spelllist)-1, chosen+1)
+                            chosen = (chosen+1) % len(spelllist)
                             if chosen == len(spelllist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(spelllist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(spelllist):
                                 chosen = i
@@ -3046,13 +3130,17 @@ def game():
 
                     elif gamestate == 'spellmakechoice':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(selectedspell.choices(player))
                             if chosen == len(selectedspell.choices(player)) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(selectedspell.choices(player)) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(selectedspell.choices(player))-1, chosen+1)
+                            chosen = (chosen+1) % len(selectedspell.choices(player))
                             if chosen == len(selectedspell.choices(player)) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(selectedspell.choices(player)) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(selectedspell.choices(player)):
                                 chosen = i
@@ -3178,13 +3266,17 @@ def game():
 
                     elif gamestate == 'spellchoosetargetbodypart':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(selectedspell.partchoices(target))
                             if chosen == len(selectedspell.partchoices(target)) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(selectedspell.partchoices(target)) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(selectedspell.partchoices(target))-1, chosen+1)
+                            chosen = (chosen+1) % len(selectedspell.partchoices(target))
                             if chosen == len(selectedspell.partchoices(target)) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(selectedspell.partchoices(target)) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(selectedspell.partchoices(target)):
                                 chosen = i
@@ -3207,13 +3299,17 @@ def game():
 
                     elif gamestate == 'read':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(readlist)
                             if chosen == len(readlist) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(readlist) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(readlist)-1, chosen+1)
+                            chosen = (chosen+1) % len(readlist)
                             if chosen == len(readlist) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(readlist) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(readlist):
                                 chosen = i
@@ -3235,13 +3331,17 @@ def game():
 
                     elif gamestate == 'write':
                         if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
-                            chosen = max(0, chosen-1)
+                            chosen = (chosen-1) % len(player.spellsknown())
                             if chosen == len(player.spellsknown()) - logback - (logheight - 1) - 1:
                                 logback += 1
+                            if chosen == len(player.spellsknown()) - 1:
+                                logback = 0
                         if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
-                            chosen = min(len(player.spellsknown())-1, chosen+1)
+                            chosen = (chosen+1) % len(player.spellsknown())
                             if chosen == len(player.spellsknown()) - logback:
                                 logback -= 1
+                            if chosen == 0:
+                                logback = len(player.spellsknown()) - logheight + 1
                         for i in range(10):
                             if event.key in numkeys[i] and i < len(player.spellsknown()):
                                 chosen = i
