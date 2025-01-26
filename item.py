@@ -352,7 +352,7 @@ class Spear(Item):
         self.mindamage = 1 + enchantment
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
-        self.weight = 6*density + 2000
+        self.weight = 6*density + 1000
         self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack. Can be thrown up to ten (plus enchantment) paces.'
 
     def attackslist(self):
@@ -394,13 +394,10 @@ class Mace(Item):
         self.maxdamage = int(materials[material].damage*1.2) + enchantment
         density = materials[material].density
         self.weight = 50*density
-        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can knock enemies back.'
+        self._info = 'A weapon made of ' + material + '. Can knock enemies back.'
 
     def attackslist(self):
-        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, [('knockback', 0.2)], self)]
-        else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', 50, self.bane, [('knockback', 0.1)], self)]
+        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, [('knockback', 0.2)], self)]
 
 def randommace(owner, x, y, level):
     enchantment = 0
@@ -410,6 +407,45 @@ def randommace(owner, x, y, level):
     if np.random.rand() < 0.2:
         bane = [np.random.choice(utils.enemyfactions)]
     return Mace(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
+
+class Staff(Item):
+    def __init__(self, owner, x, y, material, enchantment, bane):
+        if enchantment == 0:
+            enchaname = ''
+        elif enchantment > 0:
+            enchaname = '+' + repr(enchantment) + ' '
+        banename = ''
+        for b in bane:
+            banename += b + '-bane '
+        name = enchaname + banename + material + ' staff'
+        color = materials[material].color
+        super().__init__(owner, x, y, name, '/', color)
+        self.material = material
+        self.wieldable = True
+        self.weapon = True
+        self.supporting = True
+        self.bane = bane
+        self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
+        self.mindamage = 1 + enchantment
+        self.maxdamage = int(materials[material].damage*1.2) + enchantment
+        density = materials[material].density
+        self.weight = 100*density
+        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). When wielded, prevents getting imbalanced.'
+
+    def attackslist(self):
+        if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 100, self.bane, [], self)]
+        else:
+            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', 100, self.bane, [], self)]
+
+def randomstaff(owner, x, y, level):
+    enchantment = 0
+    while np.random.rand() < 0.5 + level/100:
+        enchantment += 1
+    bane = []
+    if np.random.rand() < 0.2:
+        bane = [np.random.choice(utils.enemyfactions)]
+    return Staff(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
 class Sword(Item):
     def __init__(self, owner, x, y, material, enchantment, bane):
@@ -470,7 +506,7 @@ class PickAxe(Item):
         self.maxdamage = int(materials[material].damage*1.75) + enchantment
         self._minespeed = materials[material].minespeed
         density = materials[material].density
-        self.weight = 12*density + 1500
+        self.weight = 12*density + 500
         self._info = 'A weapon and a tool, made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can be used for mining.'
 
     def attackslist(self):
@@ -495,7 +531,7 @@ def randompickaxe(owner, x, y, level):
     return PickAxe(owner, x, y, np.random.choice(weaponmaterials, p=utils.normalish(len(weaponmaterials), weaponmaterials.index(likeliestmaterialbylevel[level]), 3, 0.001)), enchantment, bane)
 
 def randomweapon(owner, x, y, level): # If new weapon types are added here, also add them to magic.CreateWeapon!
-    return np.random.choice([randomdagger, randomspear, randommace, randomsword, randompickaxe])(owner, x, y, level)
+    return np.random.choice([randomdagger, randomspear, randommace, randomstaff, randomsword, randompickaxe])(owner, x, y, level)
 
 class Stone(Item):
     def __init__(self, owner, x, y):

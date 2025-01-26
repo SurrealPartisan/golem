@@ -8,7 +8,6 @@ Major
 * Sense of hearing
   * Wolf howling
 * Make NPC:s use items (and consider carrying capacity)
-* Spellcasting
 
 Never ready
 * More enemies

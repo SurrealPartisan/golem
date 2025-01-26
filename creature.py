@@ -163,7 +163,8 @@ class Creature():
         return known
 
     def imbalanced(self):
-        return np.any([part.imbalanced() for part in self.bodyparts])
+        supportwieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0 and hasattr(part.wielded[0], 'supporting') and part.wielded[0].supporting]
+        return np.any([part.imbalanced() for part in self.bodyparts]) and not supportwieldlist
 
     def weakened(self):
         return self.weakenedclock > 0
