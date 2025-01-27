@@ -160,7 +160,7 @@ class Creature():
                 for stance in it.stances:
                     if (not self.panicked() and not self.scared()) or stance == 'flying':
                         known.append(stance)
-        return known
+        return [str(s) for s in np.unique(known)]
 
     def imbalanced(self):
         supportwieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0 and hasattr(part.wielded[0], 'supporting') and part.wielded[0].supporting]

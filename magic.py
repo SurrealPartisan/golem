@@ -217,7 +217,7 @@ class ReadMemories(TargetedSpell):
         return 'Press Return to target the ' + target.name + '.'
 
     def cast(self, caster, target):
-        super().cast(caster)
+        super().cast(caster, target)
         if not target.dead:
             targetbrains = [part for part in target.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
             if len(targetbrains) > 0:
