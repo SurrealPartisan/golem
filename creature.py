@@ -56,6 +56,8 @@ class Creature():
         self.manaused = 0
         self.stance = 'neutral'
         self.preferredstance = 'neutral'
+        self._fovmap = np.ones((mapwidth, mapheight))
+        self.fovuptodate = False
 
     def log(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
@@ -371,7 +373,7 @@ class Creature():
         if self.dying() and not self.dead:
             self.log().append('You are dead!')
             for creat in self.world.creatures:
-                fovmap = fov(creat.world.walls, creat.x, creat.y, creat.sight())
+                fovmap = creat.fov()
                 if fovmap[self.x, self.y] and creat != self:
                     creat.log().append('The ' + self.name + ' bled to death!')
             self.die()
@@ -460,6 +462,7 @@ class Creature():
         self.y_old = self.y
         self.x += dx
         self.y += dy
+        self.fovuptodate = False
         for smellx in [self.x_old-1, self.x_old, self.x_old+1]:
             for smelly in [self.y_old-1, self.y_old, self.y_old+1]:
                 smelldistance = np.sqrt((smellx - self.x_old)**2 + (smelly - self.y_old)**2)
@@ -555,6 +558,14 @@ class Creature():
         wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
         return 1 + sum([part.sight() for part in self.bodyparts]) + sum([it.sight() for it in wornlist if hasattr(it, 'sight')]) + sum([it.sight() for it in wieldlist if hasattr(it, 'sight')]) + highground
 
+    def fov(self):
+        if self.fovuptodate:
+            return self._fovmap
+        else:
+            self._fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            self.fovuptodate = True
+            return self._fovmap
+
     def heal(self, part, hpgiven):
         healed = min(hpgiven, part.damagetaken)
         alreadyincapacitated = part.incapacitated()
@@ -632,7 +643,7 @@ class Creature():
             targets = []
             for creat in self.world.creatures:
                 if creat != self and not self in creat.frightenedby() and ('player' in creat.factions or 'player' in self.factions) and creat.sight() > 1:
-                    fovmap = fov(creat.world.walls, creat.x, creat.y, creat.sight())
+                    fovmap = creat.fov()
                     if fovmap[self.x, self.y]:
                         targets.append(creat)
             logtext = 'You made a scary face.'
@@ -1407,7 +1418,7 @@ class Creature():
             if not self.dead:
                 self.resolveaction()
 
-                fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+                fovmap = self.fov()
                 for i in range(self.world.width):
                     for j in range(self.world.height):
                         if fovmap[i,j]:
@@ -1446,7 +1457,7 @@ class Creature():
                         self.creaturesseen().append(creat)
                         if self in creat.creaturesseen():
                             self.log().append('You see a ' + creat.name +'. It has noticed you.')
-                            fovmap2 = fov(creat.world.walls, creat.x, creat.y, creat.sight())
+                            fovmap2 = creat.fov()
                             if fovmap2[self.x, self.y]:
                                 creat.log().append('The ' + self.name + ' noticed you!')
                         else:
@@ -1502,8 +1513,8 @@ class Zombie(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
+            fovmap = self.fov()
+            fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
                 return(['frighten', 0.75])
             else:
@@ -1594,7 +1605,7 @@ class MolePerson(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -1692,7 +1703,7 @@ class Goblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -1780,7 +1791,7 @@ class GlassElemental(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -1873,7 +1884,7 @@ class CaveOctopus(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -1962,7 +1973,7 @@ class Dog(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2065,7 +2076,7 @@ class Imp(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2156,7 +2167,7 @@ class Hobgoblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2245,7 +2256,7 @@ class MoleMonk(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2351,8 +2362,8 @@ class ZombieZorcerer(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
+            fovmap = self.fov()
+            fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
                 return(['frighten', 0.75])
             elif np.any([part.incapacitated() and not part.destroyed() for part in self.bodyparts]) and len([spell for spell in self.spellsknown() if isinstance(spell, magic.HealThyself)]) > 0 and self.mana() >= [spell for spell in self.spellsknown() if isinstance(spell, magic.HealThyself)][0].manarequirement and not self.panicked():
@@ -2453,7 +2464,7 @@ class Wolf(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2550,7 +2561,7 @@ class Drillbot(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2638,7 +2649,7 @@ class Lobgoblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2731,7 +2742,7 @@ class RevenantCaveOctopus(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -2828,8 +2839,8 @@ class Ghoul(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
+            fovmap = self.fov()
+            fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
                 return(['frighten', 0.75])
             else:
@@ -2916,7 +2927,7 @@ class SmallFireElemental(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3010,7 +3021,7 @@ class Mobgoblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3099,7 +3110,7 @@ class DireWolf(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3198,7 +3209,7 @@ class Jobgoblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3295,8 +3306,8 @@ class Ghast(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
-            fovmap2 = fov(self.world.walls, player.x, player.y, player.sight())
+            fovmap = self.fov()
+            fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
                 return(['frighten', 0.75])
             else:
@@ -3387,7 +3398,7 @@ class Nobgoblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3476,7 +3487,7 @@ class Warg(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3575,7 +3586,7 @@ class Fobgoblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3662,7 +3673,7 @@ class LargeFireElemental(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player
@@ -3756,7 +3767,7 @@ class Dobgoblin(Creature):
             self.log().append('You stumble around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
-            fovmap = fov(self.world.walls, self.x, self.y, self.sight())
+            fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
                 target = player

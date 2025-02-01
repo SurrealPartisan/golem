@@ -149,6 +149,12 @@ class Item():
     def info(self):
         return self._info
 
+    def on_wearwield(self, creat):
+        pass
+
+    def on_unwearunwield(self, creat):
+        pass
+
 class Food(Item):
     def __init__(self, owner, x, y, name, char, color, maxhp, material, weight):
         super().__init__(owner, x, y, name, char, color)
@@ -571,6 +577,12 @@ class Torch(Item):
             return 1
         else:
             return 0
+
+    def on_wearwield(self, creat):
+        creat.fovuptodate = False
+
+    def on_unwearunwield(self, creat):
+        creat.fovuptodate = False
 
 class GlassShards(Item):
     def __init__(self, owner, x, y):
@@ -1099,6 +1111,12 @@ class RingOfVision(Item):
     def sight(self):
         return 1
 
+    def on_wearwield(self, creat):
+        creat.fovuptodate = False
+
+    def on_unwearunwield(self, creat):
+        creat.fovuptodate = False
+
 class RingOfSustenance(Item):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'ring of sustenance', '=', (255, 255, 0))
@@ -1152,6 +1170,12 @@ class Eyeglasses(Item):
         else:
             return 0
 
+    def on_wearwield(self, creat):
+        creat.fovuptodate = False
+
+    def on_unwearunwield(self, creat):
+        creat.fovuptodate = False
+
 class NerdyEyeglasses(Item):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'nerdy eyeglasses', '(', (0, 255, 255))
@@ -1166,6 +1190,12 @@ class NerdyEyeglasses(Item):
             return 1
         else:
             return 0
+
+    def on_wearwield(self, creat):
+        creat.fovuptodate = False
+
+    def on_unwearunwield(self, creat):
+        creat.fovuptodate = False
 
 class GasMask(Item):
     def __init__(self, owner, x, y):

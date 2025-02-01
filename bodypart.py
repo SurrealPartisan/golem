@@ -210,6 +210,7 @@ class BodyPart(item.Item):
                     it.x = self.owner.owner.x
                     it.y = self.owner.owner.y
                     self.owner.owner.log().append('You dropped your ' + it.name)
+                    it.on_unwearunwield(self.owner.owner)
             for it in [l[0] for l in self.worn.values() if len(l) > 0]:
                 it.owner.remove(it)
                 self.owner.owner.world.items.append(it)
@@ -217,6 +218,7 @@ class BodyPart(item.Item):
                 it.x = self.owner.owner.x
                 it.y = self.owner.owner.y
                 self.owner.owner.log().append('You dropped your ' + it.name)
+                it.on_unwearunwield(self.owner.owner)
 
 
 
@@ -410,6 +412,10 @@ class HumanEye(BodyPart):
             return 3
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class HumanBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -697,6 +703,10 @@ class ZombieEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class ZombieBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'zombie brain', '*', (150, 178, 82))
@@ -980,6 +990,10 @@ class MolePersonEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class MolePersonBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mole person brain', '*', (255, 0, 255))
@@ -1248,6 +1262,10 @@ class GoblinEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class GoblinBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'goblin brain', '*', (255, 0, 255))
@@ -1431,13 +1449,19 @@ class GlassElementalEye(BodyPart):
         self.nonconductive = True
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of elemental fire. Very short-sighted on its own. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive.'
+        self._info = 'An eye consisting of elemental glass. Very short-sighted on its own. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
             return 1
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items, self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
 
 class GlassElementalBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -1748,6 +1772,10 @@ class OctopusEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class OctopusBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'cave octopus brain', '*', (255, 0, 255))
@@ -1952,6 +1980,10 @@ class DogEye(BodyPart):
             return 3
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class DogBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -2257,6 +2289,10 @@ class ImpEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class ImpBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'imp brain', '*', (255, 0, 255))
@@ -2525,6 +2561,10 @@ class HobgoblinEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class HobgoblinBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'hobgoblin brain', '*', (255, 0, 255))
@@ -2785,6 +2825,10 @@ class MoleMonkEye(BodyPart):
             return 1
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class MoleMonkBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -3073,6 +3117,10 @@ class ZombieZorcererEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class ZombieZorcererBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'zombie zorcerer brain', '*', (150, 178, 82))
@@ -3300,6 +3348,10 @@ class WolfEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class WolfBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'wolf brain', '*', (255, 0, 255))
@@ -3523,6 +3575,10 @@ class DrillbotCamera(BodyPart):
             return 4
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class DrillbotPump(BodyPart):
     def __init__(self, owner, x, y):
@@ -3817,6 +3873,10 @@ class LobgoblinEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class LobgoblinBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'lobgoblin brain', '*', (255, 0, 255))
@@ -4048,6 +4108,10 @@ class RevenantOctopusEye(BodyPart):
             return 3
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class RevenantOctopusBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -4357,6 +4421,10 @@ class GhoulEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class GhoulBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'ghoul brain', '*', (150, 178, 82))
@@ -4536,6 +4604,10 @@ class SmallFireElementalEye(BodyPart):
             return 5
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class SmallFireElementalBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -4868,6 +4940,10 @@ class MobgoblinEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class MobgoblinBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'mobgoblin brain', '*', (255, 0, 255))
@@ -5072,6 +5148,10 @@ class DireWolfEye(BodyPart):
             return 4
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class DireWolfBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -5351,6 +5431,10 @@ class JobgoblinEye(BodyPart):
             return 3
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class JobgoblinBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -5637,6 +5721,10 @@ class GhastEye(BodyPart):
             return 3
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class GhastBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -5928,6 +6016,10 @@ class NobgoblinEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class NobgoblinBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'nobgoblin brain', '*', (255, 0, 255))
@@ -6132,6 +6224,10 @@ class WargEye(BodyPart):
             return 4
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class WargBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -6412,6 +6508,10 @@ class FobgoblinEye(BodyPart):
         else:
             return 0
 
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
 class FobgoblinBrain(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'fobgoblin brain', '*', (255, 0, 255))
@@ -6629,6 +6729,10 @@ class LargeFireElementalEye(BodyPart):
             return 3
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class LargeFireElementalBrain(BodyPart):
     def __init__(self, owner, x, y):
@@ -6960,6 +7064,10 @@ class DobgoblinEye(BodyPart):
             return 3
         else:
             return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
 
 class DobgoblinBrain(BodyPart):
     def __init__(self, owner, x, y):

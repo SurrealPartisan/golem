@@ -301,7 +301,7 @@ def game():
 
     def draw():
         if not player.dead:
-            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+            fovmap = player.fov()
         else:
             fovmap = np.ones((mapwidth, mapheight))
         # Background
@@ -387,7 +387,7 @@ def game():
                     player.creaturesseen().append(npc)
                     if player in npc.creaturesseen():
                             player.log().append('You see a ' + npc.name +'. It has noticed you.')
-                            fovmap2 = fov(npc.world.walls, npc.x, npc.y, npc.sight())
+                            fovmap2 = npc.fov()
                             if fovmap2[player.x, player.y]:
                                 npc.log().append('The ' + player.name + ' noticed you!')
                     else:
@@ -977,7 +977,7 @@ def game():
                     win.write(attackdescription, x=0, y=mapheight+statuslines+i+1, bgcolor=(255,255,255), fgcolor=(0,0,0))
 
         elif gamestate == 'throwchoosetarget':
-            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+            fovmap = player.fov()
             fovmap2 = fov(cave.walls, player.x, player.y, selectedattack.weapon.throwrange, nowalls=True)
             for i in range(mapwidth):
                 for j in range(mapheight):
@@ -1438,7 +1438,7 @@ def game():
             for creat in gd.prayerclocks:
                 gd.prayerclocks[creat] += time
         for npc in [creature for creature in cave.creatures if not 'player' in creature.factions]:
-            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+            fovmap = player.fov()
             seenbefore = fovmap[npc.x, npc.y]
             npc.update(time)
             seenafter = fovmap[npc.x, npc.y]
@@ -1453,7 +1453,7 @@ def game():
 
     def detecthiddenitems():
         if not player.dead:
-            fovmap = fov(cave.walls, player.x, player.y, player.sight())
+            fovmap = player.fov()
         else:
             fovmap = np.ones((mapwidth, mapheight))
         for it in cave.items:
@@ -2156,7 +2156,7 @@ def game():
                             gamegoeson = False
 
                     elif gamestate == 'look':
-                        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+                        fovmap = player.fov()
                         if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
                             if fovmap[lookx, looky-1]:
                                 looky -= 1
@@ -2475,6 +2475,7 @@ def game():
                                     selected.wielded.append(selecteditem)
                                     selecteditem.owner = selected.wielded
                                     player.log().append('You are now wielding the ' + selecteditem.name + ' in your ' + selected.wearwieldname() + '.')
+                                    selecteditem.on_wearwield(player)
                                 else:
                                     player.log().append('Your ' + selected.wearwieldname() + ' was destroyed before you could wield the ' + selecteditem.name + '!')
                                 detecthiddenitems()
@@ -2514,6 +2515,7 @@ def game():
                                     player.inventory.append(selected)
                                     selected.owner = player.inventory
                                     player.log().append('You removed the ' + selected.name + ' from your ' + part.wearwieldname() + '.')
+                                    selecteditem.on_unwearunwield(player)
                                 detecthiddenitems()
                                 player.previousaction = ('unwield',)
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -2585,6 +2587,7 @@ def game():
                                     selected.worn[selecteditem.wearcategory].append(selecteditem)
                                     selecteditem.owner = selected.worn[selecteditem.wearcategory]
                                     player.log().append('You are now wearing the ' + selecteditem.name + ' on your ' + selected.wearwieldname() + '.')
+                                    selecteditem.on_wearwield(player)
                                 else:
                                     player.log().append('Your ' + selected.wearwieldname() + ' was destroyed before you could wear the ' + selecteditem.name + '!')
                                 detecthiddenitems()
@@ -2624,6 +2627,7 @@ def game():
                                     player.inventory.append(selected)
                                     selected.owner = player.inventory
                                     player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
+                                    selecteditem.on_unwearunwield(player)
                                 detecthiddenitems()
                                 player.previousaction = ('undress',)
                         if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -2737,7 +2741,7 @@ def game():
                             numchosen = False
 
                     elif gamestate == 'throwchoosetarget':
-                        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+                        fovmap = player.fov()
                         fovmap2 = fov(cave.walls, player.x, player.y, selectedattack.weapon.throwrange, nowalls=True)
                         if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
                             if fovmap[lookx, looky-1] and fovmap2[lookx, looky-1]:
@@ -2912,6 +2916,7 @@ def game():
                                         it.owner.remove(it)
                                         player.inventory.append(it)
                                         it.owner = player.inventory
+                                        it.on_unwearunwield(player)
                                     for part in player.bodyparts:
                                         if not part.destroyed():
                                             part.owner = player.inventory
@@ -2924,6 +2929,7 @@ def game():
                                                 it.owner = player.inventory
                                                 player.inventory.append(it)
                                                 part.wielded.remove(it)
+                                                it.on_unwearunwield(player)
                                     player.bodyparts = bodypartcandidates
                                     player.torso = player.bodyparts[0]
                                     for part in player.bodyparts:
@@ -3162,7 +3168,7 @@ def game():
                             numchosen = False
 
                     elif gamestate == 'spellchooselocation':
-                        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+                        fovmap = player.fov()
                         if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
                             if fovmap[lookx, looky-1]:
                                 looky -= 1
@@ -3208,7 +3214,7 @@ def game():
                             numchosen = False
 
                     elif gamestate == 'spellchoosetarget':
-                        fovmap = fov(cave.walls, player.x, player.y, player.sight())
+                        fovmap = player.fov()
                         if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
                             if fovmap[lookx, looky-1]:
                                 looky -= 1
