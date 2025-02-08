@@ -8,8 +8,7 @@ Created on Thu Dec  8 17:32:51 2022
 
 from collections import namedtuple
 import numpy as np
-
-from utils import smellhalflife, smellmin
+from golem.utils import smellhalflife, smellmin
 
 Altar = namedtuple('Altar', ['x', 'y', 'god'])
 

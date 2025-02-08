@@ -7,8 +7,7 @@ Created on Mon Sep 12 20:48:19 2022
 
 from collections import namedtuple
 import numpy as np
-
-import utils
+from golem import utils
 
 Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'weaponlength', 'bane', 'special', 'weapon'])
 
