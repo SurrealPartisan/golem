@@ -10,7 +10,7 @@ import numpy as np
 import bodypart
 import item
 import magic
-from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween, directionnames
+from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween, directionnames, infoblast
 
 def checkitems(creat, cave, x,y):
     for it in cave.items:
@@ -58,6 +58,8 @@ class Creature():
         self.preferredstance = 'neutral'
         self._fovmap = np.ones((mapwidth, mapheight))
         self.fovuptodate = False
+        self.alreadysmelledplayer = False
+        self.speech = True
 
     def log(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
@@ -303,15 +305,24 @@ class Creature():
                             else:
                                 self.log().append('The campfire burned and destroyed your ' + partname + '.')
                             part.on_destruction(self.dying())
+                    volume, details = self.hurtphrase([part])
+                    if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                        if len(details) == 5:
+                            self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                        elif len(details) == 4:
+                            self.log().append('You ' + details[2] + '.')
+                        infoblast(self.world, self.x, self.y, volume, [self], details)
                 self.burnclock = self.burnclock % 1
                 if self.dying() and not self.dead:
                     self.log().append("You are dead!")
                     self.die()
                     self.causeofdeath = ('burning', 'in a campfire')
+                    infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 burned to death!'))
         elif cause == 'lava':
             if not self.dying():
                 self.burnclock += time
                 for i in range(int(self.burnclock // 1)):
+                    burnedparts = []
                     for part in [part for part in self.bodyparts if not part.internal()]:
                         totaldamage = np.random.randint(1, 21)
                         resistancemultiplier = 1 - part.resistance('fire')
@@ -324,6 +335,7 @@ class Creature():
                             if np.random.rand() < 0.5 - 0.05*numlegs:
                                 part.imbalanceclock += 20*damage/part.maxhp
                         if damage > 0:
+                            burnedparts.append(part)
                             if part.parentalconnection != None:
                                 partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                             elif part == self.torso:
@@ -344,11 +356,20 @@ class Creature():
                                 else:
                                     self.log().append('The lava burned and destroyed your ' + partname + '.')
                                 part.on_destruction(self.dying())
+                    if len(burnedparts) > 0:
+                        volume, details = self.hurtphrase(burnedparts)
+                        if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                            if len(details) == 5:
+                                self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                            elif len(details) == 4:
+                                self.log().append('You ' + details[2] + '.')
+                            infoblast(self.world, self.x, self.y, volume, [self], details)
                 self.burnclock = self.burnclock % 1
                 if self.dying() and not self.dead:
                     self.log().append("You are dead!")
                     self.die()
                     self.causeofdeath = ('burning', 'in a lava pit')
+                    infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 burned to death!'))
 
     def bleed(self, time):
         totalcausers = []
@@ -411,6 +432,7 @@ class Creature():
                     if affliction == 1:
                         if self.vomitclock == 0:
                             self.log().append('The poison made you start vomiting!')
+                            infoblast(self.world, self.x, self.y, 15, [self], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
                         self.vomitclock += np.random.rand()*10
                     if affliction == 2:
                         if self.disorientedclock == 0:
@@ -505,7 +527,7 @@ class Creature():
                 self.log().append('There is an altar of ' + gd.name + ' here.')
                 if not gd in self.godsknown():
                     self.godsknown().append(gd)
-                    self.log().append('You learn the ways of ' + gd.name + ', the ' + gd.factions[0] + '-god of ' + gd.sin + '.')
+                    self.log().append('You learned the ways of ' + gd.name + ', the ' + gd.factions[0] + '-god of ' + gd.sin + '.')
                     self.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
         if self.senseofsmell() > 0:
             for creat in self.world.smells[self.x][self.y]:
@@ -525,6 +547,15 @@ class Creature():
                         self.log().append('You smell a ' + smellname + '. The smell gets stronger towards ' + directionnames[strongestdcoords] + '.')
                     else:
                         self.log().append('You smell a ' + smellname + '. The smell is at its strongest right here.')
+                    if 'player' in creat.factions:
+                        self.alreadysmelledplayer = True
+                        volume, details = self.smellplayerphrase()
+                        if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                            if len(details) == 5:
+                                self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                            elif len(details) == 4:
+                                self.log().append('You ' + details[2] + '.')
+                            infoblast(self.world, self.x, self.y, volume, [self], details)
         checkitems(self, self.world, self.x, self.y)
 
     def godlylove(self):
@@ -547,7 +578,14 @@ class Creature():
         return max(0, sum([part.smell for part in self.bodyparts] + [it.smell for it in wornlist if hasattr(it, 'smell')]))
 
     def senseofsmell(self):
-        return sum([part.senseofsmell for part in self.bodyparts if hasattr(part, 'senseofsmell')])
+        return sum([part.senseofsmell for part in self.bodyparts if hasattr(part, 'senseofsmell') and not (part.destroyed() or part.incapacitated())])
+
+    def hearing(self):
+        hearingpartlist = [part.hearing for part in self.bodyparts if hasattr(part, 'hearing') and not (part.destroyed() or part.incapacitated())]
+        if len(hearingpartlist) > 0:
+            return(min(hearingpartlist))
+        else:
+            return 0
 
     def sight(self):
         if (self.world.largerocks[self.x, self.y] or self.stance == 'flying') and sum([part.sight() for part in self.bodyparts]) > 0:
@@ -676,6 +714,27 @@ class Creature():
         else:
             self.log().append('You attempted to make a scary face, but failed.')
 
+    def attackphrase(self):
+        return (0, ())
+
+    def hurtphrase(self, parts):
+        return (0, ())
+
+    def scaredphrase(self):
+        return (0, ())
+
+    def smellplayerphrase(self):
+        return (0, ())
+
+    def seeplayerphrase(self):
+        return (0, ())
+
+    def seefactionmatephrase(self):
+        return (0, ())
+
+    def idlephrase(self):
+        return (0, ())
+
     def attackslist(self):
         return sorted([attack for part in self.bodyparts for attack in part.attackslist()], key=lambda x: x.maxdamage * x.hitprobability / x.time, reverse=True)
 
@@ -740,7 +799,14 @@ class Creature():
         else:
             self.log().append('You were unable to finish your throw.')
 
-    def fight(self, target, targetbodypart, attack, thrown=False, magical=False):
+    def fight(self, target, targetbodypart, attack, thrown=False, magical=False, sound=True, kiai=True):
+        volume, details = self.attackphrase()
+        if kiai and np.random.rand() < 0.2 and len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+            if len(details) == 5:
+                self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+            elif len(details) == 4:
+                self.log().append('You ' + details[2] + '.')
+            infoblast(self.world, self.x, self.y, volume, [self], details)
         wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         if attack.weapon in self.bodyparts or attack.weapon == None:
             attackingpart = attack.weapon
@@ -888,7 +954,7 @@ class Creature():
                                     else:
                                         totaldamage = int(1.5*totaldamage)
                                     if not thrown:
-                                        attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13])
+                                        attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
                                 if special[0] == 'knockback' and np.random.rand() < special[1]:
                                     dx = target.x - self.x
                                     dy = target.y - self.y
@@ -909,7 +975,7 @@ class Creature():
                             if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2) and not magical:
                                 totaldamage = int(1.5*totaldamage)
                                 if not thrown:
-                                    attack = item.Attack(attack[0], 'charged', 'charged', attack[3], attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13])
+                                    attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
                             if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
                                 totaldamage *= 3
                             elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
@@ -1153,50 +1219,103 @@ class Creature():
                                             target.log().append('Your ' + armor.name + ' was also destroyed!')
                                             armor.owner.remove(armor)
                                     targetbodypart.on_destruction(False)
+                                if not thrown:
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + '!'))
+                                    elif knocked_back:
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it back!'))
+                                    elif knocked_to_obstacle:
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + '!'))
+                                else:
+                                    if not knocked_back and not knocked_to_obstacle:
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + '!'))
+                                    elif knocked_back:
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it back!'))
+                                    elif knocked_to_obstacle:
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + '!'))
+                                volume, details = target.hurtphrase([targetbodypart])
+                                if damage > 0 and np.random.rand() < 0.2 and len(details) > 0 and volume > 0:
+                                    if len(details) == 5:
+                                        target.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                    elif len(details) == 4:
+                                        target.log().append('You ' + details[2] + '.')
+                                    infoblast(target.world, target.x, target.y, volume, [target], details)
                                 if not alreadyimbalanced and target.imbalanced():
                                     self.log().append('The ' + target.name + ' was imbalanced by the attack.')
                                     target.log().append('You were imbalanced by the attack.')
+                                    infoblast(target.world, target.x, target.y, 0, [target, self], ('see only', 'NAME_0 was imbalanced.'))
                                 if panic:
-                                    self.log().append('The ' + target.name + ' got panicked.')
-                                    target.log().append('You got panicked.')
+                                    volume, details = target.scaredphrase()
+                                    if len(details) > 0 and volume > 0 and self.hearing() > 0 and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                                        if len(details) == 5:
+                                            self.log().append('The ' + target.name + ' got panicked and ' + details[2] + ': "' + details[4] + '".')
+                                            target.log().append('You got panicked and ' + details[2] + ': "' + details[4] + '".')
+                                        elif len(details) == 4:
+                                            self.log().append('The ' + target.name + ' got panicked and ' + details[2] + '.')
+                                            target.log().append('You got panicked and ' + details[2] + '.')
+                                        infoblast(target.world, target.x, target.y, volume, [target, self], details)
+                                    else:
+                                        self.log().append('The ' + target.name + ' got panicked.')
+                                        target.log().append('You got panicked.')
                                 elif scared:
-                                    self.log().append('The ' + target.name + ' got scared.')
-                                    target.log().append('You got scared.')
+                                    volume, details = target.scaredphrase()
+                                    if len(details) > 0 and volume > 0 and self.hearing() > 0 and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                                        if len(details) == 5:
+                                            self.log().append('The ' + target.name + ' got scared and ' + details[2] + ': "' + details[4] + '".')
+                                            target.log().append('You got scared and ' + details[2] + ': "' + details[4] + '".')
+                                        elif len(details) == 4:
+                                            self.log().append('The ' + target.name + ' got scared and ' + details[2] + '.')
+                                            target.log().append('You got scared and ' + details[2] + '.')
+                                        infoblast(target.world, target.x, target.y, volume, [target, self], details)
+                                    else:
+                                        self.log().append('The ' + target.name + ' got scared.')
+                                        target.log().append('You got scared.')
                             else:
                                 if not thrown:
                                     if not knocked_back and not knocked_to_obstacle:
                                         self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
                                         target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ', killing it!'))
                                     elif knocked_back:
                                         self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
                                         target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it back and killing it!'))
                                     elif knocked_to_obstacle:
                                         self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
                                         target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + ' and killing it!'))
                                 else:
                                     if not knocked_back and not knocked_to_obstacle:
                                         self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', killing it!')
                                         target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ', killing it!'))
                                     elif knocked_back:
                                         self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', knocking it back and killing it!')
                                         target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', knocking you back and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it back and killing it!'))
                                     elif knocked_to_obstacle:
                                         self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
                                         target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + ' and killing it!'))
                                 target.log().append('You are dead!')
                                 if targetbodypart.destroyed():
                                     targetbodypart.on_destruction(True)
                                 target.die()
                                 target.causeofdeath = ('attack', self)
+                            if sound:
+                                infoblast(target.world, target.x, target.y, 15, [self, target], ('hear only', 'sounds of fighting'))
                         else:
                             self.log().append('The ' + target.name + ' evaded your ' + 'thrown '*thrown + attack.name +'!')
                             target.log().append("You evaded the " + self.name + "'s " + 'thrown '*thrown + attack.name +"!")
+                            infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'The NAME_1 evaded the NAME_0\'s ' + 'thrown '*thrown + attack.name +'!'))
                     else:
                         self.log().append('Your attack missed due to fear!')
                         target.log().append("The " + self.name + "'s attack missed due to fear!")
+                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'The NAME_0\'s attack missed due to fear!'))
                 else:
                     self.log().append('The ' + target.name + ' evaded your ' + attack.name + ' by being too far away!')
                     target.log().append("You evaded the " + self.name + "'s " + attack.name + " by being too far away!")
+                    infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'The NAME_1 evaded the NAME_0\'s ' + attack.name +' by being too far away!'))
             elif targetbodypart.destroyed():
                 self.log().append('The target body part is already destroyed!')
             else:
@@ -1223,6 +1342,14 @@ class Creature():
         return ['wait', 1]
 
     def resolveaction(self):
+        if not [creat for creat in self.creaturesseen() if 'player' in creat.factions] and np.random.rand() < 0.01:
+            volume, details = self.idlephrase()
+            if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                if len(details) == 5:
+                    self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                elif len(details) == 4:
+                    self.log().append('You ' + details[2] + '.')
+                infoblast(self.world, self.x, self.y, volume, [self], details)
         if self.nextaction[0] == 'move':
             if self.stance == 'running':
                 self.runstaminaused += self.nextaction[-1]*(1 + self.slowed())
@@ -1288,6 +1415,14 @@ class Creature():
                                 self.log().append('Your ' + armor.name + ' was also destroyed!')
                                 armor.owner.remove(armor)
                         part.on_destruction(False)
+                    infoblast(self.world, self.x, self.y, 10, [self], ('see and hear', 'NAME_0', 'ran into wall', 'run into wall'))
+                    volume, details = self.hurtphrase([part])
+                    if np.random.rand() < 0.5 and len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                        if len(details) == 5:
+                            self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                        elif len(details) == 4:
+                            self.log().append('You ' + details[2] + '.')
+                        infoblast(self.world, self.x, self.y, volume, [self], details)
                 else:
                     self.log().append('You ran into wall ' + partname + ' first. It killed you.')
                     self.log().append('You are dead!')
@@ -1295,6 +1430,7 @@ class Creature():
                         part.on_destruction(True)
                     self.die()
                     self.causeofdeath = ('ranintowall', partname)
+                    infoblast(self.world, self.x, self.y, 10, [self], ('see and hear', 'NAME_0', 'ran into wall and died', 'run into wall and die'))
             else:
                 self.log().append("You bumped into a wall.")
             self.previousaction = ('wait',)
@@ -1347,6 +1483,8 @@ class Creature():
                 part.imbalanceclock = max(0, part.imbalanceclock - time)
             if imbalanced and not self.imbalanced():
                 self.log().append('You regained your balance.')
+                infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 regained it\'s balance.'))
+                
             self.applypoison(time)
             self.weakenedclock = max(0, self.weakenedclock - time)
             self.disorientedclock = max(0, self.disorientedclock - time)
@@ -1356,6 +1494,7 @@ class Creature():
             self.vomitclock = max(0, self.vomitclock - time)
             if vomiting and self.vomitclock == 0:
                 self.log().append('You stopped vomiting.')
+                infoblast(self.world, self.x, self.y, 15, [self], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
             if self.starving():
                 self.starvationclock += time
                 for i in range(int(self.starvationclock // 1)):
@@ -1383,6 +1522,7 @@ class Creature():
                 part.imbalanceclock = max(0, part.imbalanceclock - time)
             if imbalanced and not self.imbalanced():
                 self.log().append('You regained your balance.')
+                infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 regained it\'s balance.'))
             self.applypoison(timetoact)
             self.weakenedclock = max(0, self.weakenedclock - timetoact)
             self.disorientedclock = max(0, self.disorientedclock - timetoact)
@@ -1392,6 +1532,7 @@ class Creature():
             self.vomitclock = max(0, self.vomitclock - timetoact)
             if vomiting and self.vomitclock == 0:
                 self.log().append('You stopped vomiting.')
+                infoblast(self.world, self.x, self.y, 15, [self], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
             if self.starving():
                 self.starvationclock += timetoact
                 for i in range(int(self.starvationclock // 1)):
@@ -1455,13 +1596,48 @@ class Creature():
                 for creat in self.world.creatures:
                     if fovmap[creat.x, creat.y] and not creat in self.creaturesseen() and creat != self:
                         self.creaturesseen().append(creat)
+                        if creat.stance != 'neutral':
+                            stancetext = 'It is ' + creat.stance + '.'
+                        else:
+                            stancetext = ''
+                        if creat.vomitclock > 0 and creat.imbalanced():
+                            vomitimbalancedtext = ' It is vomiting and imbalanced.'
+                        elif creat.vomitclock > 0:
+                            vomitimbalancedtext = ' It is vomiting.'
+                        elif creat.imbalanced():
+                            vomitimbalancedtext = ' It is imbalanced.'
+                        else:
+                            vomitimbalancedtext = ''
                         if self in creat.creaturesseen():
-                            self.log().append('You see a ' + creat.name +'. It has noticed you.')
+                            self.log().append('You see a ' + creat.name +'. It has noticed you.' + stancetext + vomitimbalancedtext)
                             fovmap2 = creat.fov()
                             if fovmap2[self.x, self.y]:
                                 creat.log().append('The ' + self.name + ' noticed you!')
+                                if np.any([faction in self.factions for faction in creat.factions]):
+                                    volume, details = self.seefactionmatephrase()
+                                    if len(details) > 0 and volume > 0:
+                                        if len(details) == 5:
+                                            self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                        elif len(details) == 4:
+                                            self.log().append('You ' + details[2] + '.')
+                                        infoblast(self.world, self.x, self.y, volume, [self], details)
+                                    volume, details = creat.seefactionmatephrase()
+                                    if len(details) > 0 and volume > 0:
+                                        if len(details) == 5:
+                                            creat.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                        elif len(details) == 4:
+                                            creat.log().append('You ' + details[2] + '.')
+                                        infoblast(creat.world, creat.x, creat.y, volume, [creat], details)
                         else:
-                            self.log().append('You see a ' + creat.name +'. It hasn\'t noticed you.')
+                            self.log().append('You see a ' + creat.name +'. It hasn\'t noticed you.' + stancetext + vomitimbalancedtext)
+                        if 'player' in creat.factions:
+                            volume, details = self.seeplayerphrase()
+                            if len(details) > 0 and volume > 0:
+                                if len(details) == 5:
+                                    self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                elif len(details) == 4:
+                                    self.log().append('You ' + details[2] + '.')
+                                infoblast(self.world, self.x, self.y, volume, [self], details)
 
                 if not self.dead:
                     self.nextaction = self.ai()
@@ -1481,6 +1657,7 @@ class Zombie(Creature):
         self.smellname = 'zombie'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.ZombieTorso(self.bodyparts, 0, 0)
         if self.name != 'one-armed zombie':
             self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
@@ -1505,12 +1682,36 @@ class Zombie(Creature):
             self.bodyparts[-2].connect('left eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
             self.bodyparts[-3].connect('right eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def randomcroak(self):
+        start = np.random.choice(['G', 'Gr', 'Grl', 'H', 'Hr', 'Hl', 'Hrl'])
+        mid = 'u'*np.random.randint(1, 4)
+        end = np.random.choice(['gh', 'lgh', 'rgh', ])
+        return start + mid + end
+
+    def attackphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
+    
+    def hurtphrase(self, parts):
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
+    
+    def scaredphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
+
+    def seeplayerphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
+    
+    def seefactionmatephrase(self):
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
+    
+    def idlephrase(self):
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -1597,12 +1798,61 @@ class MolePerson(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.MolePersonEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.MolePersonEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Take this!', 'Eat this!', 'Die!', 'Get out of our cave!'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Aagh!'
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def smellplayerphrase(self):
+        player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        if not player in self.creaturesseen():
+            phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!', 'Is it just me or does it smell like a golem in here?'])
+            return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+        else:
+            return (0, ())
+
+    def seeplayerphrase(self):
+        if self.alreadysmelledplayer:
+            phrase = np.random.choice(['Now I see you!', 'There it is!'])
+            return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+        else:
+            phrase = np.random.choice(['Intruder!', 'I see a golem!'])
+            return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Greetings, mate!', 'Hello, hello!', 'Hi!', 'Good morning, or whatever time of the day it is!'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Hum di dum.', 'Oh well...', 'Perhaps I should dig a hole.'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -1695,12 +1945,49 @@ class Goblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.GoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.GoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -1767,6 +2054,7 @@ class GlassElemental(Creature):
         self.name = 'glass elemental'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.GlassElementalTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('left arm', bodypart.GlassElementalArm(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right arm', bodypart.GlassElementalArm(self.bodyparts, 0, 0))
@@ -1783,12 +2071,33 @@ class GlassElemental(Creature):
         self.bodyparts[-6].connect('lower left eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
         self.bodyparts[-7].connect('lower right eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        return (15, ('see and hear', 'NAME_0', 'screeched', 'screech'))
+
+    def hurtphrase(self, parts):
+        return (15, ('see and hear', 'NAME_0', 'screeched', 'screech'))
+
+    def scaredphrase(self):
+        return (15, ('see and hear', 'NAME_0', 'screeched', 'screech'))
+
+    def smellplayerphrase(self):
+        return (0, ())
+
+    def seeplayerphrase(self):
+        return (15, ('see and hear', 'NAME_0', 'screeched', 'screech'))
+
+    def seefactionmatephrase(self):
+        return (0, ())
+
+    def idlephrase(self):
+        return (0, ())
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -1855,6 +2164,7 @@ class CaveOctopus(Creature):
         self.name = 'cave octopus'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.OctopusHead(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('front left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('center-front left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
@@ -1876,12 +2186,33 @@ class CaveOctopus(Creature):
         self.bodyparts[0].connect('left eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched aggressively', 'squelch aggressively'))
+
+    def hurtphrase(self, parts):
+        return (10, ('see and hear', 'NAME_0', 'squelched in pain', 'squelch in pain'))
+
+    def scaredphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched nervously', 'squelch nervously'))
+
+    def smellplayerphrase(self):
+        return (0, ())
+
+    def seeplayerphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched', 'squelch'))
+
+    def seefactionmatephrase(self):
+        return (0, ())
+
+    def idlephrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched', 'squelch'))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -1948,6 +2279,7 @@ class Dog(Creature):
         self.name = 'dog'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.DogTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('front left leg', bodypart.DogLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('front right leg', bodypart.DogLeg(self.bodyparts, 0, 0))
@@ -1965,12 +2297,36 @@ class Dog(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.DogEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.DogEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = 'G' + 'r'*np.random.randint(2, 5)
+        return (10, ('see and hear', 'NAME_0', 'growled', 'growl', phrase))
+
+    def hurtphrase(self, parts):
+        return (10, ('see and hear', 'NAME_0', 'whimpered in pain', 'whimper in pain'))
+
+    def scaredphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
+
+    def smellplayerphrase(self):
+        phrase = 'Ao-' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seeplayerphrase(self):
+        phrase = 'Ao-' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seefactionmatephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'barked', 'bark', 'Woof!'))
+
+    def idlephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'barked', 'bark', 'Woof!'))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2068,12 +2424,49 @@ class Imp(Creature):
         self.targetcoords = None
         self.stance = 'flying'
         self.preferredstance = 'flying'
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Go to hell!', 'See you in hell!', 'Feel the power of hell!'])
+        return (15, ('see and hear', 'NAME_0', 'yelled', 'yell', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Waagh!'
+        return (15, ('see and hear', 'NAME_0', 'yelled', 'yell', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['You don\'t belong here!', 'Intruder!', 'Oh hell, a golem!'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Hell-o', 'Hail'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Nyehehe!', 'Shemhamphorash!', 'Rend flesh...'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2159,12 +2552,49 @@ class Hobgoblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.HobgoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.HobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2248,12 +2678,59 @@ class MoleMonk(Creature):
         self.bodyparts[-3].connect('right eye', bodypart.MoleMonkEye(self.bodyparts, 0, 0))
         self.targetcoords = None
         self.stance = 'fasting'
-        
+
+    def attackphrase(self):
+        return (15, ('see and hear', 'NAME_0', 'yelled', 'yell', 'Hi-yah!'))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'I am losing my zen.'
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def smellplayerphrase(self):
+        player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        if not player in self.creaturesseen():
+            phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!', 'Is it just me or does it smell like a golem in here?'])
+            return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+        else:
+            return (0, ())
+
+    def seeplayerphrase(self):
+        if self.alreadysmelledplayer:
+            phrase = np.random.choice(['Now I see you!', 'There it is!'])
+            return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+        else:
+            phrase = np.random.choice(['Intruder!', 'I see a golem!'])
+            return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', 'May the force be with you.'))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['I am one with the Force, and the Force is with Me.', 'Omm...', 'Perhaps I should meditate.'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2354,12 +2831,49 @@ class ZombieZorcerer(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.ZombieZorcererEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.ZombieZorcererEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Join me in death!', 'Feel the power of necromancy!', 'Take this, mortal!', 'Braaaaaiiiins'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Aagh!'
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Fear my magic, mortal!', 'Intruder alert!', 'Red alert!', 'Braaaaaiiiins'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Greetings!', 'Hello!'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Undeath is magical', 'Braaaaaiiiins'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2439,6 +2953,7 @@ class Wolf(Creature):
         self.name = 'wolf'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.WolfTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('front left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('front right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
@@ -2456,12 +2971,36 @@ class Wolf(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.WolfEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.WolfEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = 'G' + 'r'*np.random.randint(2, 5)
+        return (10, ('see and hear', 'NAME_0', 'growled', 'growl', phrase))
+
+    def hurtphrase(self, parts):
+        return (10, ('see and hear', 'NAME_0', 'whimpered in pain', 'whimper in pain'))
+
+    def scaredphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
+
+    def smellplayerphrase(self):
+        phrase = 'Aw' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seeplayerphrase(self):
+        phrase = 'Aw' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seefactionmatephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'whined a greeting', 'whine a greeting'))
+
+    def idlephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'barked', 'bark', 'Ruff!'))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2539,6 +3078,7 @@ class Drillbot(Creature):
         self.name = 'drillbot'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.DrillbotChassis(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('front left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('back left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
@@ -2553,12 +3093,35 @@ class Drillbot(Creature):
         self.bodyparts[0].connect('left camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def hurtphrase(self, parts):
+        phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def scaredphrase(self):
+        phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2641,12 +3204,49 @@ class Lobgoblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.LobgoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.LobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2713,6 +3313,7 @@ class RevenantCaveOctopus(Creature):
         self.name = 'revenant cave octopus'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.RevenantOctopusHead(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('center-front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
@@ -2734,12 +3335,33 @@ class RevenantCaveOctopus(Creature):
         self.bodyparts[0].connect('left eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('right eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched aggressively', 'squelch aggressively'))
+
+    def hurtphrase(self, parts):
+        return (10, ('see and hear', 'NAME_0', 'squelched in pain', 'squelch in pain'))
+
+    def scaredphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched nervously', 'squelch nervously'))
+
+    def smellplayerphrase(self):
+        return (0, ())
+
+    def seeplayerphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched', 'squelch'))
+
+    def seefactionmatephrase(self):
+        return (0, ())
+
+    def idlephrase(self):
+        return (10, ('see and hear', 'NAME_0', 'squelched', 'squelch'))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2831,12 +3453,49 @@ class Ghoul(Creature):
             self.bodyparts[-2].connect('left eye', bodypart.GhoulEye(self.bodyparts, 0, 0))
             self.bodyparts[-3].connect('right eye', bodypart.GhoulEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Join me in death!', 'Take this, mortal!', 'Give me your flesh!'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Aagh!'
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Intruder alert!', 'Red alert!', 'I will eat you, golem!'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Greetings!', 'Hello!'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['I crave flesh...', 'Become undead, they said. It will be fun, they said.'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -2919,12 +3578,49 @@ class SmallFireElemental(Creature):
         self.bodyparts[-1].connect('brain', bodypart.SmallFireElementalBrain(self.bodyparts, 0, 0))
         self.bodyparts[-2].connect('eye', bodypart.SmallFireElementalEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Burn, burn, burn!', 'Burn!', 'Feel the fire!'])
+        return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Aagh!'
+        return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Something needs to be burned!', 'No smoke without fire!', 'Fire at will!'])
+        return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['How\'s it burning?', 'Burn bright!', 'Spark and crackle!'])
+        return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Burn, baby, burn!', 'We don\'t need no water!'])
+        return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3013,12 +3709,49 @@ class Mobgoblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.MobgoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.MobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3085,6 +3818,7 @@ class DireWolf(Creature):
         self.name = 'dire wolf'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.DireWolfTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('front left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('front right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
@@ -3102,12 +3836,36 @@ class DireWolf(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.DireWolfEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.DireWolfEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = 'G' + 'r'*np.random.randint(2, 5)
+        return (10, ('see and hear', 'NAME_0', 'growled', 'growl', phrase))
+
+    def hurtphrase(self, parts):
+        return (10, ('see and hear', 'NAME_0', 'whimpered in pain', 'whimper in pain'))
+
+    def scaredphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
+
+    def smellplayerphrase(self):
+        phrase = 'Ga-w' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seeplayerphrase(self):
+        phrase = 'Ga-w' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seefactionmatephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'whined a greeting', 'whine a greeting'))
+
+    def idlephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'barked', 'bark', 'Ruff!'))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3201,12 +3959,49 @@ class Jobgoblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.JobgoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.JobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3298,12 +4093,49 @@ class Ghast(Creature):
             self.bodyparts[-2].connect('left eye', bodypart.GhastEye(self.bodyparts, 0, 0))
             self.bodyparts[-3].connect('right eye', bodypart.GhastEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Join me in death!', 'Take this, mortal!', 'Give me your flesh!'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Aagh!'
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Intruder alert!', 'Red alert!', 'I will eat you, golem!'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Greetings!', 'Hello!'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['I crave flesh...', 'Become undead, they said. It will be fun, they said.'])
+        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3390,12 +4222,49 @@ class Nobgoblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.NobgoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.NobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3462,6 +4331,7 @@ class Warg(Creature):
         self.name = 'warg'
         self.x = x
         self.y = y
+        self.speech = False
         self.torso = bodypart.WargTorso(self.bodyparts, 0, 0)
         self.bodyparts[0].connect('front left leg', bodypart.WargLeg(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('front right leg', bodypart.WargLeg(self.bodyparts, 0, 0))
@@ -3479,12 +4349,36 @@ class Warg(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.WargEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.WargEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = 'G' + 'r'*np.random.randint(2, 5)
+        return (10, ('see and hear', 'NAME_0', 'growled', 'growl', phrase))
+
+    def hurtphrase(self, parts):
+        return (10, ('see and hear', 'NAME_0', 'whimpered in pain', 'whimper in pain'))
+
+    def scaredphrase(self):
+        return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
+
+    def smellplayerphrase(self):
+        phrase = 'Ar' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seeplayerphrase(self):
+        phrase = 'Ar' + 'o'*np.random.randint(2, 10) +'!'
+        return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
+
+    def seefactionmatephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'whined a greeting', 'whine a greeting'))
+
+    def idlephrase(self):
+        return (15, ('see and hear', 'NAME_0', 'barked', 'bark', 'Ruff!'))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3578,12 +4472,49 @@ class Fobgoblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.FobgoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.FobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3665,12 +4596,49 @@ class LargeFireElemental(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['BURN, BURN, BURN!', 'BURN!', 'FEEL THE FIRE!'])
+        return (20, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)].upper()
+            elif part == self.torso:
+                partname = 'TORSO'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'OUCH, MY ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname.upper() + ', PLEASE HELP ME!'
+        else:
+            phrase = 'AAGH!'
+        return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['SOMETHING NEEDS TO BE BURNED!', 'NO SMOKE WITHOUT FIRE!', 'FIRE AT WILL!'])
+        return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['HOW\'S IT BURNING?', 'BURN BRIGHT!', 'SPARK AND CRACKLE!'])
+        return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['BURN, BABY, BURN!', 'WE DON\'T NEED NO WATER!'])
+        return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
@@ -3759,12 +4727,49 @@ class Dobgoblin(Creature):
         self.bodyparts[-2].connect('left eye', bodypart.DobgoblinEye(self.bodyparts, 0, 0))
         self.bodyparts[-3].connect('right eye', bodypart.DobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-        
+
+    def attackphrase(self):
+        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Yeouch, my ' + partname + '!'
+        else:
+            phrase = 'Yeouch!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+        else:
+            phrase = 'Yikes!'
+        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
-            self.log().append('You stumble around.')
+            self.log().append('You stumbled around.')
         if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
             player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()

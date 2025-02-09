@@ -10,7 +10,7 @@ import numpy as np
 from roman import toRoman
 
 import item
-from utils import numlevels, mapwidth, mapheight
+from utils import numlevels, mapwidth, mapheight, magicwords, infoblast
 
 class Spell():
     def __init__(self, name, intelligencerequirement, manarequirement, castingtime, scalable):
@@ -21,10 +21,17 @@ class Spell():
         self.intelligencerequirement = intelligencerequirement
         self.manarequirement = manarequirement
         self.castingtime = castingtime
+        self.words = magicwords()
         self._info = 'No information available.'
 
     def cast(self, caster):
         caster.manaused += self.manarequirement
+        if caster.speech and len([p for p in caster.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+            caster.log().append('You said the magic words: "' + self.words + '"!')
+            infoblast(caster.world, caster.x, caster.y, 15, [caster], ('see and hear', 'NAME_0', 'casted a spell saying', 'cast a spell saying', self.words))
+        else:
+            caster.log().append('You casted a spell without words.')
+            infoblast(caster.world, caster.x, caster.y, 15, [caster], ('see only', 'NAME_0 casted a spell without words.'))
 
     def info(self):
         return self._info
@@ -312,7 +319,7 @@ class MissileSpell(BodypartTargetedSpell):
     def cast(self, caster, target, targetbodypart):
         super().cast(caster, target, targetbodypart)
         if not target.dead:
-            caster.fight(target, targetbodypart, item.Attack(self.name, 'blasted', 'blasted', ' with ' + self.name, ' with ' + self.name, self.hitprobability, 0, self.mindamage, self.maxdamage, self.damagetype, 0, [], [], None), magical=True)
+            caster.fight(target, targetbodypart, item.Attack(self.name, 'blasted', 'blasted', 'blast', ' with ' + self.name, ' with ' + self.name, self.hitprobability, 0, self.mindamage, self.maxdamage, self.damagetype, 0, [], [], None), magical=True, sound=False, kiai=False)
         else:
             caster.log().append('The ' + target.name + ' died while you were casting the spell.')
 

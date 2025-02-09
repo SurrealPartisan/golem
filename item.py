@@ -10,7 +10,7 @@ import numpy as np
 
 import utils
 
-Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'weaponlength', 'bane', 'special', 'weapon'])
+Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'verbinfinitive', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'weaponlength', 'bane', 'special', 'weapon'])
 
 Material = namedtuple('Material', ['damage', 'hitbonus', 'minespeed', 'armor', 'hp', 'density', 'color'])
 materials = {'leather': Material(None, None, None, 3, 25, 4, (186, 100, 13)),
@@ -322,10 +322,10 @@ class Dagger(Item):
         self._info = 'A one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time). Can be thrown up to five (plus enchantment) paces.'
 
     def attackslist(self):
-        return[Attack(self.name, 'stabbed', 'stabbed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
+        return[Attack(self.name, 'stabbed', 'stabbed', 'stab', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
 
 def randomdagger(owner, x, y, level):
     enchantment = 0
@@ -363,12 +363,12 @@ class Spear(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
+            return[Attack(self.name, 'thrust', 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
         else:
-            return[Attack(self.name, 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 100, self.bane, [('charge',)], self)]
+            return[Attack(self.name, 'thrust', 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 100, self.bane, [('charge',)], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
 
 def randomspear(owner, x, y, level):
     enchantment = 0
@@ -403,7 +403,7 @@ class Mace(Item):
         self._info = 'A weapon made of ' + material + '. Can knock enemies back.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, [('knockback', 0.2)], self)]
+        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, [('knockback', 0.2)], self)]
 
 def randommace(owner, x, y, level):
     enchantment = 0
@@ -440,9 +440,9 @@ class Staff(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 100, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 100, self.bane, [], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', 100, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', 100, self.bane, [], self)]
 
 def randomstaff(owner, x, y, level):
     enchantment = 0
@@ -478,9 +478,9 @@ class Sword(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 50, self.bane, [('internals-seeking',)], self)]
+            return[Attack(self.name, 'slashed', 'slashed', 'slash', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 50, self.bane, [('internals-seeking',)], self)]
         else:
-            return[Attack(self.name, 'slashed', 'slashed', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 50, self.bane, [('internals-seeking',)], self)]
+            return[Attack(self.name, 'slashed', 'slashed', 'slash', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 50, self.bane, [('internals-seeking',)], self)]
 
 def randomsword(owner, x, y, level):
     enchantment = 0
@@ -517,9 +517,9 @@ class PickAxe(Item):
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.25, self.mindamage, self.maxdamage, 'rough', 50, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.25, self.mindamage, self.maxdamage, 'rough', 50, self.bane, [], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 1.5, self.mindamage, int(0.67*self.maxdamage), 'rough', 50, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 1.5, self.mindamage, int(0.67*self.maxdamage), 'rough', 50, self.bane, [], self)]
 
     def minespeed(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -553,10 +553,10 @@ class Stone(Item):
         self._info = 'A blunt improvised weapon. Can be thrown up to five paces.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
+        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
 
 class Torch(Item):
     def __init__(self, owner, x, y):
@@ -570,7 +570,7 @@ class Torch(Item):
         self._info = 'A light source and an improvised weapon. When wielded, increases your range of vision, as long as you have eyes. Deals fire damage.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'fire', 50, [], [], self)]
+        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'fire', 50, [], [], self)]
 
     def sight(self):
         if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not (part.destroyed() or part.incapacitated())]) > 0:
@@ -646,6 +646,13 @@ class GlassShards(Item):
                         creat.log().append('Your ' + armor.name + ' was also destroyed!')
                         armor.owner.remove(armor)
                 part.on_destruction(False)
+            volume, details = creat.hurtphrase([part])
+            if len(details) > 0 and volume > 0 and len([p for p in creat.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                if len(details) == 5:
+                    creat.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                elif len(details) == 4:
+                    creat.log().append('You ' + details[2] + '.')
+                utils.infoblast(creat.world, creat.x, creat.y, volume, [creat], details)
         else:
             creat.log().append('You stepped on ' + self.name + '. They killed you.')
             creat.log().append('You are dead!')
@@ -732,6 +739,13 @@ class Caltrops(Item):
                         creat.log().append('Your ' + armor.name + ' was also destroyed!')
                         armor.owner.remove(armor)
                 part.on_destruction(False)
+            volume, details = creat.hurtphrase([part])
+            if len(details) > 0 and volume > 0 and len([p for p in creat.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                if len(details) == 5:
+                    creat.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                elif len(details) == 4:
+                    creat.log().append('You ' + details[2] + '.')
+                utils.infoblast(creat.world, creat.x, creat.y, volume, [creat], details)
         else:
             creat.log().append('You stepped on ' + self.name + '. They killed you.')
             creat.log().append('You are dead!')
@@ -813,6 +827,13 @@ class LooseRoundPebbles(Item):
                         creat.log().append('Your ' + armor.name + ' was also destroyed!')
                         armor.owner.remove(armor)
                 part.on_destruction(False)
+            volume, details = creat.hurtphrase([part])
+            if len(details) > 0 and volume > 0 and len([p for p in creat.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                if len(details) == 5:
+                    creat.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                elif len(details) == 4:
+                    creat.log().append('You ' + details[2] + '.')
+                utils.infoblast(creat.world, creat.x, creat.y, volume, [creat], details)
         else:
             creat.log().append('You stepped on ' + self.name + ', falling prone. It killed you.')
             creat.log().append('You are dead!')
@@ -844,12 +865,15 @@ class ExposedWires(Item):
             dmglist = []
             destroyedlist = []
             alreadyimbalanced = creat.imbalanced()
+            shockedlist = []
             for part in [part for part in creat.bodyparts if not part.destroyed()]:
                 resistancemultiplier = 1 - part.resistance('electric')
                 totaldamage = np.random.randint(0, int(self.maxdamage*(1/2)**part.bottomheight())+1)
                 damage = min(int(resistancemultiplier*totaldamage), part.hp())
                 alreadyincapacitated = part.incapacitated()
                 part.damagetaken += damage
+                if damage > 0:
+                    shockedlist.append(part)
                 if 'leg' in part.categories:
                     numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
                     if np.random.rand() < 0.5 - 0.05*numlegs:
@@ -877,6 +901,13 @@ class ExposedWires(Item):
                 creat.log().append('You stepped on ' + self.name + ', getting shocked. The shock ' + joiner.join(dmglist) + '.')
                 for part in destroyedlist:
                     part.on_destruction(False)
+                volume, details = creat.hurtphrase(shockedlist)
+                if len(details) > 0 and volume > 0 and len([p for p in creat.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                    if len(details) == 5:
+                        creat.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                    elif len(details) == 4:
+                        creat.log().append('You ' + details[2] + '.')
+                    utils.infoblast(creat.world, creat.x, creat.y, volume, [creat], details)
             else:
                 creat.log().append('You stepped on ' + self.name + ', getting shocked. It killed you.')
                 creat.log().append('You are dead!')

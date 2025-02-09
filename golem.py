@@ -13,7 +13,7 @@ import world
 import bodypart
 import god
 import magic
-from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, numkeys, drugname, infusionname, bodypartshortnames, listwithowner
+from utils import mapwidth, mapheight, numlevels, fov, sins, keynames, numkeys, drugname, infusionname, bodypartshortnames, listwithowner, infoblast
 
 pickle.settings['byref'] = True
 pygame.init()
@@ -385,13 +385,25 @@ def game():
                              fgcolor=npc.color)
                 if not player.dead and not npc in player.creaturesseen():
                     player.creaturesseen().append(npc)
+                    if npc.stance != 'neutral':
+                        stancetext = 'It is ' + npc.stance + '.'
+                    else:
+                        stancetext = ''
+                    if npc.vomitclock > 0 and npc.imbalanced():
+                        vomitimbalancedtext = ' It is vomiting and imbalanced.'
+                    elif npc.vomitclock > 0:
+                        vomitimbalancedtext = ' It is vomiting.'
+                    elif npc.imbalanced():
+                        vomitimbalancedtext = ' It is imbalanced.'
+                    else:
+                        vomitimbalancedtext = ''
                     if player in npc.creaturesseen():
-                            player.log().append('You see a ' + npc.name +'. It has noticed you.')
+                            player.log().append('You see a ' + npc.name +'. It has noticed you.' + stancetext + vomitimbalancedtext)
                             fovmap2 = npc.fov()
                             if fovmap2[player.x, player.y]:
                                 npc.log().append('The ' + player.name + ' noticed you!')
                     else:
-                        player.log().append('You see a ' + npc.name +'. It hasn\'t noticed you.')
+                        player.log().append('You see a ' + npc.name +'. It hasn\'t noticed you.' + stancetext + vomitimbalancedtext)
         if cave.lavapits[player.x,player.y]:
             bgcolor = (255, 0, 0)
         else:
@@ -451,6 +463,10 @@ def game():
             statuseffects = []
             if player.stance != 'neutral':
                 statuseffects.append((player.stance.capitalize(), (0, 255, 0)))
+            if player.sight() == 1:
+                statuseffects.append(('Blind', (255, 0, 0)))
+            if player.hearing() == 0:
+                statuseffects.append(('Deaf', (255, 0, 0)))
             if player.panicked():
                 statuseffects.append(('Panicked', (255, 0, 0)))
             elif player.scared():
@@ -533,15 +549,36 @@ def game():
             for it in cave.items:
                 if it.x == lookx and it.y == looky and (it in player.itemsseen() or not it.hidden):
                     lookinglist.append('a ' + it.name)
+            creattext = ''
             for creat in cave.creatures:
                 if creat.x == lookx and creat.y == looky:
-                    lookinglist.append('a ' + creat.name)
+                    if creat == player:
+                        lookinglist.append('yourself')
+                    else:
+                        lookinglist.append('a ' + creat.name)
+                        creatpropertylist = []
+                        if creat.stance != 'neutral':
+                            creatpropertylist.append(creat.stance)
+                        else:
+                            stancetext = ''
+                        if creat.vomitclock > 0:
+                            creatpropertylist.append('vomiting')
+                        if creat.imbalanced():
+                            creatpropertylist.append('imbalanced')
+                        if creatpropertylist:
+                            if len(creatpropertylist) > 1:
+                                creatpropertylist[-1] = 'and ' + creatpropertylist[-1]
+                            if len(creatpropertylist) > 2:
+                                joiner = ', '
+                            else:
+                                joiner = ' '
+                            creattext = ' The ' + creat.name + ' is ' + joiner.join(creatpropertylist) + '.'
             if player.sight() > 1:
                 verb = 'see '
             else:
                 verb = 'sense '
             if len(lookinglist) > 10:
-                win.write('You ' + verb + 'a large pile of things here.', x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
+                win.write('You ' + verb + 'a large pile of things here, with ' + lookinglist[-1] + ' on top.' + creattext, x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
             elif len(lookinglist) == 0:
                 win.write('You ' + verb + 'nothing here.', x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
             else:
@@ -551,7 +588,7 @@ def game():
                     joiner = ', '
                 else:
                     joiner = ' '
-                looktext = 'You ' + verb + joiner.join(lookinglist) + ' here.'
+                looktext = 'You ' + verb + joiner.join(lookinglist) + ' here.' + creattext
                 if len(looktext) <= mapwidth:
                     win.write(looktext, x=0, y=mapheight+statuslines+1, fgcolor=(255,255,255))
                 else:
@@ -1402,6 +1439,7 @@ def game():
             part.imbalanceclock = max(0, part.imbalanceclock - time)
         if imbalanced and not player.imbalanced():
             player.log().append('You regained your balance.')
+            infoblast(cave, player.x, player.y, 0, [player], ('see only', 'NAME_0 regained it\'s balance.'))
         player.applypoison(time)
         player.weakenedclock = max(0, player.weakenedclock - time)
         player.disorientedclock = max(0, player.disorientedclock - time)
@@ -1411,6 +1449,7 @@ def game():
         player.vomitclock = max(0, player.vomitclock - time)
         if vomiting and player.vomitclock == 0:
             player.log().append('You stopped vomiting.')
+            infoblast(cave, player.x, player.y, 15, [player], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
         if player.starving():
             player.starvationclock += time
             for i in range(int(player.starvationclock // 1)):
@@ -1468,7 +1507,7 @@ def game():
         stumbling = False
         if (player.disorientedclock > 0 and np.random.rand() < 0.5) or (player.imbalanced() and np.random.rand() < 0.2):
             stumbling = True
-            player.log().append('You stumble around.')
+            player.log().append('You stumbled around.')
             originaldxdy = (dx, dy)
             while (dx,dy) == (0,0) or (dx,dy) == originaldxdy:
                 dx = np.random.choice([-1,0,1])
@@ -1547,6 +1586,7 @@ def game():
                                     player.log().append('Your ' + armor.name + ' was also destroyed!')
                                     armor.owner.remove(armor)
                             part.on_destruction(False)
+                        infoblast(cave, player.x, player.y, 10, [player], ('see and hear', 'NAME_0', 'ran into wall', 'run into wall'))
                     else:
                         player.log().append('You ran into wall ' + partname + ' first. It killed you.')
                         player.log().append('You are dead!')
@@ -1554,6 +1594,7 @@ def game():
                             part.on_destruction(True)
                         player.die()
                         player.causeofdeath = ('ranintowall', partname)
+                        infoblast(cave, player.x, player.y, 10, [player], ('see and hear', 'NAME_0', 'ran into wall and died', 'run into wall and die'))
             if not player.dying():
                 player.previousaction = ('wait',)
                 detecthiddenitems()
@@ -1603,6 +1644,9 @@ def game():
                     else:
                         bodypart.TyrannosaurusSkull(cave.items, player.x+dx, player.y+dy)
                 player.previousaction = ('mine',)
+            for creat in cave.creatures:
+                if creat.fov()[player.x+dx, player.y+dy]:
+                    creat.fovuptodate = False
             detecthiddenitems()
         else:
             player.log().append("There's no wall there.")
@@ -1791,6 +1835,7 @@ def game():
                                     player.log().append('You went down the stairs.')
                                     detecthiddenitems()
                                     player.previousaction = ('move',)
+                                    player.fovuptodate = False
                                     logback = 0
 
                         if (event.key == keybindings['go up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go up'][0][1])) or (event.key == keybindings['go up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go up'][1][1])):
@@ -1813,6 +1858,7 @@ def game():
                                     player.log().append('You went up the stairs.')
                                     detecthiddenitems()
                                     player.previousaction = ('move',)
+                                    player.fovuptodate = False
                                     logback = 0
 
                         if (event.key == keybindings['look'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['look'][0][1])) or (event.key == keybindings['look'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['look'][1][1])):
@@ -2362,6 +2408,7 @@ def game():
                                                     player.log().append(stomach.foodprocessing[selected.material][2])
                                             else:
                                                 player.log().append('You got food poisoning and started vomiting!')
+                                                infoblast(cave, player.x, player.y, 15, [player], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
                                                 player.vomitclock += np.random.rand()*20
                                         elif stomach.foodprocessing[selected.material][0] == 0:
                                             player.log().append('Your stomach doesn\'t tolerate ' + selected.material + ' very well, and you are not desperate enough to try.')
@@ -2939,6 +2986,7 @@ def game():
                                     for connection, part in connectioncandidates[1:-1]:
                                         if part != None:
                                             connection.connect(part)
+                                    player.fovuptodate = False
                                     player.log().append('You have selected your bodyparts.')
                                     detecthiddenitems()
                                     player.previousaction = ('choosebody',)
