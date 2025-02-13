@@ -15,6 +15,8 @@ from golem import god
 from golem import magic
 from golem.utils import mapwidth, mapheight, numlevels, fov, sins, keynames, numkeys, drugname, infusionname, bodypartshortnames, listwithowner
 from pathlib import Path
+from golem import key_bindings
+
 
 # Get the base path, whether running as a script or as a PyInstaller EXE
 BASE_PATH = Path(getattr(sys, '_MEIPASS', Path(__file__).parent.parent))
@@ -22,6 +24,7 @@ STATICS_PATH = BASE_PATH.joinpath('statics')
 FONTS_PATH = STATICS_PATH.joinpath('fonts')
 ICON_PATH = STATICS_PATH.joinpath('icon.png')
 SAVE_PATH = BASE_PATH.joinpath('savegame.pickle')
+SAVE_KEYS_PATH = BASE_PATH.joinpath('keybindings.json')
 
 pickle.settings['byref'] = True
 pygame.init()
@@ -43,61 +46,14 @@ else:
 win.font = pygame.font.Font(font, fontsize)
 win.autoupdate = False
 
-keybindings_default = {'move north': ((pygame.locals.K_UP, False, False), (pygame.locals.K_KP8, False, True)),  # Key, shift, editable
-                       'move south': ((pygame.locals.K_DOWN, False, False), (pygame.locals.K_KP2, False, True)),
-                       'move west': ((pygame.locals.K_LEFT, False, False), (pygame.locals.K_KP4, False, True)),
-                       'move east': ((pygame.locals.K_RIGHT, False, False), (pygame.locals.K_KP6, False, True)),
-                       'move northwest': ((None, False, True), (pygame.locals.K_KP7, False, True)),
-                       'move northeast': ((None, False, True), (pygame.locals.K_KP9, False, True)),
-                       'move southwest': ((None, False, True), (pygame.locals.K_KP1, False, True)),
-                       'move southeast': ((None, False, True), (pygame.locals.K_KP3, False, True)),
-                       'wait': ((pygame.locals.K_PERIOD, False, True), (pygame.locals.K_KP5, False, True)),
-                       'repeat last attack': ((pygame.locals.K_r, False, True), (None, False, True)),
-                       'repeat second last attack': ((pygame.locals.K_r, True, True), (None, False, True)),
-                       'look': ((pygame.locals.K_l, False, True), (None, False, True)),
-                       'go down': ((pygame.locals.K_GREATER, False, True), (pygame.locals.K_LESS, True, True)),
-                       'go up': ((pygame.locals.K_LESS, False, True), (None, False, True)),
-                       'mine': ((pygame.locals.K_m, False, True), (None, False, True)),
-                       'pick up': ((pygame.locals.K_COMMA, False, True), (None, False, True)),
-                       'drop': ((pygame.locals.K_d, False, True), (None, False, True)),
-                       'throw': ((pygame.locals.K_t, False, True), (None, False, True)),
-                       'inventory': ((pygame.locals.K_i, False, True), (None, False, True)),
-                       'information': ((pygame.locals.K_i, True, True), (None, False, True)),
-                       'consume': ((pygame.locals.K_c, False, True), (None, False, True)),
-                       'cook': ((pygame.locals.K_c, True, True), (None, False, True)),
-                       'wield': ((pygame.locals.K_w, False, True), (None, False, True)),
-                       'wear': ((pygame.locals.K_w, True, True), (None, False, True)),
-                       'unwield': ((pygame.locals.K_u, False, True), (None, False, True)),
-                       'undress': ((pygame.locals.K_u, True, True), (None, False, True)),
-                       'choose stance': ((pygame.locals.K_s, False, True), (None, False, True)),
-                       'pray': ((pygame.locals.K_p, False, True), (None, False, True)),
-                       'frighten': ((pygame.locals.K_f, False, True), (None, False, True)),
-                       'cast a spell': ((pygame.locals.K_m, True, True), (None, False, True)),
-                       'read': ((pygame.locals.K_l, True, True), (None, False, True)),
-                       'write': ((pygame.locals.K_s, True, True), (None, False, True)),
-                       'list bodyparts': ((pygame.locals.K_b, False, True), (None, False, True)),
-                       'choose bodyparts': ((pygame.locals.K_b, True, True), (None, False, True)),
-                       'help': ((pygame.locals.K_h, False, True), (None, False, True)),
-                       'log up': ((pygame.locals.K_PAGEUP, False, True), (None, False, True)),
-                       'log down': ((pygame.locals.K_PAGEDOWN, False, True), (None, False, True)),
-                       'log start': ((pygame.locals.K_HOME, False, True), (None, False, True)),
-                       'log end': ((pygame.locals.K_END, False, True), (None, False, True)),
-                       'list up': ((pygame.locals.K_UP, False, False), (None, False, True)),
-                       'list down': ((pygame.locals.K_DOWN, False, False), (None, False, True)),
-                       'list select': ((pygame.locals.K_RETURN, False, False), (None, False, True)),
-                       'escape': ((pygame.locals.K_ESCAPE, False, False), (None, False, True)),
-                       }
-reservedkeys = [pygame.locals.K_UP, pygame.locals.K_DOWN, pygame.locals.K_LEFT,
-                pygame.locals.K_RIGHT, pygame.locals.K_RETURN, pygame.locals.K_ESCAPE, pygame.locals.K_LSHIFT]
+keybindings_default = key_bindings.DEFAULT_BINDINGS
+keybindings = keybindings_default
+reservedkeys = key_bindings.RESERVED_KEYS
 
-if file_exists('keybindings.pickle'):
-    with open('keybindings.pickle', 'rb') as f:
-        keybindings = pickle.load(f)
+if SAVE_KEYS_PATH.exists():
+    keys = key_bindings.load_keys(SAVE_KEYS_PATH)
 else:
-    keybindings = {}
-for command in keybindings_default:
-    if not command in keybindings:
-        keybindings[command] = keybindings_default[command]
+    keys = key_bindings.build_default_keys()
 
 
 def game():
@@ -1921,43 +1877,73 @@ def game():
 
                 if gamestate == 'free':
                     # Player movements
-                    if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(
-                            0, -1)
-                        numchosen = False
-                    if (event.key == keybindings['move south'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][0][1])) or (event.key == keybindings['move south'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(0, 1)
-                        numchosen = False
-                    if (event.key == keybindings['move west'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][0][1])) or (event.key == keybindings['move west'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(
-                            -1, 0)
-                        numchosen = False
-                    if (event.key == keybindings['move east'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][0][1])) or (event.key == keybindings['move east'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(1, 0)
-                        numchosen = False
-                    if (event.key == keybindings['move northwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][0][1])) or (event.key == keybindings['move northwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(
-                            -1, -1)
-                        numchosen = False
-                    if (event.key == keybindings['move northeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][0][1])) or (event.key == keybindings['move northeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(
-                            1, -1)
-                        numchosen = False
-                    if (event.key == keybindings['move southwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][0][1])) or (event.key == keybindings['move southwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(
-                            -1, 1)
-                        numchosen = False
-                    if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
-                        gamestate, logback, target, chosen = moveorattack(1, 1)
-                        numchosen = False
-
-                    if (event.key == keybindings['wait'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][0][1])) or (event.key == keybindings['wait'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][1][1])):
-                        updatetime(1)
-                        if not player.dying():
-                            player.log().append('You waited a second.')
-                            detecthiddenitems()
-                        logback = 0
-                        player.previousaction = ('wait',)
+                    cmd_names = keys.get_command_names(event.key)
+                    if 'move north' in cmd_names:
+                        for binding in keys['move north']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    0, -1)
+                                numchosen = False
+                                break
+                    if 'move south' in cmd_names:
+                        for binding in keys['move south']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    0, 1)
+                                numchosen = False
+                                break
+                    if 'move west' in cmd_names:
+                        for binding in keys['move west']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    -1, 0)
+                                numchosen = False
+                                break
+                    if 'move east' in cmd_names:
+                        for binding in keys['move east']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    1, 0)
+                                numchosen = False
+                                break
+                    if 'move northwest' in cmd_names:
+                        for binding in keys['move northwest']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    -1, -1)
+                                numchosen = False
+                                break
+                    if 'move northeast' in cmd_names:
+                        for binding in keys['move northeast']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    1, -1)
+                                numchosen = False
+                                break
+                    if 'move southwest' in cmd_names:
+                        for binding in keys['move southwest']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    -1, -1)
+                                numchosen = False
+                                break
+                    if 'move southeast' in cmd_names:
+                        for binding in keys['move southeast']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                gamestate, logback, target, chosen = moveorattack(
+                                    1, 1)
+                                numchosen = False
+                                break
+                    if 'wait' in cmd_names:
+                        for binding in keys['wait']:
+                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
+                                updatetime(1)
+                                if not player.dying():
+                                    player.log().append('You waited a second.')
+                                    detecthiddenitems()
+                                logback = 0
+                                player.previousaction = ('wait',)
+                                break
 
                     if (event.key == keybindings['repeat last attack'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat last attack'][0][1])) or (event.key == keybindings['repeat last attack'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat last attack'][1][1])):
                         if lastattack != None:
