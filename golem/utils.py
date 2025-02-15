@@ -37,6 +37,11 @@ def infusionname():
 def unpronounceablename(length):
     return ''.join(np.random.choice(list(letters), length)).capitalize()
 
+def magicwords():
+    length1 = np.random.randint(3, 11)
+    length2 = np.random.randint(3, 11)
+    return ''.join(np.random.choice(list(letters), length1)).upper() + ' ' + ''.join(np.random.choice(list(letters), length2)).upper()
+
 godlynicknames = {'pride': ['Majestic', 'August', 'Self-Important', 'Self-Righteous', 'Vain', 'Pompous', 'Magnificent'],
                   'greed': ['Rich', 'Plentiful', 'Luxurious', 'Opulent', 'Selfish', 'Scrooge', 'Possessive'],
                   'wrath': ['Hateful', 'Hellish', 'Raving', 'Zealous', 'Furious', 'Warrior', 'Irascible'],
@@ -59,6 +64,87 @@ def fov(walls, x, y, sight, nowalls=False):
                 fovmap[x2,y2] = 1
             if walls[x2,y2] == 1 or r >= sight: cont = False
     return fovmap
+
+def soundmap(walls, x, y, volume):
+    smap = np.ones((mapwidth, mapheight))*(-np.inf)
+    smap[x, y] = volume
+    changes = True
+    r = 0
+    while changes:
+        changes = False
+        r = min(r+1, volume)
+        for i in range(max(0, x-r), min(mapwidth, x+r+1)):
+            for j in range(max(0, y-r), min(mapheight, y+r+1)):
+                if smap[i, j] > 0:
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and i-dx >= 0 and j-dy >= 0 and i+dx < mapwidth and j+dy < mapheight and not walls[i+dx, j+dy]]
+                    for dx, dy in dxdylist:
+                        newvol = smap[i, j] - np.sqrt(dx**2 + dy**2)
+                        if smap[i+dx, j+dy] < newvol:
+                            changes = True
+                            smap[i+dx, j+dy] = newvol
+    return smap
+
+def infoblast(cave, x, y, volume, creatures_involved, details):
+    if len(details) > 0:
+        if details[0] != 'see only':
+            smap = soundmap(cave.walls, x, y, volume)
+        for creat in cave.creatures:
+            if not creat in creatures_involved:
+                if details[0] == 'see only':
+                    if creat.fov()[x, y] and creat.sight() > 1:
+                        txt = details[1]
+                        for i in range(len(creatures_involved)):
+                            if creatures_involved[i] in creat.creaturesseen():
+                                txt = txt.replace('NAME_' + repr(i), 'the ' + creatures_involved[i].name)
+                            else:
+                                txt = txt.replace('NAME_' + repr(i), 'something')
+                        txt = txt[0].upper() + txt[1:]
+                        creat.log().append(txt)
+                elif details[0] == 'hear only':
+                    if (not creat.fov()[x, y]) and smap[creat.x, creat.y] >= creat.hearing():
+                        txt = 'You heard ' + details[1] + '.'
+                        for i in range(len(creatures_involved)):
+                            if creatures_involved[i] in creat.creaturesseen():
+                                txt = txt.replace('NAME_' + repr(i), 'the ' + creatures_involved[i].name)
+                            else:
+                                txt = txt.replace('NAME_' + repr(i), 'something')
+                        creat.log().append(txt)
+                elif details[0] == 'see and hear':
+                    if creat.fov()[x, y] and creat.sight() > 1 and smap[creat.x, creat.y] >= creat.hearing():
+                        if len(details) == 5:
+                            txt = details[1] + ' ' + details[2] + ': "' + details[4] + '".'
+                        elif len(details) == 4:
+                            txt = details[1] + ' ' + details[2] + '.'
+                        for i in range(len(creatures_involved)):
+                            if creatures_involved[i] in creat.creaturesseen():
+                                txt = txt.replace('NAME_' + repr(i), 'the ' + creatures_involved[i].name)
+                            else:
+                                txt = txt.replace('NAME_' + repr(i), 'something')
+                        txt = txt[0].upper() + txt[1:]
+                        creat.log().append(txt)
+                    elif creat.fov()[x, y] and creat.sight() > 1:
+                        if len(details) == 5:
+                            txt = details[1] + ' ' + details[2] + ' something, but you couldn\'t hear what.'
+                        elif len(details) == 4:
+                            txt = 'You saw, but didn\'t hear ' + details[1] + ' ' + details[3] + '.'
+                        for i in range(len(creatures_involved)):
+                            if creatures_involved[i] in creat.creaturesseen():
+                                txt = txt.replace('NAME_' + repr(i), 'the ' + creatures_involved[i].name)
+                            else:
+                                txt = txt.replace('NAME_' + repr(i), 'something')
+                        txt = txt[0].upper() + txt[1:]
+                        creat.log().append(txt)
+                    elif smap[creat.x, creat.y] >= creat.hearing():
+                        if len(details) == 5:
+                            txt = 'You heard ' + details[1] + ' ' + details[3] + ': "' + details[4] + '".'
+                        elif len(details) == 4:
+                            txt = 'You heard ' + details[1] + ' ' + details[3] + '.'
+                        for i in range(len(creatures_involved)):
+                            if creatures_involved[i] in creat.creaturesseen():
+                                txt = txt.replace('NAME_' + repr(i), 'the ' + creatures_involved[i].name)
+                            else:
+                                txt = txt.replace('NAME_' + repr(i), 'something')
+                        creat.log().append(txt)
 
 def constantfunction(c):
     def fun():
