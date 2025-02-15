@@ -25,6 +25,7 @@ FONTS_PATH = STATICS_PATH.joinpath('fonts')
 ICON_PATH = STATICS_PATH.joinpath('icon.png')
 SAVE_PATH = BASE_PATH.joinpath('savegame.pickle')
 SAVE_KEYS_PATH = BASE_PATH.joinpath('keybindings.json')
+OLD_SAVE_KEYS_PATH = BASE_PATH.joinpath('keybindings.pickle')
 
 pickle.settings['byref'] = True
 pygame.init()
@@ -54,6 +55,9 @@ if SAVE_KEYS_PATH.exists():
     keys = key_bindings.load_keys(SAVE_KEYS_PATH)
 else:
     keys = key_bindings.build_default_keys()
+if OLD_SAVE_KEYS_PATH.exists():
+    with open(OLD_SAVE_KEYS_PATH, 'rb') as f:
+        keybindings = pickle.load(f)
 
 
 def game():
@@ -3919,14 +3923,14 @@ def keybingsoptions():
         win.update()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                with open('keybindings.pickle', 'wb') as f:
+                with open(OLD_SAVE_KEYS_PATH, 'wb') as f:
                     pickle.dump(keybindings, f)
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.locals.KEYDOWN:
                 if state == 0:
                     if event.key == pygame.locals.K_ESCAPE:
-                        with open('keybindings.pickle', 'wb') as f:
+                        with open(OLD_SAVE_KEYS_PATH, 'wb') as f:
                             pickle.dump(keybindings, f)
                         cont = True
                     if event.key == pygame.locals.K_UP:
@@ -3943,7 +3947,7 @@ def keybingsoptions():
                             if keybindings[list(keybindings.keys())[selected[0]]][selected[1]][2]:
                                 state = 1
                         elif selected[1] == 0:
-                            with open('keybindings.pickle', 'wb') as f:
+                            with open(OLD_SAVE_KEYS_PATH, 'wb') as f:
                                 pickle.dump(keybindings, f)
                             cont = True
                         else:
