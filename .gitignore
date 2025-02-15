@@ -1,3 +1,7 @@
+# Pyinstaller artefacts
+build/
+dist/
+
 # Python venv 
 bin
 pyvenv.cfg

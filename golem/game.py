@@ -2,21 +2,31 @@ import sys
 import dill as pickle
 from os.path import exists as file_exists
 from os import remove as remove_file
-
 import pygame
 import pygcurse
 import numpy as np
-
 from golem import item
 from golem import creature
 from golem import world
 from golem import bodypart
 from golem import god
 from golem import magic
-from golem.utils import mapwidth, mapheight, numlevels, fov, sins, keynames, numkeys, drugname, infusionname, bodypartshortnames, listwithowner
 from pathlib import Path
 from golem import key_bindings
-
+from golem.utils import (
+    mapwidth,
+    mapheight,
+    numlevels,
+    fov,
+    sins,
+    keynames,
+    numkeys,
+    drugname,
+    infusionname,
+    bodypartshortnames,
+    listwithowner,
+    infoblast
+)
 
 # Get the base path, whether running as a script or as a PyInstaller EXE
 BASE_PATH = Path(getattr(sys, '_MEIPASS', Path(__file__).parent.parent))
@@ -394,13 +404,27 @@ def game():
                              fgcolor=npc.color)
                 if not player.dead and not npc in player.creaturesseen():
                     player.creaturesseen().append(npc)
+                    if npc.stance != 'neutral':
+                        stancetext = 'It is ' + npc.stance + '.'
+                    else:
+                        stancetext = ''
+                    if npc.vomitclock > 0 and npc.imbalanced():
+                        vomitimbalancedtext = ' It is vomiting and imbalanced.'
+                    elif npc.vomitclock > 0:
+                        vomitimbalancedtext = ' It is vomiting.'
+                    elif npc.imbalanced():
+                        vomitimbalancedtext = ' It is imbalanced.'
+                    else:
+                        vomitimbalancedtext = ''
                     if player in npc.creaturesseen():
-                        player.log().append('You see a ' + npc.name + '. It has noticed you.')
+                        player.log().append('You see a ' + npc.name +
+                                            '. It has noticed you.' + stancetext + vomitimbalancedtext)
                         fovmap2 = npc.fov()
                         if fovmap2[player.x, player.y]:
                             npc.log().append('The ' + player.name + ' noticed you!')
                     else:
-                        player.log().append('You see a ' + npc.name + '. It hasn\'t noticed you.')
+                        player.log().append('You see a ' + npc.name +
+                                            '. It hasn\'t noticed you.' + stancetext + vomitimbalancedtext)
         if cave.lavapits[player.x, player.y]:
             bgcolor = (255, 0, 0)
         else:
@@ -475,6 +499,10 @@ def game():
             statuseffects = []
             if player.stance != 'neutral':
                 statuseffects.append((player.stance.capitalize(), (0, 255, 0)))
+            if player.sight() == 1:
+                statuseffects.append(('Blind', (255, 0, 0)))
+            if player.hearing() == 0:
+                statuseffects.append(('Deaf', (255, 0, 0)))
             if player.panicked():
                 statuseffects.append(('Panicked', (255, 0, 0)))
             elif player.scared():
@@ -561,16 +589,39 @@ def game():
             for it in cave.items:
                 if it.x == lookx and it.y == looky and (it in player.itemsseen() or not it.hidden):
                     lookinglist.append('a ' + it.name)
+            creattext = ''
             for creat in cave.creatures:
                 if creat.x == lookx and creat.y == looky:
-                    lookinglist.append('a ' + creat.name)
+                    if creat == player:
+                        lookinglist.append('yourself')
+                    else:
+                        lookinglist.append('a ' + creat.name)
+                        creatpropertylist = []
+                        if creat.stance != 'neutral':
+                            creatpropertylist.append(creat.stance)
+                        else:
+                            stancetext = ''
+                        if creat.vomitclock > 0:
+                            creatpropertylist.append('vomiting')
+                        if creat.imbalanced():
+                            creatpropertylist.append('imbalanced')
+                        if creatpropertylist:
+                            if len(creatpropertylist) > 1:
+                                creatpropertylist[-1] = 'and ' + \
+                                    creatpropertylist[-1]
+                            if len(creatpropertylist) > 2:
+                                joiner = ', '
+                            else:
+                                joiner = ' '
+                            creattext = ' The ' + creat.name + ' is ' + \
+                                joiner.join(creatpropertylist) + '.'
             if player.sight() > 1:
                 verb = 'see '
             else:
                 verb = 'sense '
             if len(lookinglist) > 10:
-                win.write('You ' + verb + 'a large pile of things here.',
-                          x=0, y=mapheight+statuslines+1, fgcolor=(255, 255, 255))
+                win.write('You ' + verb + 'a large pile of things here, with ' +
+                          lookinglist[-1] + ' on top.' + creattext, x=0, y=mapheight+statuslines+1, fgcolor=(255, 255, 255))
             elif len(lookinglist) == 0:
                 win.write('You ' + verb + 'nothing here.', x=0,
                           y=mapheight+statuslines+1, fgcolor=(255, 255, 255))
@@ -581,7 +632,8 @@ def game():
                     joiner = ', '
                 else:
                     joiner = ' '
-                looktext = 'You ' + verb + joiner.join(lookinglist) + ' here.'
+                looktext = 'You ' + verb + \
+                    joiner.join(lookinglist) + ' here.' + creattext
                 if len(looktext) <= mapwidth:
                     win.write(looktext, x=0, y=mapheight +
                               statuslines+1, fgcolor=(255, 255, 255))
@@ -1588,6 +1640,8 @@ def game():
             part.imbalanceclock = max(0, part.imbalanceclock - time)
         if imbalanced and not player.imbalanced():
             player.log().append('You regained your balance.')
+            infoblast(cave, player.x, player.y, 0, [
+                      player], ('see only', 'NAME_0 regained it\'s balance.'))
         player.applypoison(time)
         player.weakenedclock = max(0, player.weakenedclock - time)
         player.disorientedclock = max(0, player.disorientedclock - time)
@@ -1597,6 +1651,8 @@ def game():
         player.vomitclock = max(0, player.vomitclock - time)
         if vomiting and player.vomitclock == 0:
             player.log().append('You stopped vomiting.')
+            infoblast(cave, player.x, player.y, 15, [
+                      player], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
         if player.starving():
             player.starvationclock += time
             for i in range(int(player.starvationclock // 1)):
@@ -1659,7 +1715,7 @@ def game():
         stumbling = False
         if (player.disorientedclock > 0 and np.random.rand() < 0.5) or (player.imbalanced() and np.random.rand() < 0.2):
             stumbling = True
-            player.log().append('You stumble around.')
+            player.log().append('You stumbled around.')
             originaldxdy = (dx, dy)
             while (dx, dy) == (0, 0) or (dx, dy) == originaldxdy:
                 dx = np.random.choice([-1, 0, 1])
@@ -1748,6 +1804,8 @@ def game():
                                     player.log().append('Your ' + armor.name + ' was also destroyed!')
                                     armor.owner.remove(armor)
                             part.on_destruction(False)
+                        infoblast(cave, player.x, player.y, 10, [
+                                  player], ('see and hear', 'NAME_0', 'ran into wall', 'run into wall'))
                     else:
                         player.log().append('You ran into wall ' + partname + ' first. It killed you.')
                         player.log().append('You are dead!')
@@ -1755,6 +1813,8 @@ def game():
                             part.on_destruction(True)
                         player.die()
                         player.causeofdeath = ('ranintowall', partname)
+                        infoblast(cave, player.x, player.y, 10, [
+                                  player], ('see and hear', 'NAME_0', 'ran into wall and died', 'run into wall and die'))
             if not player.dying():
                 player.previousaction = ('wait',)
                 detecthiddenitems()
@@ -1815,6 +1875,9 @@ def game():
                         bodypart.TyrannosaurusSkull(
                             cave.items, player.x+dx, player.y+dy)
                 player.previousaction = ('mine',)
+            for creat in cave.creatures:
+                if creat.fov()[player.x+dx, player.y+dy]:
+                    creat.fovuptodate = False
             detecthiddenitems()
         else:
             player.log().append("There's no wall there.")
@@ -1881,73 +1944,43 @@ def game():
 
                 if gamestate == 'free':
                     # Player movements
-                    cmd_names = keys.get_command_names(event.key)
-                    if 'move north' in cmd_names:
-                        for binding in keys['move north']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    0, -1)
-                                numchosen = False
-                                break
-                    if 'move south' in cmd_names:
-                        for binding in keys['move south']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    0, 1)
-                                numchosen = False
-                                break
-                    if 'move west' in cmd_names:
-                        for binding in keys['move west']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    -1, 0)
-                                numchosen = False
-                                break
-                    if 'move east' in cmd_names:
-                        for binding in keys['move east']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    1, 0)
-                                numchosen = False
-                                break
-                    if 'move northwest' in cmd_names:
-                        for binding in keys['move northwest']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    -1, -1)
-                                numchosen = False
-                                break
-                    if 'move northeast' in cmd_names:
-                        for binding in keys['move northeast']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    1, -1)
-                                numchosen = False
-                                break
-                    if 'move southwest' in cmd_names:
-                        for binding in keys['move southwest']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    -1, -1)
-                                numchosen = False
-                                break
-                    if 'move southeast' in cmd_names:
-                        for binding in keys['move southeast']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                gamestate, logback, target, chosen = moveorattack(
-                                    1, 1)
-                                numchosen = False
-                                break
-                    if 'wait' in cmd_names:
-                        for binding in keys['wait']:
-                            if (event.mod & pygame.KMOD_SHIFT) == binding.can_shift:
-                                updatetime(1)
-                                if not player.dying():
-                                    player.log().append('You waited a second.')
-                                    detecthiddenitems()
-                                logback = 0
-                                player.previousaction = ('wait',)
-                                break
+                    if (event.key == keybindings['move north'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][0][1])) or (event.key == keybindings['move north'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move north'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(
+                            0, -1)
+                        numchosen = False
+                    if (event.key == keybindings['move south'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][0][1])) or (event.key == keybindings['move south'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move south'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(0, 1)
+                        numchosen = False
+                    if (event.key == keybindings['move west'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][0][1])) or (event.key == keybindings['move west'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move west'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(
+                            -1, 0)
+                        numchosen = False
+                    if (event.key == keybindings['move east'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][0][1])) or (event.key == keybindings['move east'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move east'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(1, 0)
+                        numchosen = False
+                    if (event.key == keybindings['move northwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][0][1])) or (event.key == keybindings['move northwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northwest'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(
+                            -1, -1)
+                        numchosen = False
+                    if (event.key == keybindings['move northeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][0][1])) or (event.key == keybindings['move northeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move northeast'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(
+                            1, -1)
+                        numchosen = False
+                    if (event.key == keybindings['move southwest'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][0][1])) or (event.key == keybindings['move southwest'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southwest'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(
+                            -1, 1)
+                        numchosen = False
+                    if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
+                        gamestate, logback, target, chosen = moveorattack(1, 1)
+                        numchosen = False
+
+                    if (event.key == keybindings['wait'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][0][1])) or (event.key == keybindings['wait'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['wait'][1][1])):
+                        updatetime(1)
+                        if not player.dying():
+                            player.log().append('You waited a second.')
+                            detecthiddenitems()
+                        logback = 0
+                        player.previousaction = ('wait',)
 
                     if (event.key == keybindings['repeat last attack'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat last attack'][0][1])) or (event.key == keybindings['repeat last attack'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['repeat last attack'][1][1])):
                         if lastattack != None:
@@ -2055,6 +2088,7 @@ def game():
                                 player.log().append('You went down the stairs.')
                                 detecthiddenitems()
                                 player.previousaction = ('move',)
+                                player.fovuptodate = False
                                 logback = 0
 
                     if (event.key == keybindings['go up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go up'][0][1])) or (event.key == keybindings['go up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['go up'][1][1])):
@@ -2077,6 +2111,7 @@ def game():
                                 player.log().append('You went up the stairs.')
                                 detecthiddenitems()
                                 player.previousaction = ('move',)
+                                player.fovuptodate = False
                                 logback = 0
 
                     if (event.key == keybindings['look'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['look'][0][1])) or (event.key == keybindings['look'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['look'][1][1])):
@@ -2666,6 +2701,8 @@ def game():
                                                     stomach.foodprocessing[selected.material][2])
                                         else:
                                             player.log().append('You got food poisoning and started vomiting!')
+                                            infoblast(cave, player.x, player.y, 15, [
+                                                      player], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
                                             player.vomitclock += np.random.rand()*20
                                     elif stomach.foodprocessing[selected.material][0] == 0:
                                         player.log().append('Your stomach doesn\'t tolerate ' + selected.material +
@@ -3297,6 +3334,7 @@ def game():
                                 for connection, part in connectioncandidates[1:-1]:
                                     if part != None:
                                         connection.connect(part)
+                                player.fovuptodate = False
                                 player.log().append('You have selected your bodyparts.')
                                 detecthiddenitems()
                                 player.previousaction = ('choosebody',)
