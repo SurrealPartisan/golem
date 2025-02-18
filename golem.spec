@@ -3,12 +3,15 @@
 
 block_cipher = None
 
-
+added_files = [
+	('statics', 'statics'),
+]
+		 
 a = Analysis(
-    ['golem.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=added_files,
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -37,7 +40,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['icon.png'],
+    icon=['statics/icon.png'],
 )
 coll = COLLECT(
     exe,

@@ -7,15 +7,17 @@ Created on Mon Sep 12 21:16:44 2022
 
 import numpy as np
 
-import bodypart
-import item
-import magic
-from utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween, directionnames, infoblast
+from golem import bodypart
+from golem import item
+from golem import magic
+from golem.utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween, directionnames, infoblast
 
-def checkitems(creat, cave, x,y):
+
+def checkitems(creat, cave, x, y):
     for it in cave.items:
         if it.x == x and it.y == y:
             creat.log().append('There is a ' + it.name + ' here.')
+
 
 class Creature():
     def __init__(self, world, world_i):
@@ -62,7 +64,8 @@ class Creature():
         self.speech = True
 
     def log(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].log
         else:
@@ -72,66 +75,76 @@ class Creature():
                 return ['You have no brain, so nothing is logged.', 'You are dead!', 'Press escape to end.']
 
     def seen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].seen
         else:
             seenlist = []
             for i in range(numlevels):
-                seenlist.append([[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
+                seenlist.append(
+                    [[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
             return seenlist
 
     def godsknown(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].godsknown
         else:
             return []
 
     def curesknown(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].curesknown
         else:
             return []
 
     def creaturesseen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].creaturesseen
         else:
             return []
 
     def frightenedby(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].frightenedby
         else:
             return []
 
     def itemsseen(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].itemsseen
         else:
             return []
 
     def spellsknown(self):
-        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (part.destroyed() or part.incapacitated())]
+        brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
         if len(brains) > 0:
             return brains[0].spellsknown
         else:
             return []
 
     def manacapacity(self):
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return sum([part.manacapacity for part in self.bodyparts if hasattr(part, 'manacapacity')]) + sum([it.manacapacity for it in wornlist if hasattr(it, 'manacapacity')])
 
     def mana(self):
         return self.manacapacity() - self.manaused
 
     def intelligence(self):
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return sum([part.intelligence for part in self.bodyparts if hasattr(part, 'intelligence')]) + sum([it.intelligence for it in wornlist if hasattr(it, 'intelligence')])
 
     def maxrunstamina(self):
@@ -158,7 +171,8 @@ class Creature():
             for stance in part.stances():
                 if (not self.panicked() and not self.scared()) or stance == 'flying':
                     known.append(stance)
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         for it in wornlist:
             if hasattr(it, 'stances'):
                 for stance in it.stances:
@@ -167,7 +181,8 @@ class Creature():
         return [str(s) for s in np.unique(known)]
 
     def imbalanced(self):
-        supportwieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0 and hasattr(part.wielded[0], 'supporting') and part.wielded[0].supporting]
+        supportwieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(
+            part.wielded) > 0 and hasattr(part.wielded[0], 'supporting') and part.wielded[0].supporting]
         return np.any([part.imbalanced() for part in self.bodyparts]) and not supportwieldlist
 
     def weakened(self):
@@ -180,13 +195,16 @@ class Creature():
         return self.panickedclock > 0
 
     def carryingcapacity(self):
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         divider = 2 if self.weakened() else 1
         return int((sum([part.carryingcapacity for part in self.bodyparts if not (part.destroyed() or part.incapacitated())]) + sum([it.carryingcapacity for it in wornlist])) / divider)
 
     def weightcarried(self):
-        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wieldlist = [part.wielded[0]
+                     for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return sum([it.weight for it in self.inventory]) + sum([it.weight for it in wornlist]) + sum([it.weight for it in wieldlist])
 
     def hungry(self):
@@ -196,25 +214,30 @@ class Creature():
         return self.hunger > 40 and len([part for part in self.bodyparts if part.material == 'living flesh']) > 0
 
     def gainhunger(self, time):
-        livingmass = sum([part.weight for part in self.bodyparts if part.material == 'living flesh'])
-        itemmultipliers = [it[0].hungermultiplier for part in self.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'hungermultiplier')]
+        livingmass = sum(
+            [part.weight for part in self.bodyparts if part.material == 'living flesh'])
+        itemmultipliers = [it[0].hungermultiplier for part in self.bodyparts for it in part.worn.values(
+        ) if len(it) > 0 and hasattr(it[0], 'hungermultiplier')]
         multiplier = 1
         for m in itemmultipliers:
             multiplier *= m
         if 'player' in self.factions:
             self.hunger += livingmass*time*multiplier*1e-06
         if self.vomitclock > 0:
-            self.hunger += livingmass*min(time, self.vomitclock)*multiplier*1e-05
+            self.hunger += livingmass * \
+                min(time, self.vomitclock)*multiplier*1e-05
 
     def starve(self):
         if not self.dying():
-            part = np.random.choice([part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()])
+            part = np.random.choice(
+                [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()])
             alreadyincapacitated = part.incapacitated()
             part.damagetaken += 1
             if part.damagetaken > part.maxhp:
                 part.damagetaken = part.maxhp
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
             if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
@@ -230,24 +253,29 @@ class Creature():
                 self.causeofdeath = ('starvation',)
 
     def suffocating(self):
-        lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
-        livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
+        lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
+        livingparts = [part for part in self.bodyparts if part.material ==
+                       'living flesh' and not part.destroyed()]
         return len(lungs) == 0 and len(livingparts) > 0
 
     def suffocate(self, time):
         if not self.dying():
-            lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
+            lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (
+                part.destroyed() or part.incapacitated())]
             if len(lungs) == 0:
                 self.suffocationclock += time
                 for i in range(int(self.suffocationclock // 1)):
-                    livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
+                    livingparts = [part for part in self.bodyparts if part.material ==
+                                   'living flesh' and not part.destroyed()]
                     for part in livingparts:
                         alreadyincapacitated = part.incapacitated()
                         part.damagetaken += 1
                         if part.damagetaken > part.maxhp:
                             part.damagetaken = part.maxhp
                         if part.parentalconnection != None:
-                            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                            partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                                part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                         elif part == self.torso:
                             partname = 'torso'
                         if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
@@ -269,55 +297,66 @@ class Creature():
                 self.burnclock += time
                 for i in range(int(self.burnclock // 1)):
                     part = self.approxfastestpart()
-                    adjacentparts = [connection.child for connection in part.childconnections.values() if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
+                    adjacentparts = [connection.child for connection in part.childconnections.values(
+                    ) if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
                     if part.parentalconnection != None and not part.parentalconnection.parent.destroyed():
                         adjacentparts.append(part.parentalconnection.parent)
                     if np.random.rand() > 0.75 and len(adjacentparts) > 0:
                         part = np.random.choice(adjacentparts)
                     totaldamage = np.random.randint(1, 11)
                     resistancemultiplier = 1 - part.resistance('fire')
-                    damage = min(int(resistancemultiplier*totaldamage), part.hp())
+                    damage = min(
+                        int(resistancemultiplier*totaldamage), part.hp())
                     alreadyincapacitated = part.incapacitated()
                     part.damagetaken += damage
                     alreadyimbalanced = self.imbalanced()
                     if 'leg' in part.categories:
-                        numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                        numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed(
+                        ) and not p.incapacitated()])
                         if np.random.rand() < 0.5 - 0.05*numlegs:
                             part.imbalanceclock += 20*damage/part.maxhp
                     if damage > 0:
                         if part.parentalconnection != None:
-                            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                            partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                                part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                         elif part == self.torso:
                             partname = 'torso'
                         if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
                             if self.imbalanced() and not alreadyimbalanced:
-                                self.log().append('The campfire burned and incapacitated your ' + partname + ', imbalancing you.')
+                                self.log().append('The campfire burned and incapacitated your ' +
+                                                  partname + ', imbalancing you.')
                             else:
                                 self.log().append('The campfire burned and incapacitated your ' + partname + '.')
                         elif not part.destroyed():
                             if self.imbalanced() and not alreadyimbalanced:
-                                self.log().append('The campfire burned your ' + partname + ', dealing ' + repr(damage) + ' damage and imbalancing you.')
+                                self.log().append('The campfire burned your ' + partname +
+                                                  ', dealing ' + repr(damage) + ' damage and imbalancing you.')
                             else:
-                                self.log().append('The campfire burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
+                                self.log().append('The campfire burned your ' + partname +
+                                                  ', dealing ' + repr(damage) + ' damage.')
                         else:
                             if self.imbalanced() and not alreadyimbalanced:
-                                self.log().append('The campfire burned and destroyed your ' + partname + ', imbalancing you.')
+                                self.log().append('The campfire burned and destroyed your ' +
+                                                  partname + ', imbalancing you.')
                             else:
                                 self.log().append('The campfire burned and destroyed your ' + partname + '.')
                             part.on_destruction(self.dying())
                     volume, details = self.hurtphrase([part])
                     if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                         if len(details) == 5:
-                            self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                            self.log().append(
+                                'You ' + details[2] + ': "' + details[4] + '".')
                         elif len(details) == 4:
                             self.log().append('You ' + details[2] + '.')
-                        infoblast(self.world, self.x, self.y, volume, [self], details)
+                        infoblast(self.world, self.x, self.y,
+                                  volume, [self], details)
                 self.burnclock = self.burnclock % 1
                 if self.dying() and not self.dead:
                     self.log().append("You are dead!")
                     self.die()
                     self.causeofdeath = ('burning', 'in a campfire')
-                    infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 burned to death!'))
+                    infoblast(self.world, self.x, self.y, 0, [
+                              self], ('see only', 'NAME_0 burned to death!'))
         elif cause == 'lava':
             if not self.dying():
                 self.burnclock += time
@@ -326,33 +365,40 @@ class Creature():
                     for part in [part for part in self.bodyparts if not part.internal()]:
                         totaldamage = np.random.randint(1, 21)
                         resistancemultiplier = 1 - part.resistance('fire')
-                        damage = min(int(resistancemultiplier*totaldamage), part.hp())
+                        damage = min(
+                            int(resistancemultiplier*totaldamage), part.hp())
                         alreadyincapacitated = part.incapacitated()
                         part.damagetaken += damage
                         alreadyimbalanced = self.imbalanced()
                         if 'leg' in part.categories:
-                            numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                            numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed(
+                            ) and not p.incapacitated()])
                             if np.random.rand() < 0.5 - 0.05*numlegs:
                                 part.imbalanceclock += 20*damage/part.maxhp
                         if damage > 0:
                             burnedparts.append(part)
                             if part.parentalconnection != None:
-                                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                             elif part == self.torso:
                                 partname = 'torso'
                             if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
                                 if self.imbalanced() and not alreadyimbalanced:
-                                    self.log().append('The lava burned and incapacitated your ' + partname + ', imbalancing you.')
+                                    self.log().append('The lava burned and incapacitated your ' +
+                                                      partname + ', imbalancing you.')
                                 else:
                                     self.log().append('The lava burned and incapacitated your ' + partname + '.')
                             elif not part.destroyed():
                                 if self.imbalanced() and not alreadyimbalanced:
-                                    self.log().append('The lava burned your ' + partname + ', dealing ' + repr(damage) + ' damage and imbalancing you.')
+                                    self.log().append('The lava burned your ' + partname +
+                                                      ', dealing ' + repr(damage) + ' damage and imbalancing you.')
                                 else:
-                                    self.log().append('The lava burned your ' + partname + ', dealing ' + repr(damage) + ' damage.')
+                                    self.log().append('The lava burned your ' + partname +
+                                                      ', dealing ' + repr(damage) + ' damage.')
                             else:
                                 if self.imbalanced() and not alreadyimbalanced:
-                                    self.log().append('The lava burned and destroyed your ' + partname + ', imbalancing you.')
+                                    self.log().append('The lava burned and destroyed your ' +
+                                                      partname + ', imbalancing you.')
                                 else:
                                     self.log().append('The lava burned and destroyed your ' + partname + '.')
                                 part.on_destruction(self.dying())
@@ -360,22 +406,26 @@ class Creature():
                         volume, details = self.hurtphrase(burnedparts)
                         if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                             if len(details) == 5:
-                                self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                self.log().append(
+                                    'You ' + details[2] + ': "' + details[4] + '".')
                             elif len(details) == 4:
                                 self.log().append('You ' + details[2] + '.')
-                            infoblast(self.world, self.x, self.y, volume, [self], details)
+                            infoblast(self.world, self.x, self.y,
+                                      volume, [self], details)
                 self.burnclock = self.burnclock % 1
                 if self.dying() and not self.dead:
                     self.log().append("You are dead!")
                     self.die()
                     self.causeofdeath = ('burning', 'in a lava pit')
-                    infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 burned to death!'))
+                    infoblast(self.world, self.x, self.y, 0, [
+                              self], ('see only', 'NAME_0 burned to death!'))
 
     def bleed(self, time):
         totalcausers = []
         for part in self.bodyparts:
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
             alreadyincapacitated = part.incapacitated()
@@ -390,7 +440,8 @@ class Creature():
                     self.log().append('Your ' + partname + ' bled out.')
                     part.on_destruction(self.dying())
                 else:
-                    self.log().append('Your ' + partname + ' took ' + repr(bled) + ' damage from bleeding.')
+                    self.log().append('Your ' + partname + ' took ' +
+                                      repr(bled) + ' damage from bleeding.')
         if self.dying() and not self.dead:
             self.log().append('You are dead!')
             for creat in self.world.creatures:
@@ -404,19 +455,24 @@ class Creature():
         return 0.1 + sum([part.endotoxicity for part in self.bodyparts if not (part.destroyed() or part.incapacitated())])
 
     def breathepoisonresistance(self):
-        lungresistances = [part.breathepoisonresistance for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
-        wornresistances = [it[0].breathepoisonresistance for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        lungresistances = [part.breathepoisonresistance for part in self.bodyparts if 'lung' in part.categories and not (
+            part.destroyed() or part.incapacitated())]
+        wornresistances = [
+            it[0].breathepoisonresistance for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return min(1, np.mean(lungresistances) + sum(wornresistances))
 
     def applypoison(self, time):
         oldaccumulation = self.accumulatedpoison
-        self.accumulatedpoison = min(50, max(0, self.accumulatedpoison + self.endotoxicity()*time))
+        self.accumulatedpoison = min(
+            50, max(0, self.accumulatedpoison + self.endotoxicity()*time))
         if self.accumulatedpoison > 5 and oldaccumulation > 5:
             self.poisonclock = self.poisonclock + time
         elif self.accumulatedpoison > 5:
-            self.poisonclock = self.poisonclock + (self.accumulatedpoison - 5)/self.endotoxicity()
+            self.poisonclock = self.poisonclock + \
+                (self.accumulatedpoison - 5)/self.endotoxicity()
         elif oldaccumulation > 5:
-            self.poisonclock = self.poisonclock + (oldaccumulation - 5)/self.endotoxicity()
+            self.poisonclock = self.poisonclock + \
+                (oldaccumulation - 5)/self.endotoxicity()
         else:
             self.poisonclock = 0
         ticks = int(self.poisonclock)
@@ -432,7 +488,8 @@ class Creature():
                     if affliction == 1:
                         if self.vomitclock == 0:
                             self.log().append('The poison made you start vomiting!')
-                            infoblast(self.world, self.x, self.y, 15, [self], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
+                            infoblast(self.world, self.x, self.y, 15, [
+                                      self], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
                         self.vomitclock += np.random.rand()*10
                     if affliction == 2:
                         if self.disorientedclock == 0:
@@ -452,15 +509,16 @@ class Creature():
 
     def overloaded(self):
         return self.weightcarried() > self.carryingcapacity()
-    
+
     def slowed(self):
         return int(self.world.spiderwebs[self.x, self.y]) + (self.slowedclock > 0)
-    
+
     def speed(self):
         if self.stance != 'flying':
             basespeed = max([part.speed() for part in self.bodyparts])
         else:
-            basespeed = max([part.flyingspeed() for part in self.bodyparts] + [it[0].flyingspeed for part in self.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'flyingspeed')])
+            basespeed = max([part.flyingspeed() for part in self.bodyparts] + [
+                            it[0].flyingspeed for part in self.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'flyingspeed')])
         if self.stance == 'running':
             basespeed *= 2
         if self.overloaded():
@@ -487,11 +545,14 @@ class Creature():
         self.fovuptodate = False
         for smellx in [self.x_old-1, self.x_old, self.x_old+1]:
             for smelly in [self.y_old-1, self.y_old, self.y_old+1]:
-                smelldistance = np.sqrt((smellx - self.x_old)**2 + (smelly - self.y_old)**2)
+                smelldistance = np.sqrt(
+                    (smellx - self.x_old)**2 + (smelly - self.y_old)**2)
                 if self in self.world.smells[smellx][smelly]:
-                    self.world.smells[smellx][smelly][self] = max(self.world.smells[smellx][smelly][self], self.smell()/(1+smelldistance))
+                    self.world.smells[smellx][smelly][self] = max(
+                        self.world.smells[smellx][smelly][self], self.smell()/(1+smelldistance))
                 else:
-                    self.world.smells[smellx][smelly][self] = self.smell()/(1+smelldistance)
+                    self.world.smells[smellx][smelly][self] = self.smell(
+                    )/(1+smelldistance)
         if self.stance != 'flying':
             for it in self.world.items:
                 if (it.x, it.y) == (self.x, self.y) and it.trap:
@@ -527,8 +588,10 @@ class Creature():
                 self.log().append('There is an altar of ' + gd.name + ' here.')
                 if not gd in self.godsknown():
                     self.godsknown().append(gd)
-                    self.log().append('You learned the ways of ' + gd.name + ', the ' + gd.factions[0] + '-god of ' + gd.sin + '.')
-                    self.log().append(gd.pronoun.capitalize() + ' ' + gd.copula + ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
+                    self.log().append('You learned the ways of ' + gd.name +
+                                      ', the ' + gd.factions[0] + '-god of ' + gd.sin + '.')
+                    self.log().append(gd.pronoun.capitalize() + ' ' + gd.copula +
+                                      ' a ' + gd.power + ' and ' + gd.attitude + ' god.')
         if self.senseofsmell() > 0:
             for creat in self.world.smells[self.x][self.y]:
                 if creat != self and self.world.smells[self.x][self.y][creat] > 1/self.senseofsmell():
@@ -537,30 +600,37 @@ class Creature():
                     for dx2 in [-1, 0, 1]:
                         for dy2 in [-1, 0, 1]:
                             if creat in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][creat] > strongestsmell:
-                                strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][creat]
+                                strongestsmell = self.world.smells[self.x +
+                                                                   dx2][self.y + dy2][creat]
                                 strongestdcoords = (dx2, dy2)
                     if hasattr(creat, 'smellname'):
                         smellname = creat.smellname
                     else:
                         smellname = creat.name
-                    if strongestdcoords != (0,0):
-                        self.log().append('You smell a ' + smellname + '. The smell gets stronger towards ' + directionnames[strongestdcoords] + '.')
+                    if strongestdcoords != (0, 0):
+                        self.log().append('You smell a ' + smellname +
+                                          '. The smell gets stronger towards ' + directionnames[strongestdcoords] + '.')
                     else:
-                        self.log().append('You smell a ' + smellname + '. The smell is at its strongest right here.')
+                        self.log().append('You smell a ' + smellname +
+                                          '. The smell is at its strongest right here.')
                     if 'player' in creat.factions:
                         self.alreadysmelledplayer = True
                         volume, details = self.smellplayerphrase()
                         if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                             if len(details) == 5:
-                                self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                self.log().append(
+                                    'You ' + details[2] + ': "' + details[4] + '".')
                             elif len(details) == 4:
                                 self.log().append('You ' + details[2] + '.')
-                            infoblast(self.world, self.x, self.y, volume, [self], details)
+                            infoblast(self.world, self.x, self.y,
+                                      volume, [self], details)
         checkitems(self, self.world, self.x, self.y)
 
     def godlylove(self):
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
-        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wieldlist = [part.wielded[0]
+                     for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
         return 1 + sum([part.godlylove for part in self.bodyparts if hasattr(part, 'godlylove') and not (part.destroyed() or part.incapacitated())]) + sum([it.godlylove for it in wornlist if hasattr(it, 'godlylove')]) + sum([it.godlylove for it in wieldlist if hasattr(it, 'godlylove')])
 
     def pray(self, gd):
@@ -574,14 +644,16 @@ class Creature():
         return 1/self.minespeed()
 
     def smell(self):
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         return max(0, sum([part.smell for part in self.bodyparts] + [it.smell for it in wornlist if hasattr(it, 'smell')]))
 
     def senseofsmell(self):
         return sum([part.senseofsmell for part in self.bodyparts if hasattr(part, 'senseofsmell') and not (part.destroyed() or part.incapacitated())])
 
     def hearing(self):
-        hearingpartlist = [part.hearing for part in self.bodyparts if hasattr(part, 'hearing') and not (part.destroyed() or part.incapacitated())]
+        hearingpartlist = [part.hearing for part in self.bodyparts if hasattr(
+            part, 'hearing') and not (part.destroyed() or part.incapacitated())]
         if len(hearingpartlist) > 0:
             return(min(hearingpartlist))
         else:
@@ -592,8 +664,10 @@ class Creature():
             highground = 1
         else:
             highground = 0
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
-        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wieldlist = [part.wielded[0]
+                     for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
         return 1 + sum([part.sight() for part in self.bodyparts]) + sum([it.sight() for it in wornlist if hasattr(it, 'sight')]) + sum([it.sight() for it in wieldlist if hasattr(it, 'sight')]) + highground
 
     def fov(self):
@@ -611,7 +685,8 @@ class Creature():
         if part.damagetaken > part.maxhp:
             part.damagetaken = part.maxhp
         if part.parentalconnection != None:
-            partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
         elif part == self.torso:
             partname = 'torso'
         if healed > 0:
@@ -638,7 +713,8 @@ class Creature():
 
     def die(self):
         if self.lasthitter != None:
-            self.lasthitter.xp += sum([part.maxhp for part in self.bodyparts]) // 2
+            self.lasthitter.xp += sum(
+                [part.maxhp for part in self.bodyparts]) // 2
         self.world.creatures.remove(self)
         for it in self.inventory:
             it.owner = self.world.items
@@ -689,7 +765,8 @@ class Creature():
                 logtext += ' No one new saw it.'
             for target in targets:
                 target.frightenedby().append(self)
-                braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
+                braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [
+                    it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
                 scared = True
                 for bravery in braveries:
                     if np.random.rand() < bravery:
@@ -739,11 +816,15 @@ class Creature():
         return sorted([attack for part in self.bodyparts for attack in part.attackslist()], key=lambda x: x.maxdamage * x.hitprobability / x.time, reverse=True)
 
     def thrownattackslist(self):
-        wieldlist = [part.wielded[0] for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
-        freelimbs = len([part for part in self.bodyparts if part.capableofwielding and part.capableofthrowing and len(part.wielded) == 0])
-        l = sorted([attack for it in wieldlist for attack in it.thrownattackslist()], key=lambda x: x.maxdamage * x.hitprobability, reverse=True)
+        wieldlist = [part.wielded[0]
+                     for part in self.bodyparts if part.capableofwielding and len(part.wielded) > 0]
+        freelimbs = len(
+            [part for part in self.bodyparts if part.capableofwielding and part.capableofthrowing and len(part.wielded) == 0])
+        l = sorted([attack for it in wieldlist for attack in it.thrownattackslist(
+        )], key=lambda x: x.maxdamage * x.hitprobability, reverse=True)
         if freelimbs > 0:
-            l += sorted([attack for it in self.inventory for attack in it.thrownattackslist()], key=lambda x: x.maxdamage * x.hitprobability, reverse=True)
+            l += sorted([attack for it in self.inventory for attack in it.thrownattackslist()],
+                        key=lambda x: x.maxdamage * x.hitprobability, reverse=True)
         return l
 
     def throwatsquare(self, targetx, targety, missile, throwinglimb, verbose=True):
@@ -759,9 +840,11 @@ class Creature():
                 else:
                     x, y = targetx, targety
                     while (x, y) == (targetx, targety) or self.world.walls[x, y]:
-                        x, y = np.random.randint(targetx-1, targetx+2), np.random.randint(targety-1, targety+2)
+                        x, y = np.random.randint(
+                            targetx-1, targetx+2), np.random.randint(targety-1, targety+2)
                     if verbose:
-                        self.log().append('You threw the ' + missile.name + ' approximately where you wanted.')
+                        self.log().append('You threw the ' + missile.name +
+                                          ' approximately where you wanted.')
                     hit = False
             else:
                 angle = anglebetween((self.x, self.y), (targetx, targety))
@@ -774,7 +857,8 @@ class Creature():
                     y = round(self.y + r*np.sin(angle))
                     newdistance = np.sqrt((x - self.x)**2 + (y - self.y)**2)
                 if verbose:
-                    self.log().append('You threw the ' + missile.name + ' but could not get it as far as you wanted.')
+                    self.log().append('You threw the ' + missile.name +
+                                      ' but could not get it as far as you wanted.')
                 hit = False
             missile.owner.remove(missile)
             missile.owner = self.world.items
@@ -790,12 +874,15 @@ class Creature():
     def throwatenemy(self, target, targetbodypart, attack, throwinglimb):
         missile = attack.weapon
         if throwinglimb in self.bodyparts and not throwinglimb.incapacitated() and not throwinglimb.destroyed():
-            hitsquare = self.throwatsquare(target.x, target.y, missile, throwinglimb, verbose=False)
+            hitsquare = self.throwatsquare(
+                target.x, target.y, missile, throwinglimb, verbose=False)
             if hitsquare:
                 self.fight(target, targetbodypart, attack, thrown=True)
             else:
-                self.log().append('You threw the ' + missile.name + ' but missed the ' + target.name + '.')
-                target.log().append('The ' + self.name + ' threw a ' + missile.name + 'at you but missed.')
+                self.log().append('You threw the ' + missile.name +
+                                  ' but missed the ' + target.name + '.')
+                target.log().append('The ' + self.name + ' threw a ' +
+                                    missile.name + 'at you but missed.')
         else:
             self.log().append('You were unable to finish your throw.')
 
@@ -803,11 +890,13 @@ class Creature():
         volume, details = self.attackphrase()
         if kiai and np.random.rand() < 0.2 and len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
             if len(details) == 5:
-                self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                self.log().append(
+                    'You ' + details[2] + ': "' + details[4] + '".')
             elif len(details) == 4:
                 self.log().append('You ' + details[2] + '.')
             infoblast(self.world, self.x, self.y, volume, [self], details)
-        wornlist = [it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
+        wornlist = [
+            it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         if attack.weapon in self.bodyparts or attack.weapon == None:
             attackingpart = attack.weapon
         elif attack.weapon.owner != self.world.items:
@@ -841,18 +930,26 @@ class Creature():
                         else:
                             highgroundcoefficient = 1
                         if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
-                            upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
-                            upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
-                            lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
-                            lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - attack.weaponlength
+                            upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + \
+                                attack.weaponlength
+                            upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + \
+                                attack.weaponlength
+                            lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - \
+                                attack.weaponlength
+                            lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - \
+                                attack.weaponlength
                             if upperfinelimit >= targetbodypart.topheight() >= lowerfinelimit or upperfinelimit >= targetbodypart.bottomheight() >= lowerfinelimit or targetbodypart.topheight() >= upperfinelimit >= targetbodypart.bottomheight():
                                 heightcoefficient = 1
                             elif targetbodypart.bottomheight() >= upperpoorlimit or targetbodypart.topheight() <= lowerpoorlimit:
                                 heightcoefficient = 0.5
                             elif upperpoorlimit > targetbodypart.bottomheight() > upperfinelimit:
-                                heightcoefficient = 0.5 + 0.5*(upperpoorlimit - targetbodypart.bottomheight())/(upperpoorlimit - upperfinelimit)
+                                heightcoefficient = 0.5 + 0.5 * \
+                                    (upperpoorlimit - targetbodypart.bottomheight()
+                                     )/(upperpoorlimit - upperfinelimit)
                             elif lowerpoorlimit < targetbodypart.topheight() < lowerfinelimit:
-                                heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                                heightcoefficient = 0.5 + 0.5 * \
+                                    (targetbodypart.topheight() - lowerpoorlimit) / \
+                                    (lowerfinelimit - lowerpoorlimit)
                         else:
                             heightcoefficient = 1
                         if hasattr(targetbodypart, 'protectiveness'):
@@ -863,8 +960,10 @@ class Creature():
                                 upperlimit = part.baseheight() + part.upperpoorlimit
                                 lowerlimit = part.baseheight() + part.lowerpoorlimit
                                 if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
-                                    protectioncoefficient *= (1 - part.protectiveness)
-                        speedcoefficient = 1/np.sqrt(target.speed()/(1 + target.slowed())+0.1)
+                                    protectioncoefficient *= (1 -
+                                                              part.protectiveness)
+                        speedcoefficient = 1 / \
+                            np.sqrt(target.speed()/(1 + target.slowed())+0.1)
                         if target.imbalanced():
                             imbalancedcoefficient = 1.25
                         else:
@@ -875,20 +974,29 @@ class Creature():
                             if targetbodypart.internal():
                                 secondarytargetbodypart = targetbodypart.parentalconnection.parent
                             elif len([connection for connection in targetbodypart.childconnections if targetbodypart.childconnections[connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()]) > 0 and np.random.rand() < 0.5:
-                                internaltarget = np.random.choice([targetbodypart.childconnections[connection].child for connection in targetbodypart.childconnections if targetbodypart.childconnections[connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()])
+                                internaltarget = np.random.choice([targetbodypart.childconnections[connection].child for connection in targetbodypart.childconnections if targetbodypart.childconnections[
+                                                                  connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()])
                                 if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
-                                    upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
-                                    upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
-                                    lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
-                                    lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - attack.weaponlength
+                                    upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + \
+                                        attack.weaponlength
+                                    upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + \
+                                        attack.weaponlength
+                                    lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - \
+                                        attack.weaponlength
+                                    lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - \
+                                        attack.weaponlength
                                     if upperfinelimit >= internaltarget.topheight() >= lowerfinelimit or upperfinelimit >= internaltarget.bottomheight() >= lowerfinelimit or internaltarget.topheight() >= upperfinelimit >= internaltarget.bottomheight():
                                         heightcoefficient = 1
                                     elif internaltarget.bottomheight() >= upperpoorlimit or internaltarget.topheight() <= lowerpoorlimit:
                                         heightcoefficient = 0.5
                                     elif upperpoorlimit > internaltarget.bottomheight() > upperfinelimit:
-                                        heightcoefficient = 0.5 + 0.5*(upperpoorlimit - internaltarget.bottomheight())/(upperpoorlimit - upperfinelimit)
+                                        heightcoefficient = 0.5 + 0.5 * \
+                                            (upperpoorlimit - internaltarget.bottomheight()
+                                             )/(upperpoorlimit - upperfinelimit)
                                     elif lowerpoorlimit < internaltarget.topheight() < lowerfinelimit:
-                                        heightcoefficient = 0.5 + 0.5*(internaltarget.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                                        heightcoefficient = 0.5 + 0.5 * \
+                                            (internaltarget.topheight(
+                                            ) - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
                                 else:
                                     heightcoefficient = 1
                                 if hasattr(internaltarget, 'protectiveness'):
@@ -899,32 +1007,44 @@ class Creature():
                                         upperlimit = part.baseheight() + part.upperpoorlimit
                                         lowerlimit = part.baseheight() + part.lowerpoorlimit
                                         if upperlimit >= internaltarget.topheight() >= lowerlimit or upperlimit >= internaltarget.bottomheight() >= lowerlimit or internaltarget.topheight() >= upperlimit >= internaltarget.bottomheight():
-                                            protectioncoefficient *= (1 - part.protectiveness)
+                                            protectioncoefficient *= (
+                                                1 - part.protectiveness)
                                 if np.random.rand() < max(min(attack.hitprobability*internaltarget.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                                     secondarytargetbodypart = targetbodypart
                                     targetbodypart = internaltarget
                         else:
-                            adjacentparts = [connection.child for connection in targetbodypart.childconnections.values() if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
+                            adjacentparts = [connection.child for connection in targetbodypart.childconnections.values(
+                            ) if not connection.child == None and not connection.child.destroyed() and not connection.child.internal()]
                             if targetbodypart.parentalconnection != None and not targetbodypart.parentalconnection.parent.destroyed():
-                                adjacentparts.append(targetbodypart.parentalconnection.parent)
+                                adjacentparts.append(
+                                    targetbodypart.parentalconnection.parent)
                             for part in [part for part in target.bodyparts if hasattr(part, 'protectiveness') and part != targetbodypart and not part.destroyed() and not part.incapacitated()]:
                                 if not part in adjacentparts:
                                     adjacentparts.append(part)
                             if len(adjacentparts) > 0:
-                                targetbodypart = np.random.choice(adjacentparts)
+                                targetbodypart = np.random.choice(
+                                    adjacentparts)
                                 if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
-                                    upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + attack.weaponlength
-                                    upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + attack.weaponlength
-                                    lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - attack.weaponlength
-                                    lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - attack.weaponlength
+                                    upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + \
+                                        attack.weaponlength
+                                    upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + \
+                                        attack.weaponlength
+                                    lowerfinelimit = attackingpart.baseheight() + attackingpart.lowerfinelimit - \
+                                        attack.weaponlength
+                                    lowerpoorlimit = attackingpart.baseheight() + attackingpart.lowerpoorlimit - \
+                                        attack.weaponlength
                                     if upperfinelimit >= targetbodypart.topheight() >= lowerfinelimit or upperfinelimit >= targetbodypart.bottomheight() >= lowerfinelimit or targetbodypart.topheight() >= upperfinelimit >= targetbodypart.bottomheight():
                                         heightcoefficient = 1
                                     elif targetbodypart.bottomheight() >= upperpoorlimit or targetbodypart.topheight() <= lowerpoorlimit:
                                         heightcoefficient = 0.5
                                     elif upperpoorlimit > targetbodypart.bottomheight() > upperfinelimit:
-                                        heightcoefficient = 0.5 + 0.5*(upperpoorlimit - targetbodypart.bottomheight())/(upperpoorlimit - upperfinelimit)
+                                        heightcoefficient = 0.5 + 0.5 * \
+                                            (upperpoorlimit - targetbodypart.bottomheight()
+                                             )/(upperpoorlimit - upperfinelimit)
                                     elif lowerpoorlimit < targetbodypart.topheight() < lowerfinelimit:
-                                        heightcoefficient = 0.5 + 0.5*(targetbodypart.topheight() - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
+                                        heightcoefficient = 0.5 + 0.5 * \
+                                            (targetbodypart.topheight(
+                                            ) - lowerpoorlimit)/(lowerfinelimit - lowerpoorlimit)
                                 else:
                                     heightcoefficient = 1
                                 if hasattr(targetbodypart, 'protectiveness'):
@@ -935,7 +1055,8 @@ class Creature():
                                         upperlimit = part.baseheight() + part.upperpoorlimit
                                         lowerlimit = part.baseheight() + part.lowerpoorlimit
                                         if upperlimit >= targetbodypart.topheight() >= lowerlimit or upperlimit >= targetbodypart.bottomheight() >= lowerlimit or targetbodypart.topheight() >= upperlimit >= targetbodypart.bottomheight():
-                                            protectioncoefficient *= (1 - part.protectiveness)
+                                            protectioncoefficient *= (
+                                                1 - part.protectiveness)
                                 if np.random.rand() < max(min(attack.hitprobability*targetbodypart.defensecoefficient()*attackerstancecoefficient*defenderstancecoefficient*highgroundcoefficient*heightcoefficient*protectioncoefficient*speedcoefficient*imbalancedcoefficient, 0.95), 0.05):
                                     hit = True
                                 else:
@@ -944,7 +1065,8 @@ class Creature():
                                 hit = False
                         if hit:
                             target.lasthitter = self
-                            totaldamage = np.random.randint(attack.mindamage, attack.maxdamage+1)
+                            totaldamage = np.random.randint(
+                                attack.mindamage, attack.maxdamage+1)
                             knocked_back = False
                             knocked_to_obstacle = ''
                             for special in attack.special:
@@ -954,7 +1076,8 @@ class Creature():
                                     else:
                                         totaldamage = int(1.5*totaldamage)
                                     if not thrown:
-                                        attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
+                                        attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6],
+                                                             attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
                                 if special[0] == 'knockback' and np.random.rand() < special[1]:
                                     dx = target.x - self.x
                                     dy = target.y - self.y
@@ -975,7 +1098,8 @@ class Creature():
                             if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2) and not magical:
                                 totaldamage = int(1.5*totaldamage)
                                 if not thrown:
-                                    attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6], attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
+                                    attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6],
+                                                         attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
                             if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
                                 totaldamage *= 3
                             elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
@@ -989,7 +1113,8 @@ class Creature():
                                 totaldamage //= 2
                             if targetbodypart.armor() != None:
                                 armor = targetbodypart.armor()
-                                armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+                                armordamage = min(armor.hp(), min(
+                                    totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
                                 armor.damagetaken += armordamage
                             else:
                                 armor = None
@@ -998,11 +1123,16 @@ class Creature():
                                 banemultiplier = 2
                             else:
                                 banemultiplier = 1
-                            armorpassingdamage = banemultiplier*(totaldamage - armordamage)
+                            armorpassingdamage = banemultiplier * \
+                                (totaldamage - armordamage)
                             if secondarytargetbodypart != None and armorpassingdamage > 1:
-                                _secondarydamage = np.random.randint(1, armorpassingdamage)
-                                secondaryresistancemultiplier = 1 - secondarytargetbodypart.resistance(attack.damagetype)
-                                secondarydamage = min(int(secondaryresistancemultiplier*_secondarydamage), secondarytargetbodypart.hp())
+                                _secondarydamage = np.random.randint(
+                                    1, armorpassingdamage)
+                                secondaryresistancemultiplier = 1 - \
+                                    secondarytargetbodypart.resistance(
+                                        attack.damagetype)
+                                secondarydamage = min(
+                                    int(secondaryresistancemultiplier*_secondarydamage), secondarytargetbodypart.hp())
                             elif secondarytargetbodypart != None and armorpassingdamage < 2:
                                 targetbodypart = secondarytargetbodypart
                                 secondarytargetbodypart = None
@@ -1011,13 +1141,16 @@ class Creature():
                             else:
                                 _secondarydamage = 0
                                 secondarydamage = 0
-                            resistancemultiplier = 1 - targetbodypart.resistance(attack.damagetype)
-                            damage = min(int(resistancemultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
+                            resistancemultiplier = 1 - \
+                                targetbodypart.resistance(attack.damagetype)
+                            damage = min(int(
+                                resistancemultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
                             bleed = False
                             for special in attack.special:
                                 if special[0] == 'bleed' and np.random.rand() < special[1]:
                                     bleed = True
-                                    targetbodypart.bleedclocks.append((damage, 0, self))
+                                    targetbodypart.bleedclocks.append(
+                                        (damage, 0, self))
                             alreadyincapacitated = targetbodypart.incapacitated()
                             if secondarytargetbodypart != None:
                                 secondaryalreadyincapacitated = secondarytargetbodypart.incapacitated()
@@ -1025,22 +1158,28 @@ class Creature():
                                 targetparthalfhp = targetbodypart.maxhp / 2
                                 if secondarytargetbodypart != None:
                                     secondarytargetparthalfhp = secondarytargetbodypart.maxhp / 2
-                                totalthreequartershp = sum([part.maxhp for part in target.bodyparts])/2*3/4
+                                totalthreequartershp = sum(
+                                    [part.maxhp for part in target.bodyparts])/2*3/4
                             else:
                                 targetparthalfhp = targetbodypart.maxhp * difficulty / 2
                                 if secondarytargetbodypart != None:
                                     secondarytargetparthalfhp = secondarytargetbodypart.maxhp * difficulty / 2
-                                totalthreequartershp = sum([part.maxhp for part in target.bodyparts])/2*3/4*difficulty
-                            vitalalreadyunderhalf = (targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (secondarytargetbodypart != None and secondarytargetbodypart.vital() and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp)
-                            totalalreadyunderquarter = sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp
+                                totalthreequartershp = sum(
+                                    [part.maxhp for part in target.bodyparts])/2*3/4*difficulty
+                            vitalalreadyunderhalf = (targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (
+                                secondarytargetbodypart != None and secondarytargetbodypart.vital() and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp)
+                            totalalreadyunderquarter = sum(
+                                [part.damagetaken for part in target.bodyparts]) > totalthreequartershp
                             targetbodypart.damagetaken += damage
                             if secondarytargetbodypart != None:
                                 secondarytargetbodypart.damagetaken += secondarydamage
-                            reasontopanic = (not vitalalreadyunderhalf and ((targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (secondarytargetbodypart != None and secondarytargetbodypart.vital() and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp))) or (not totalalreadyunderquarter and sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp)
+                            reasontopanic = (not vitalalreadyunderhalf and ((targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (secondarytargetbodypart != None and secondarytargetbodypart.vital(
+                            ) and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp))) or (not totalalreadyunderquarter and sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp)
                             panic = False
                             scared = False
                             if reasontopanic:
-                                braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
+                                braveries = [part.bravery for part in target.bodyparts if part.bravery > 0] + [
+                                    it[0].bravery for part in target.bodyparts for it in part.worn.values() if len(it) > 0 and hasattr(it[0], 'bravery')]
                                 scared = True
                                 for bravery in braveries:
                                     if np.random.rand() < bravery:
@@ -1051,23 +1190,30 @@ class Creature():
                                         if np.random.rand() < bravery:
                                             panic = False
                                     if panic:
-                                        target.panickedclock += 2*(damage+secondarydamage)
+                                        target.panickedclock += 2 * \
+                                            (damage+secondarydamage)
                                     else:
-                                        target.scaredclock += 2*(damage+secondarydamage)
+                                        target.scaredclock += 2 * \
+                                            (damage+secondarydamage)
                             if 'leg' in targetbodypart.categories:
-                                numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()])
+                                numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed(
+                                ) and not part.incapacitated()])
                                 if np.random.rand() < 0.5 - 0.05*numlegs:
                                     targetbodypart.imbalanceclock += 20*damage/targetbodypart.maxhp
                             if secondarytargetbodypart != None and 'leg' in secondarytargetbodypart.categories:
-                                numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed() and not part.incapacitated()])
+                                numlegs = len([part for part in target.bodyparts if 'leg' in part.categories and not part.destroyed(
+                                ) and not part.incapacitated()])
                                 if np.random.rand() < 0.5 - 0.05*numlegs:
-                                    secondarytargetbodypart.imbalanceclock += 20*secondarydamage/secondarytargetbodypart.maxhp
+                                    secondarytargetbodypart.imbalanceclock += 20 * \
+                                        secondarydamage/secondarytargetbodypart.maxhp
                             if targetbodypart.parentalconnection != None:
-                                partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
+                                partname = list(targetbodypart.parentalconnection.parent.childconnections.keys())[list(
+                                    targetbodypart.parentalconnection.parent.childconnections.values()).index(targetbodypart.parentalconnection)]
                             elif targetbodypart == target.torso:
                                 partname = 'torso'
                             if secondarytargetbodypart != None and secondarytargetbodypart.parentalconnection != None:
-                                secondarypartname = list(secondarytargetbodypart.parentalconnection.parent.childconnections.keys())[list(secondarytargetbodypart.parentalconnection.parent.childconnections.values()).index(secondarytargetbodypart.parentalconnection)]
+                                secondarypartname = list(secondarytargetbodypart.parentalconnection.parent.childconnections.keys())[list(
+                                    secondarytargetbodypart.parentalconnection.parent.childconnections.values()).index(secondarytargetbodypart.parentalconnection)]
                             elif secondarytargetbodypart == target.torso:
                                 secondarypartname = 'torso'
                             else:
@@ -1075,24 +1221,34 @@ class Creature():
                             if not target.dying():
                                 if targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed() and secondarytargetbodypart != None and secondarytargetbodypart.incapacitated() and not secondaryalreadyincapacitated and not secondarytargetbodypart.destroyed():
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + ' and your ' + secondarypartname + attack.post3rd + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' +
+                                                          partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd +
+                                                            ' and incapacitated your ' + partname + ' and your ' + secondarypartname + attack.post3rd + '!')
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you back!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname +
+                                                          ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' +
+                                                            partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you back!')
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and incapacitated the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' and the ' +
+                                                          secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' +
+                                                            partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
-                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                            target.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                                         else:
                                             target.log().append('Your ' + armor.name + ' was destroyed!')
                                             armor.owner.remove(armor)
                                 elif targetbodypart.incapacitated() and not alreadyincapacitated and not targetbodypart.destroyed():
                                     if secondarytargetbodypart != None and not secondarytargetbodypart.destroyed():
-                                        secondarymessage1 = ', dealing ' + repr(secondarydamage) + ' damage to its ' + secondarypartname
-                                        secondarymessage2 = ', dealing ' + repr(secondarydamage) + ' damage to your ' + secondarypartname
+                                        secondarymessage1 = ', dealing ' + \
+                                            repr(secondarydamage) + \
+                                            ' damage to its ' + secondarypartname
+                                        secondarymessage2 = ', dealing ' + \
+                                            repr(secondarydamage) + \
+                                            ' damage to your ' + secondarypartname
                                         commaorand = ' and'
                                     elif secondarytargetbodypart != None and secondarytargetbodypart.destroyed():
                                         secondarymessage1 = 'destroying its ' + secondarypartname
@@ -1103,26 +1259,35 @@ class Creature():
                                         secondarymessage2 = ''
                                         commaorand = ','
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + secondarymessage2 + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' +
+                                                          partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd +
+                                                            ' and incapacitated your ' + partname + attack.post3rd + secondarymessage2 + '!')
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it back!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you back!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname +
+                                                          ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' +
+                                                            partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you back!')
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it against the ' + knocked_to_obstacle + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you against the ' + knocked_to_obstacle + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and incapacitated the ' + partname + ' of the ' +
+                                                          target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and incapacitated your ' +
+                                                            partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
-                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                            target.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                                         else:
                                             target.log().append('Your ' + armor.name + ' was destroyed!')
                                             armor.owner.remove(armor)
                                     if secondarytargetbodypart != None and secondarytargetbodypart.destroyed():
-                                        secondarytargetbodypart.on_destruction(False)
+                                        secondarytargetbodypart.on_destruction(
+                                            False)
                                 elif not targetbodypart.destroyed():
                                     if secondarytargetbodypart != None and not (secondarytargetbodypart.incapacitated() and not secondaryalreadyincapacitated) and not secondarytargetbodypart.destroyed():
-                                        secondarymessage1 = '(' + repr(secondarydamage) + ' to the ' + secondarypartname + ')'
-                                        secondarymessage2 = '(' + repr(secondarydamage) + ' to the ' + secondarypartname + ')'
+                                        secondarymessage1 = '(' + repr(
+                                            secondarydamage) + ' to the ' + secondarypartname + ')'
+                                        secondarymessage2 = '(' + repr(
+                                            secondarydamage) + ' to the ' + secondarypartname + ')'
                                         andorspace = ' '
                                         commaorspace = ' '
                                     elif secondarytargetbodypart != None and not secondarytargetbodypart.destroyed():
@@ -1142,58 +1307,85 @@ class Creature():
                                         commaorspace = ''
                                     if not thrown:
                                         if not bleed and not knocked_back and not knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + '!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + '!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' the ' + target.name + ' in the ' +
+                                                              partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' +
+                                                                partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + '!')
                                         elif bleed:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and making it bleed!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and making you bleed!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' the ' + target.name + ' in the ' + partname +
+                                                              attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and making it bleed!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname +
+                                                                attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and making you bleed!')
                                         elif knocked_back:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and knocking it back!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and knocking you back!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' the ' + target.name + ' in the ' + partname +
+                                                              attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and knocking it back!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname +
+                                                                attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and knocking you back!')
                                         elif knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' the ' + target.name + ' in the ' + partname + attack.post2nd +
+                                                              ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd +
+                                                                ', dealing ' + repr(damage) + ' damage' + commaorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
                                     else:
                                         if not bleed and not knocked_back and not knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + '!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + '!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' at the ' + target.name + '\'s ' + partname +
+                                                              attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname +
+                                                                attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + '!')
                                         elif bleed:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and making it bleed!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and making you bleed!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' at the ' + target.name + '\'s ' + partname +
+                                                              attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and making it bleed!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname +
+                                                                attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and making you bleed!')
                                         elif knocked_back:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it back!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you back!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' at the ' + target.name + '\'s ' + partname +
+                                                              attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it back!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname +
+                                                                attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you back!')
                                         elif knocked_to_obstacle:
-                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
-                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
+                                            self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' at the ' + target.name + '\'s ' + partname + attack.post2nd +
+                                                              ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
+                                            target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd +
+                                                                ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
-                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                            target.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                                         else:
                                             target.log().append('Your ' + armor.name + ' was destroyed!')
                                             armor.owner.remove(armor)
                                 elif secondarytargetbodypart != None and secondarytargetbodypart.destroyed():
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + ' and your ' + secondarypartname + attack.post3rd + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and destroyed the ' +
+                                                          partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd +
+                                                            ' and destroyed your ' + partname + ' and your ' + secondarypartname + attack.post3rd + '!')
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you back!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and destroyed the ' + partname +
+                                                          ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' +
+                                                            partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you back!')
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' and the ' + secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + ' and your ' + secondarypartname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and destroyed the ' + partname + ' and the ' +
+                                                          secondarypartname + ' of the ' + target.name + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname +
+                                                            ' and your ' + secondarypartname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
-                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                            target.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                                         else:
                                             target.log().append('Your ' + armor.name + ' was also destroyed!')
                                             armor.owner.remove(armor)
                                     targetbodypart.on_destruction(False)
-                                    secondarytargetbodypart.on_destruction(False)
+                                    secondarytargetbodypart.on_destruction(
+                                        False)
                                 else:
                                     if secondarytargetbodypart != None and not (secondarytargetbodypart.incapacitated() and not secondaryalreadyincapacitated):
-                                        secondarymessage1 = ', dealing ' + repr(secondarydamage) + ' damage to its ' + secondarypartname
-                                        secondarymessage2 = ', dealing ' + repr(secondarydamage) + ' damage to your ' + secondarypartname
+                                        secondarymessage1 = ', dealing ' + \
+                                            repr(secondarydamage) + \
+                                            ' damage to its ' + secondarypartname
+                                        secondarymessage2 = ', dealing ' + \
+                                            repr(secondarydamage) + \
+                                            ' damage to your ' + secondarypartname
                                         commaorand = ' and'
                                     elif secondarytargetbodypart != None:
                                         secondarymessage1 = 'incapacitating its ' + secondarypartname
@@ -1204,56 +1396,78 @@ class Creature():
                                         secondarymessage2 = ''
                                         commaorand = ','
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + secondarymessage2 + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and destroyed the ' +
+                                                          partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd +
+                                                            ' and destroyed your ' + partname + attack.post3rd + secondarymessage2 + '!')
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it back!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you back!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and destroyed the ' + partname +
+                                                          ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it back!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' +
+                                                            partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you back!')
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' and destroyed the ' + partname + ' of the ' + target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it against the ' + knocked_to_obstacle + '!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname + attack.post3rd + secondarymessage2 + commaorand + ' knocking you against the ' + knocked_to_obstacle + '!')
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' and destroyed the ' + partname + ' of the ' +
+                                                          target.name + attack.post2nd + secondarymessage1 + commaorand + ' knocking it against the ' + knocked_to_obstacle + '!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' and destroyed your ' + partname +
+                                                            attack.post3rd + secondarymessage2 + commaorand + ' knocking you against the ' + knocked_to_obstacle + '!')
                                     if armordamage > 0:
                                         if not armor.destroyed():
-                                            target.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                            target.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                                         else:
                                             target.log().append('Your ' + armor.name + ' was also destroyed!')
                                             armor.owner.remove(armor)
                                     targetbodypart.on_destruction(False)
                                 if not thrown:
                                     if not knocked_back and not knocked_to_obstacle:
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + '!'))
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + '!'))
                                     elif knocked_back:
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it back!'))
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it back!'))
                                     elif knocked_to_obstacle:
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + '!'))
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + '!'))
                                 else:
                                     if not knocked_back and not knocked_to_obstacle:
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + '!'))
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + '!'))
                                     elif knocked_back:
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it back!'))
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it back!'))
                                     elif knocked_to_obstacle:
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + '!'))
-                                volume, details = target.hurtphrase([targetbodypart])
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + '!'))
+                                volume, details = target.hurtphrase(
+                                    [targetbodypart])
                                 if damage > 0 and np.random.rand() < 0.2 and len(details) > 0 and volume > 0:
                                     if len(details) == 5:
-                                        target.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                        target.log().append(
+                                            'You ' + details[2] + ': "' + details[4] + '".')
                                     elif len(details) == 4:
-                                        target.log().append('You ' + details[2] + '.')
-                                    infoblast(target.world, target.x, target.y, volume, [target], details)
+                                        target.log().append(
+                                            'You ' + details[2] + '.')
+                                    infoblast(target.world, target.x,
+                                              target.y, volume, [target], details)
                                 if not alreadyimbalanced and target.imbalanced():
                                     self.log().append('The ' + target.name + ' was imbalanced by the attack.')
                                     target.log().append('You were imbalanced by the attack.')
-                                    infoblast(target.world, target.x, target.y, 0, [target, self], ('see only', 'NAME_0 was imbalanced.'))
+                                    infoblast(target.world, target.x, target.y, 0, [
+                                              target, self], ('see only', 'NAME_0 was imbalanced.'))
                                 if panic:
                                     volume, details = target.scaredphrase()
                                     if len(details) > 0 and volume > 0 and self.hearing() > 0 and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                         if len(details) == 5:
-                                            self.log().append('The ' + target.name + ' got panicked and ' + details[2] + ': "' + details[4] + '".')
-                                            target.log().append('You got panicked and ' + details[2] + ': "' + details[4] + '".')
+                                            self.log().append('The ' + target.name + ' got panicked and ' +
+                                                              details[2] + ': "' + details[4] + '".')
+                                            target.log().append('You got panicked and ' +
+                                                                details[2] + ': "' + details[4] + '".')
                                         elif len(details) == 4:
-                                            self.log().append('The ' + target.name + ' got panicked and ' + details[2] + '.')
-                                            target.log().append('You got panicked and ' + details[2] + '.')
-                                        infoblast(target.world, target.x, target.y, volume, [target, self], details)
+                                            self.log().append('The ' + target.name +
+                                                              ' got panicked and ' + details[2] + '.')
+                                            target.log().append(
+                                                'You got panicked and ' + details[2] + '.')
+                                        infoblast(target.world, target.x, target.y, volume, [
+                                                  target, self], details)
                                     else:
                                         self.log().append('The ' + target.name + ' got panicked.')
                                         target.log().append('You got panicked.')
@@ -1261,79 +1475,116 @@ class Creature():
                                     volume, details = target.scaredphrase()
                                     if len(details) > 0 and volume > 0 and self.hearing() > 0 and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                         if len(details) == 5:
-                                            self.log().append('The ' + target.name + ' got scared and ' + details[2] + ': "' + details[4] + '".')
-                                            target.log().append('You got scared and ' + details[2] + ': "' + details[4] + '".')
+                                            self.log().append('The ' + target.name + ' got scared and ' +
+                                                              details[2] + ': "' + details[4] + '".')
+                                            target.log().append('You got scared and ' +
+                                                                details[2] + ': "' + details[4] + '".')
                                         elif len(details) == 4:
-                                            self.log().append('The ' + target.name + ' got scared and ' + details[2] + '.')
-                                            target.log().append('You got scared and ' + details[2] + '.')
-                                        infoblast(target.world, target.x, target.y, volume, [target, self], details)
+                                            self.log().append('The ' + target.name +
+                                                              ' got scared and ' + details[2] + '.')
+                                            target.log().append(
+                                                'You got scared and ' + details[2] + '.')
+                                        infoblast(target.world, target.x, target.y, volume, [
+                                                  target, self], details)
                                     else:
                                         self.log().append('The ' + target.name + ' got scared.')
                                         target.log().append('You got scared.')
                             else:
                                 if not thrown:
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ', killing it!'))
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' the ' +
+                                                          target.name + ' in the ' + partname + attack.post2nd + ', killing it!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak +
+                                                            attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ', killing it!'))
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it back and killing it!'))
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' the ' + target.name +
+                                                          ' in the ' + partname + attack.post2nd + ', knocking it back and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd +
+                                                            ' you in the ' + partname + attack.post3rd + ', knocking you back and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it back and killing it!'))
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' the ' + target.name + ' in the ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + ' and killing it!'))
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' the ' + target.name + ' in the ' +
+                                                          partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' you in the ' +
+                                                            partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd +
+                                                  ' NAME_1 in the ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + ' and killing it!'))
                                 else:
                                     if not knocked_back and not knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', killing it!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', killing you!')
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ', killing it!'))
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' at the ' +
+                                                          target.name + '\'s ' + partname + attack.post2nd + ', killing it!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak +
+                                                            attack.verb3rd + ' at your ' + partname + attack.post3rd + ', killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ', killing it!'))
                                     elif knocked_back:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', knocking it back and killing it!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', knocking you back and killing you!')
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it back and killing it!'))
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' at the ' +
+                                                          target.name + '\'s ' + partname + attack.post2nd + ', knocking it back and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd +
+                                                            ' at your ' + partname + attack.post3rd + ', knocking you back and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                            'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it back and killing it!'))
                                     elif knocked_to_obstacle:
-                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd +' at the ' + target.name + '\'s ' + partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
-                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
-                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + ' and killing it!'))
+                                        self.log().append('You ' + 'sneakily '*sneak + attack.verb2nd + ' at the ' + target.name + '\'s ' +
+                                                          partname + attack.post2nd + ', knocking it against the ' + knocked_to_obstacle + ' and killing it!')
+                                        target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' +
+                                                            partname + attack.post3rd + ', knocking you against the ' + knocked_to_obstacle + ' and killing you!')
+                                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd +
+                                                  ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + ' and killing it!'))
                                 target.log().append('You are dead!')
                                 if targetbodypart.destroyed():
                                     targetbodypart.on_destruction(True)
                                 target.die()
                                 target.causeofdeath = ('attack', self)
                             if sound:
-                                infoblast(target.world, target.x, target.y, 15, [self, target], ('hear only', 'sounds of fighting'))
+                                infoblast(target.world, target.x, target.y, 15, [
+                                          self, target], ('hear only', 'sounds of fighting'))
                         else:
-                            self.log().append('The ' + target.name + ' evaded your ' + 'thrown '*thrown + attack.name +'!')
-                            target.log().append("You evaded the " + self.name + "'s " + 'thrown '*thrown + attack.name +"!")
-                            infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'The NAME_1 evaded the NAME_0\'s ' + 'thrown '*thrown + attack.name +'!'))
+                            self.log().append('The ' + target.name + ' evaded your ' +
+                                              'thrown '*thrown + attack.name + '!')
+                            target.log().append("You evaded the " + self.name +
+                                                "'s " + 'thrown '*thrown + attack.name + "!")
+                            infoblast(target.world, target.x, target.y, 0, [self, target], (
+                                'see only', 'The NAME_1 evaded the NAME_0\'s ' + 'thrown '*thrown + attack.name + '!'))
                     else:
                         self.log().append('Your attack missed due to fear!')
                         target.log().append("The " + self.name + "'s attack missed due to fear!")
-                        infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'The NAME_0\'s attack missed due to fear!'))
+                        infoblast(target.world, target.x, target.y, 0, [
+                                  self, target], ('see only', 'The NAME_0\'s attack missed due to fear!'))
                 else:
-                    self.log().append('The ' + target.name + ' evaded your ' + attack.name + ' by being too far away!')
-                    target.log().append("You evaded the " + self.name + "'s " + attack.name + " by being too far away!")
-                    infoblast(target.world, target.x, target.y, 0, [self, target], ('see only', 'The NAME_1 evaded the NAME_0\'s ' + attack.name +' by being too far away!'))
+                    self.log().append('The ' + target.name + ' evaded your ' +
+                                      attack.name + ' by being too far away!')
+                    target.log().append("You evaded the " + self.name +
+                                        "'s " + attack.name + " by being too far away!")
+                    infoblast(target.world, target.x, target.y, 0, [self, target], (
+                        'see only', 'The NAME_1 evaded the NAME_0\'s ' + attack.name + ' by being too far away!'))
             elif targetbodypart.destroyed():
                 self.log().append('The target body part is already destroyed!')
             else:
                 self.log().append('The ' + target.name + ' no longer has that part!')
         elif attackingpart != None:
             if attackingpart.parentalconnection != None:
-                attackingpartname = list(attackingpart.parentalconnection.parent.childconnections.keys())[list(attackingpart.parentalconnection.parent.childconnections.values()).index(attackingpart.parentalconnection)]
+                attackingpartname = list(attackingpart.parentalconnection.parent.childconnections.keys())[list(
+                    attackingpart.parentalconnection.parent.childconnections.values()).index(attackingpart.parentalconnection)]
             elif attackingpart == self.torso:
                 attackingpartname = 'torso'
             if attackingpart.destroyed():
-                self.log().append('Your ' + attackingpartname + ' was destroyed before you could finish the attack!')
-                target.log().append('The ' + self.name + '\'s ' + attackingpartname + ' was destroyed before it could finish its attack!')
+                self.log().append('Your ' + attackingpartname +
+                                  ' was destroyed before you could finish the attack!')
+                target.log().append('The ' + self.name + '\'s ' + attackingpartname +
+                                    ' was destroyed before it could finish its attack!')
             else:
-                self.log().append('Your ' + attackingpartname + ' was incapacitated before you could finish the attack!')
-                target.log().append('The ' + self.name + '\'s ' + attackingpartname + ' was incapacitated before it could finish its attack!')
+                self.log().append('Your ' + attackingpartname +
+                                  ' was incapacitated before you could finish the attack!')
+                target.log().append('The ' + self.name + '\'s ' + attackingpartname +
+                                    ' was incapacitated before it could finish its attack!')
         else:
             self.log().append('You dropped your weapon before you could finish the attack!')
-            target.log().append('The ' + self.name + ' dropped its weapon before it could finish its attack!')
+            target.log().append('The ' + self.name +
+                                ' dropped its weapon before it could finish its attack!')
 
     def ai(self):
         # Return something to put in self.nextaction. It should be a list,
@@ -1346,39 +1597,46 @@ class Creature():
             volume, details = self.idlephrase()
             if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                 if len(details) == 5:
-                    self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                    self.log().append(
+                        'You ' + details[2] + ': "' + details[4] + '".')
                 elif len(details) == 4:
                     self.log().append('You ' + details[2] + '.')
                 infoblast(self.world, self.x, self.y, volume, [self], details)
         if self.nextaction[0] == 'move':
             if self.stance == 'running':
                 self.runstaminaused += self.nextaction[-1]*(1 + self.slowed())
-            creaturesintheway = [creature for creature in self.world.creatures if creature.x == self.x+self.nextaction[1] and creature.y == self.y+self.nextaction[2]]
+            creaturesintheway = [creature for creature in self.world.creatures if creature.x ==
+                                 self.x+self.nextaction[1] and creature.y == self.y+self.nextaction[2]]
             if len(creaturesintheway) == 0:
                 self.move(self.nextaction[1], self.nextaction[2])
                 self.previousaction = ('move',)
             else:
-                self.log().append("There's a " + creaturesintheway[0].name + " in your way.")
+                self.log().append("There's a " +
+                                  creaturesintheway[0].name + " in your way.")
                 self.previousaction = ('wait',)
         elif self.nextaction[0] == 'bump':
             if self.stance == 'running':
                 self.runstaminaused += self.nextaction[-1]*(1 + self.slowed())
-                part = np.random.choice([part for part in self.bodyparts if not part.internal() and not part.destroyed()])
+                part = np.random.choice(
+                    [part for part in self.bodyparts if not part.internal() and not part.destroyed()])
                 resistancemultiplier = 1 - part.resistance('blunt')
                 totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
                 if part.armor() != None:
                     armor = part.armor()
-                    armordamage = min(armor.hp(), min(totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
+                    armordamage = min(armor.hp(), min(
+                        totaldamage, np.random.randint(armor.mindamage, armor.maxdamage+1)))
                     armor.damagetaken += armordamage
                 else:
                     armor = None
                     armordamage = 0
-                damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+                damage = min(int(resistancemultiplier *
+                             (totaldamage - armordamage)), part.hp())
                 alreadyincapacitated = part.incapacitated()
                 part.damagetaken += damage
                 alreadyimbalanced = self.imbalanced()
                 if 'leg' in part.categories:
-                    numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
+                    numlegs = len([p for p in self.bodyparts if 'leg' in p.categories and not p.destroyed(
+                    ) and not p.incapacitated()])
                     if np.random.rand() < 0.5 - 0.05*numlegs:
                         part.imbalanceclock += 20*damage/part.maxhp
                 if self.imbalanced() and not alreadyimbalanced:
@@ -1386,43 +1644,50 @@ class Creature():
                 else:
                     imbalancedtext = ''
                 if part.parentalconnection != None:
-                    partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                    partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                        part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
                 elif part == self.torso:
                     partname = 'torso'
                 if not self.dying():
                     if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
-                        self.log().append('You ran into wall. It incapacitated your ' + partname + imbalancedtext + '.')
+                        self.log().append('You ran into wall. It incapacitated your ' +
+                                          partname + imbalancedtext + '.')
                         if armordamage > 0:
                             if not armor.destroyed():
-                                self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                self.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                             else:
                                 self.log().append('Your ' + armor.name + ' was destroyed!')
                                 armor.owner.remove(armor)
                     elif not part.destroyed():
-                        self.log().append('You ran into wall. It dealt ' + repr(damage) + ' damage to your ' + partname + imbalancedtext + '.')
+                        self.log().append('You ran into wall. It dealt ' + repr(damage) +
+                                          ' damage to your ' + partname + imbalancedtext + '.')
                         if armordamage > 0:
                             if not armor.destroyed():
-                                self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                self.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                             else:
                                 self.log().append('Your ' + armor.name + ' was destroyed!')
                                 armor.owner.remove(armor)
                     else:
-                        self.log().append('You ran into wall. It destroyed your ' + partname + imbalancedtext + '.')
+                        self.log().append('You ran into wall. It destroyed your ' +
+                                          partname + imbalancedtext + '.')
                         if armordamage > 0:
                             if not armor.destroyed():
-                                self.log().append('Your ' + armor.name + ' took ' +repr(armordamage) + ' damage!')
+                                self.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')
                             else:
                                 self.log().append('Your ' + armor.name + ' was also destroyed!')
                                 armor.owner.remove(armor)
                         part.on_destruction(False)
-                    infoblast(self.world, self.x, self.y, 10, [self], ('see and hear', 'NAME_0', 'ran into wall', 'run into wall'))
+                    infoblast(self.world, self.x, self.y, 10, [
+                              self], ('see and hear', 'NAME_0', 'ran into wall', 'run into wall'))
                     volume, details = self.hurtphrase([part])
                     if np.random.rand() < 0.5 and len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                         if len(details) == 5:
-                            self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                            self.log().append(
+                                'You ' + details[2] + ': "' + details[4] + '".')
                         elif len(details) == 4:
                             self.log().append('You ' + details[2] + '.')
-                        infoblast(self.world, self.x, self.y, volume, [self], details)
+                        infoblast(self.world, self.x, self.y,
+                                  volume, [self], details)
                 else:
                     self.log().append('You ran into wall ' + partname + ' first. It killed you.')
                     self.log().append('You are dead!')
@@ -1430,7 +1695,8 @@ class Creature():
                         part.on_destruction(True)
                     self.die()
                     self.causeofdeath = ('ranintowall', partname)
-                    infoblast(self.world, self.x, self.y, 10, [self], ('see and hear', 'NAME_0', 'ran into wall and died', 'run into wall and die'))
+                    infoblast(self.world, self.x, self.y, 10, [
+                              self], ('see and hear', 'NAME_0', 'ran into wall and died', 'run into wall and die'))
             else:
                 self.log().append("You bumped into a wall.")
             self.previousaction = ('wait',)
@@ -1439,8 +1705,10 @@ class Creature():
             self.previousaction = ('frighten',)
         elif self.nextaction[0] == 'fight':
             if not self.nextaction[1].dead:  # prevent a crash
-                self.fight(self.nextaction[1], self.nextaction[2], self.nextaction[3])
-                self.previousaction = ('fight', self.nextaction[3].weapon, self.nextaction[2])
+                self.fight(
+                    self.nextaction[1], self.nextaction[2], self.nextaction[3])
+                self.previousaction = (
+                    'fight', self.nextaction[3].weapon, self.nextaction[2])
         elif self.nextaction[0] == 'cast':
             self.nextaction[1].cast(*self.nextaction[2])
             self.previousaction = ('cast',)
@@ -1456,7 +1724,7 @@ class Creature():
                 self.stance = 'defensive'
             elif 'running' in self.stancesknown():
                 self.stance = 'running'
-            else: # Shouldn't happen, but just in case
+            else:  # Shouldn't happen, but just in case
                 self.stance = 'neutral'
             if oldstance == 'flying':
                 for it in self.world.items:
@@ -1470,9 +1738,11 @@ class Creature():
                         else:
                             it.entrap(self, part)
                             self.itemsseen().append(it)
-        timetoact = self.nextaction[-1]*(1 + self.slowed()*(self.nextaction[0] != 'wait'))
+        timetoact = self.nextaction[-1] * \
+            (1 + self.slowed()*(self.nextaction[0] != 'wait'))
         if time < timetoact:
-            self.nextaction[-1] -= time/(1 + self.slowed()*(self.nextaction[0] != 'wait'))
+            self.nextaction[-1] -= time / \
+                (1 + self.slowed()*(self.nextaction[0] != 'wait'))
             self.bleed(time)
             if self.world.campfires[self.x, self.y] and self.stance != 'flying':
                 self.burn('campfire', time)
@@ -1483,8 +1753,9 @@ class Creature():
                 part.imbalanceclock = max(0, part.imbalanceclock - time)
             if imbalanced and not self.imbalanced():
                 self.log().append('You regained your balance.')
-                infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 regained it\'s balance.'))
-                
+                infoblast(self.world, self.x, self.y, 0, [
+                          self], ('see only', 'NAME_0 regained it\'s balance.'))
+
             self.applypoison(time)
             self.weakenedclock = max(0, self.weakenedclock - time)
             self.disorientedclock = max(0, self.disorientedclock - time)
@@ -1494,7 +1765,8 @@ class Creature():
             self.vomitclock = max(0, self.vomitclock - time)
             if vomiting and self.vomitclock == 0:
                 self.log().append('You stopped vomiting.')
-                infoblast(self.world, self.x, self.y, 15, [self], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
+                infoblast(self.world, self.x, self.y, 15, [
+                          self], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
             if self.starving():
                 self.starvationclock += time
                 for i in range(int(self.starvationclock // 1)):
@@ -1502,9 +1774,11 @@ class Creature():
                 self.starvationclock = self.starvationclock % 1
             self.suffocate(time)
             if self.stance != 'running' and not self.hungry():
-                self.runstaminaused = max(0, self.runstaminaused - time*self.runstaminarecoveryspeed())
+                self.runstaminaused = max(
+                    0, self.runstaminaused - time*self.runstaminarecoveryspeed())
             elif self.stance != 'running' and not self.starving():
-                self.runstaminaused = max(0, self.runstaminaused - time*0.5*self.runstaminarecoveryspeed())
+                self.runstaminaused = max(
+                    0, self.runstaminaused - time*0.5*self.runstaminarecoveryspeed())
             if self.panicked():
                 self.panickedclock = max(0, self.panickedclock - time)
             elif self.scared():
@@ -1522,7 +1796,8 @@ class Creature():
                 part.imbalanceclock = max(0, part.imbalanceclock - time)
             if imbalanced and not self.imbalanced():
                 self.log().append('You regained your balance.')
-                infoblast(self.world, self.x, self.y, 0, [self], ('see only', 'NAME_0 regained it\'s balance.'))
+                infoblast(self.world, self.x, self.y, 0, [
+                          self], ('see only', 'NAME_0 regained it\'s balance.'))
             self.applypoison(timetoact)
             self.weakenedclock = max(0, self.weakenedclock - timetoact)
             self.disorientedclock = max(0, self.disorientedclock - timetoact)
@@ -1532,7 +1807,8 @@ class Creature():
             self.vomitclock = max(0, self.vomitclock - timetoact)
             if vomiting and self.vomitclock == 0:
                 self.log().append('You stopped vomiting.')
-                infoblast(self.world, self.x, self.y, 15, [self], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
+                infoblast(self.world, self.x, self.y, 15, [
+                          self], ('see and hear', 'NAME_0', 'stopped vomiting', 'stop vomiting'))
             if self.starving():
                 self.starvationclock += timetoact
                 for i in range(int(self.starvationclock // 1)):
@@ -1540,20 +1816,25 @@ class Creature():
                 self.starvationclock = self.starvationclock % 1
             self.suffocate(timetoact)
             if self.stance != 'running' and not self.hungry():
-                self.runstaminaused = max(0, self.runstaminaused - timetoact*self.runstaminarecoveryspeed())
+                self.runstaminaused = max(
+                    0, self.runstaminaused - timetoact*self.runstaminarecoveryspeed())
             elif self.stance != 'running' and not self.starving():
-                self.runstaminaused = max(0, self.runstaminaused - timetoact*0.5*self.runstaminarecoveryspeed())
+                self.runstaminaused = max(
+                    0, self.runstaminaused - timetoact*0.5*self.runstaminarecoveryspeed())
             if self.panicked():
                 self.panickedclock = max(0, self.panickedclock - timetoact)
             elif self.scared():
                 self.scaredclock = max(0, self.scaredclock - timetoact)
             self.manaused = max(0, self.manaused - timetoact/2)
             if self.world.poisongas[self.x, self.y]:
-                livingparts = [part for part in self.bodyparts if part.material == 'living flesh' and not part.destroyed()]
-                lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (part.destroyed() or part.incapacitated())]
+                livingparts = [part for part in self.bodyparts if part.material ==
+                               'living flesh' and not part.destroyed()]
+                lungs = [part for part in self.bodyparts if 'lung' in part.categories and not (
+                    part.destroyed() or part.incapacitated())]
                 if np.random.rand() > self.breathepoisonresistance() and len(livingparts) > 0 and len(lungs) > 0:
                     oldaccumulation = self.accumulatedpoison
-                    self.accumulatedpoison = min(50, self.accumulatedpoison + np.random.rand()*40)
+                    self.accumulatedpoison = min(
+                        50, self.accumulatedpoison + np.random.rand()*40)
                     if self.accumulatedpoison > 5 and oldaccumulation <= 5:
                         self.log().append('You were poisoned by the gas.')
             if not self.dead:
@@ -1562,26 +1843,34 @@ class Creature():
                 fovmap = self.fov()
                 for i in range(self.world.width):
                     for j in range(self.world.height):
-                        if fovmap[i,j]:
-                            if self.world.walls[i,j]:
-                                self.seen()[self.world_i][i][j] = (' ', (0, 0, 0), (128, 128, 128), (0, 0, 0))
-                            elif self.world.spiderwebs[i,j]:
-                                self.seen()[self.world_i][i][j] = ('#', (128, 128, 128), (0, 0, 0), (0, 0, 0))
-                            elif self.world.largerocks[i,j]:
-                                self.seen()[self.world_i][i][j] = ('%', (128, 128, 128), (0, 0, 0), (0, 0, 0))
-                            elif self.world.campfires[i,j]:
-                                self.seen()[self.world_i][i][j] = ('%', (128, 102, 0), (0, 0, 0), (0, 0, 0))
+                        if fovmap[i, j]:
+                            if self.world.walls[i, j]:
+                                self.seen()[self.world_i][i][j] = (
+                                    ' ', (0, 0, 0), (128, 128, 128), (0, 0, 0))
+                            elif self.world.spiderwebs[i, j]:
+                                self.seen()[self.world_i][i][j] = (
+                                    '#', (128, 128, 128), (0, 0, 0), (0, 0, 0))
+                            elif self.world.largerocks[i, j]:
+                                self.seen()[self.world_i][i][j] = (
+                                    '%', (128, 128, 128), (0, 0, 0), (0, 0, 0))
+                            elif self.world.campfires[i, j]:
+                                self.seen()[self.world_i][i][j] = (
+                                    '%', (128, 102, 0), (0, 0, 0), (0, 0, 0))
                             else:
-                                self.seen()[self.world_i][i][j] = (' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))
+                                self.seen()[self.world_i][i][j] = (
+                                    ' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))
                             i, j = self.world.stairsdowncoords
-                            if fovmap[i,j]:
-                                self.seen()[self.world_i][i][j] = ('>', (128, 128, 128), (0, 0, 0), (0, 0, 0))
+                            if fovmap[i, j]:
+                                self.seen()[self.world_i][i][j] = (
+                                    '>', (128, 128, 128), (0, 0, 0), (0, 0, 0))
                             i, j = self.world.stairsupcoords
-                            if fovmap[i,j]:
-                                self.seen()[self.world_i][i][j] = ('<', (128, 128, 128), (0, 0, 0), (0, 0, 0))
+                            if fovmap[i, j]:
+                                self.seen()[self.world_i][i][j] = (
+                                    '<', (128, 128, 128), (0, 0, 0), (0, 0, 0))
                             for i, j, _ in self.world.altars:
-                                if fovmap[i,j]:
-                                    self.seen()[self.world_i][i][j] = ('%', (0, 128, 128), (0, 0, 0), (0, 0, 0))
+                                if fovmap[i, j]:
+                                    self.seen()[self.world_i][i][j] = (
+                                        '%', (0, 128, 128), (0, 0, 0), (0, 0, 0))
                             for it in self.world.items:
                                 if fovmap[it.x, it.y]:
                                     if not it in self.itemsseen() and not it.hidden:
@@ -1592,7 +1881,8 @@ class Creature():
                                                 self.log().append('You noticed ' + it.name + '!')
                                                 self.itemsseen().append(it)
                                     if it in self.itemsseen():
-                                        self.seen()[self.world_i][it.x][it.y] = ('?', (128, 128, 128), (0, 0, 0), (0, 0, 0))
+                                        self.seen()[self.world_i][it.x][it.y] = (
+                                            '?', (128, 128, 128), (0, 0, 0), (0, 0, 0))
                 for creat in self.world.creatures:
                     if fovmap[creat.x, creat.y] and not creat in self.creaturesseen() and creat != self:
                         self.creaturesseen().append(creat)
@@ -1609,7 +1899,8 @@ class Creature():
                         else:
                             vomitimbalancedtext = ''
                         if self in creat.creaturesseen():
-                            self.log().append('You see a ' + creat.name +'. It has noticed you.' + stancetext + vomitimbalancedtext)
+                            self.log().append('You see a ' + creat.name +
+                                              '. It has noticed you.' + stancetext + vomitimbalancedtext)
                             fovmap2 = creat.fov()
                             if fovmap2[self.x, self.y]:
                                 creat.log().append('The ' + self.name + ' noticed you!')
@@ -1617,28 +1908,37 @@ class Creature():
                                     volume, details = self.seefactionmatephrase()
                                     if len(details) > 0 and volume > 0:
                                         if len(details) == 5:
-                                            self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                            self.log().append(
+                                                'You ' + details[2] + ': "' + details[4] + '".')
                                         elif len(details) == 4:
-                                            self.log().append('You ' + details[2] + '.')
-                                        infoblast(self.world, self.x, self.y, volume, [self], details)
+                                            self.log().append(
+                                                'You ' + details[2] + '.')
+                                        infoblast(self.world, self.x, self.y, volume, [
+                                                  self], details)
                                     volume, details = creat.seefactionmatephrase()
                                     if len(details) > 0 and volume > 0:
                                         if len(details) == 5:
-                                            creat.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                            creat.log().append(
+                                                'You ' + details[2] + ': "' + details[4] + '".')
                                         elif len(details) == 4:
-                                            creat.log().append('You ' + details[2] + '.')
-                                        infoblast(creat.world, creat.x, creat.y, volume, [creat], details)
+                                            creat.log().append(
+                                                'You ' + details[2] + '.')
+                                        infoblast(creat.world, creat.x, creat.y, volume, [
+                                                  creat], details)
                         else:
-                            self.log().append('You see a ' + creat.name +'. It hasn\'t noticed you.' + stancetext + vomitimbalancedtext)
+                            self.log().append('You see a ' + creat.name +
+                                              '. It hasn\'t noticed you.' + stancetext + vomitimbalancedtext)
                         if 'player' in creat.factions:
                             volume, details = self.seeplayerphrase()
                             if len(details) > 0 and volume > 0:
                                 if len(details) == 5:
-                                    self.log().append('You ' + details[2] + ': "' + details[4] + '".')
+                                    self.log().append(
+                                        'You ' + details[2] + ': "' + details[4] + '".')
                                 elif len(details) == 4:
-                                    self.log().append('You ' + details[2] + '.')
-                                infoblast(self.world, self.x, self.y, volume, [self], details)
-
+                                    self.log().append(
+                                        'You ' + details[2] + '.')
+                                infoblast(self.world, self.x, self.y,
+                                          volume, [self], details)
                 if not self.dead:
                     self.nextaction = self.ai()
                 else:
@@ -1647,73 +1947,69 @@ class Creature():
                     self.nextaction[-1] = self.nextaction[-1]*1.5
                 self.update(timeleft)
 
+
 class Zombie(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
         self.factions = ['undead']
         self.char = 'z'
         self.color = (191, 255, 128)
-        self.name = np.random.choice(['zombie', 'headless zombie', 'one-armed zombie', 'crawler zombie'], p=[0.7, 0.1, 0.1, 0.1])
+        self.name = np.random.choice(
+            ['zombie', 'headless zombie', 'one-armed zombie', 'crawler zombie'], p=[0.7, 0.1, 0.1, 0.1])
         self.smellname = 'zombie'
         self.x = x
         self.y = y
         self.speech = False
         self.torso = bodypart.ZombieTorso(self.bodyparts, 0, 0)
         if self.name != 'one-armed zombie':
-            self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
         else:
             if np.random.choice(2):
-                self.bodyparts[0].connect('left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'left arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
             else:
-                self.bodyparts[0].connect('right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'right arm', bodypart.ZombieArm(self.bodyparts, 0, 0))
         if self.name != 'crawler zombie':
-            self.bodyparts[0].connect('left leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.ZombieKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.ZombieKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.ZombieStomach(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right leg', bodypart.ZombieLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.ZombieHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.ZombieLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.ZombieKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.ZombieKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.ZombieStomach(self.bodyparts, 0, 0))
         if self.name != 'headless zombie':
-            self.bodyparts[0].connect('head', bodypart.ZombieHead(self.bodyparts, 0, 0))
-            self.bodyparts[-1].connect('brain', bodypart.ZombieBrain(self.bodyparts, 0, 0))
-            self.bodyparts[-2].connect('left eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
-            self.bodyparts[-3].connect('right eye', bodypart.ZombieEye(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'head', bodypart.ZombieHead(self.bodyparts, 0, 0))
+            self.bodyparts[-1].connect('brain',
+                                       bodypart.ZombieBrain(self.bodyparts, 0, 0))
+            self.bodyparts[-2].connect('left eye',
+                                       bodypart.ZombieEye(self.bodyparts, 0, 0))
+            self.bodyparts[-3].connect('right eye',
+                                       bodypart.ZombieEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-
-    def randomcroak(self):
-        start = np.random.choice(['G', 'Gr', 'Grl', 'H', 'Hr', 'Hl', 'Hrl'])
-        mid = 'u'*np.random.randint(1, 4)
-        end = np.random.choice(['gh', 'lgh', 'rgh', ])
-        return start + mid + end
-
-    def attackphrase(self):
-        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
-    
-    def hurtphrase(self, parts):
-        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
-    
-    def scaredphrase(self):
-        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
-
-    def seeplayerphrase(self):
-        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
-    
-    def seefactionmatephrase(self):
-        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
-    
-    def idlephrase(self):
-        return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', self.randomcroak()))
 
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
@@ -1731,13 +2027,17 @@ class Zombie(Creature):
                 elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                     # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                     # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                                  self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                     if len(dxdylist) > 0:
                         if not self.panicked():
-                            dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                            dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                         else:
-                            dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                            dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                            self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                         return(['move', dx, dy, time])
                     else:
                         return(['wait', 1])
@@ -1746,11 +2046,12 @@ class Zombie(Creature):
                     dx = 0
                     dy = 0
                     repeats = 0
-                    while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
+                    while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
                         repeats += 1
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         return(['move', dx, dy, time])
                     else:
@@ -1759,10 +2060,11 @@ class Zombie(Creature):
                     self.targetcoords = None
                     dx = 0
                     dy = 0
-                    while (dx,dy) == (0,0):
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    while (dx, dy) == (0, 0):
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         if not self.world.walls[self.x+dx, self.y+dy]:
                             return(['move', dx, dy, time])
@@ -1772,6 +2074,7 @@ class Zombie(Creature):
                         return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class MolePerson(Creature):
     def __init__(self, world, world_i, x, y):
@@ -1783,24 +2086,39 @@ class MolePerson(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.MolePersonTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.MolePersonHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.MolePersonKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.MolePersonKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.MolePersonStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.MolePersonHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.MolePersonBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.MolePersonEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.MolePersonEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.MolePersonArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.MolePersonLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.MolePersonHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.MolePersonLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.MolePersonKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.MolePersonKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.MolePersonStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.MolePersonHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.MolePersonBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.MolePersonEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.MolePersonEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Take this!', 'Eat this!', 'Die!', 'Get out of our cave!'])
+        phrase = np.random.choice(
+            ['Take this!', 'Eat this!', 'Die!', 'Get out of our cave!'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def hurtphrase(self, parts):
@@ -1808,7 +2126,8 @@ class MolePerson(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -1819,15 +2138,19 @@ class MolePerson(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Aagh!'
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def smellplayerphrase(self):
-        player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        player = [
+            creature for creature in self.world.creatures if 'player' in creature.factions][0]
         if not player in self.creaturesseen():
-            phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!', 'Is it just me or does it smell like a golem in here?'])
+            phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!',
+                                      'Is it just me or does it smell like a golem in here?'])
             return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
         else:
             return (0, ())
@@ -1841,11 +2164,13 @@ class MolePerson(Creature):
             return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def seefactionmatephrase(self):
-        phrase = np.random.choice(['Greetings, mate!', 'Hello, hello!', 'Hi!', 'Good morning, or whatever time of the day it is!'])
+        phrase = np.random.choice(['Greetings, mate!', 'Hello, hello!',
+                                  'Hi!', 'Good morning, or whatever time of the day it is!'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Hum di dum.', 'Oh well...', 'Perhaps I should dig a hole.'])
+        phrase = np.random.choice(
+            ['Hum di dum.', 'Oh well...', 'Perhaps I should dig a hole.'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -1853,8 +2178,10 @@ class MolePerson(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -1867,10 +2194,12 @@ class MolePerson(Creature):
                 for dx2 in [-1, 0, 1]:
                     for dy2 in [-1, 0, 1]:
                         if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
-                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestsmell = self.world.smells[self.x +
+                                                               dx2][self.y + dy2][player]
                             strongestdcoords = (dx2, dy2)
                 if strongestdcoords != (0, 0):
-                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
+                    self.targetcoords = (
+                        self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
@@ -1878,13 +2207,17 @@ class MolePerson(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -1893,11 +2226,12 @@ class MolePerson(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -1906,10 +2240,11 @@ class MolePerson(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -1919,6 +2254,7 @@ class MolePerson(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Goblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -1930,66 +2266,45 @@ class Goblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.GoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.GoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.GoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.GoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.GoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.GoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.GoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.GoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.GoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.GoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.GoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.GoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.GoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.GoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.GoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.GoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.GoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.GoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.GoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.GoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.GoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.GoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.GoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.GoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.GoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.GoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
-
-    def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
-        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
-
-    def hurtphrase(self, parts):
-        partname = ''
-        if len(parts) == 1:
-            part = parts[0]
-            if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
-            elif part == self.torso:
-                partname = 'torso'
-        if partname != '' and np.random.rand() < 0.5:
-            phrase = 'Yeouch, my ' + partname + '!'
-        else:
-            phrase = 'Yeouch!'
-        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
-
-    def scaredphrase(self):
-        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
-        else:
-            phrase = 'Yikes!'
-        return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
-
-    def seeplayerphrase(self):
-        phrase = np.random.choice(['Alert!', 'What is that?', 'Attack!'])
-        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
-
-    def seefactionmatephrase(self):
-        phrase = np.random.choice(['Yo!', 'Hello!', 'Oh, hi!', 'What\'s up?'])
-        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
-
-    def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
-        return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
         disoriented = False
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2003,13 +2318,17 @@ class Goblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -2018,11 +2337,12 @@ class Goblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -2031,10 +2351,11 @@ class Goblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -2044,6 +2365,7 @@ class Goblin(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class GlassElemental(Creature):
     def __init__(self, world, world_i, x, y):
@@ -2056,20 +2378,34 @@ class GlassElemental(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.GlassElementalTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.GlassElementalArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.GlassElementalArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.GlassElementalHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.GlassElementalLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.GlassElementalLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('tail', bodypart.GlassElementalTail(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.GlassElementalHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.GlassElementalBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('upper left eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('upper right eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
-        self.bodyparts[-4].connect('center left eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
-        self.bodyparts[-5].connect('center right eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
-        self.bodyparts[-6].connect('lower left eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
-        self.bodyparts[-7].connect('lower right eye', bodypart.GlassElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.GlassElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.GlassElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.GlassElementalHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.GlassElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.GlassElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'tail', bodypart.GlassElementalTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.GlassElementalHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.GlassElementalBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('upper left eye',
+                                   bodypart.GlassElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('upper right eye',
+                                   bodypart.GlassElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[-4].connect('center left eye',
+                                   bodypart.GlassElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[-5].connect('center right eye',
+                                   bodypart.GlassElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[-6].connect('lower left eye',
+                                   bodypart.GlassElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[-7].connect('lower right eye',
+                                   bodypart.GlassElementalEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -2098,8 +2434,10 @@ class GlassElemental(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2113,13 +2451,17 @@ class GlassElemental(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -2128,11 +2470,12 @@ class GlassElemental(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -2141,10 +2484,11 @@ class GlassElemental(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -2154,6 +2498,7 @@ class GlassElemental(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class CaveOctopus(Creature):
     def __init__(self, world, world_i, x, y):
@@ -2166,25 +2511,44 @@ class CaveOctopus(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.OctopusHead(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-front left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-back left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-front right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('central heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left metanephridium', bodypart.OctopusMetanephridium(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right metanephridium', bodypart.OctopusMetanephridium(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.OctopusStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('brain', bodypart.OctopusBrain(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-front left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-back left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-front right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right limb', bodypart.OctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'central heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right heart', bodypart.OctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right gills', bodypart.OctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left metanephridium', bodypart.OctopusMetanephridium(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right metanephridium', bodypart.OctopusMetanephridium(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.OctopusStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'brain', bodypart.OctopusBrain(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right eye', bodypart.OctopusEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -2213,8 +2577,10 @@ class CaveOctopus(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2228,13 +2594,17 @@ class CaveOctopus(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -2243,11 +2613,12 @@ class CaveOctopus(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -2256,10 +2627,11 @@ class CaveOctopus(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -2269,6 +2641,7 @@ class CaveOctopus(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Dog(Creature):
     def __init__(self, world, world_i, x, y):
@@ -2281,21 +2654,36 @@ class Dog(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.DogTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left leg', bodypart.DogLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right leg', bodypart.DogLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left leg', bodypart.DogLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right leg', bodypart.DogLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.DogHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.DogLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.DogLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.DogKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.DogKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.DogStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('tail', bodypart.DogTail(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.DogHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.DogBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.DogEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.DogEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left leg', bodypart.DogLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right leg', bodypart.DogLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left leg', bodypart.DogLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right leg', bodypart.DogLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.DogHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.DogLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.DogLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.DogKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.DogKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.DogStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'tail', bodypart.DogTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.DogHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.DogBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.DogEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.DogEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -2309,11 +2697,11 @@ class Dog(Creature):
         return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
 
     def smellplayerphrase(self):
-        phrase = 'Ao-' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Ao-' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seeplayerphrase(self):
-        phrase = 'Ao-' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Ao-' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seefactionmatephrase(self):
@@ -2327,8 +2715,10 @@ class Dog(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2341,25 +2731,32 @@ class Dog(Creature):
                 for dx2 in [-1, 0, 1]:
                     for dy2 in [-1, 0, 1]:
                         if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
-                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestsmell = self.world.smells[self.x +
+                                                               dx2][self.y + dy2][player]
                             strongestdcoords = (dx2, dy2)
                 if strongestdcoords != (0, 0):
-                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
+                    self.targetcoords = (
+                        self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
-                i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                # N.B. DIFFERENT THAN MOST CREATURES!
+                i = maxdmglist.index(max(maxdmglist))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -2368,11 +2765,12 @@ class Dog(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -2381,10 +2779,11 @@ class Dog(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -2394,6 +2793,7 @@ class Dog(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Imp(Creature):
     def __init__(self, world, world_i, x, y):
@@ -2405,28 +2805,45 @@ class Imp(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.ImpTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.ImpArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.ImpArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left wing', bodypart.ImpWing(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right wing', bodypart.ImpWing(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.ImpLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.ImpLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.ImpHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.ImpLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.ImpLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.ImpKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.ImpKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.ImpStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.ImpHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.ImpBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.ImpEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.ImpEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.ImpArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.ImpArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left wing', bodypart.ImpWing(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right wing', bodypart.ImpWing(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.ImpLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.ImpLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.ImpHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.ImpLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.ImpLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.ImpKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.ImpKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.ImpStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.ImpHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.ImpBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.ImpEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.ImpEye(self.bodyparts, 0, 0))
         self.targetcoords = None
         self.stance = 'flying'
         self.preferredstance = 'flying'
 
     def attackphrase(self):
-        phrase = np.random.choice(['Go to hell!', 'See you in hell!', 'Feel the power of hell!'])
+        phrase = np.random.choice(
+            ['Go to hell!', 'See you in hell!', 'Feel the power of hell!'])
         return (15, ('see and hear', 'NAME_0', 'yelled', 'yell', phrase))
 
     def hurtphrase(self, parts):
@@ -2434,7 +2851,8 @@ class Imp(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -2445,13 +2863,16 @@ class Imp(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Waagh!'
         return (15, ('see and hear', 'NAME_0', 'yelled', 'yell', phrase))
 
     def seeplayerphrase(self):
-        phrase = np.random.choice(['You don\'t belong here!', 'Intruder!', 'Oh hell, a golem!'])
+        phrase = np.random.choice(
+            ['You don\'t belong here!', 'Intruder!', 'Oh hell, a golem!'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def seefactionmatephrase(self):
@@ -2459,7 +2880,8 @@ class Imp(Creature):
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Nyehehe!', 'Shemhamphorash!', 'Rend flesh...'])
+        phrase = np.random.choice(
+            ['Nyehehe!', 'Shemhamphorash!', 'Rend flesh...'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -2467,8 +2889,10 @@ class Imp(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2483,15 +2907,20 @@ class Imp(Creature):
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
                 if self.stance == 'flying':
-                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len(
+                        [creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
                 else:
-                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                                  self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -2500,11 +2929,12 @@ class Imp(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or (self.world.lavapits[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (self.world.campfires[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or (len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0 and self.stance != 'flying'):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or (self.world.lavapits[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (self.world.campfires[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or (len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0 and self.stance != 'flying'):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -2513,10 +2943,11 @@ class Imp(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -2526,6 +2957,7 @@ class Imp(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Hobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -2537,24 +2969,39 @@ class Hobgoblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.HobgoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.HobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.HobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.HobgoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.HobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.HobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.HobgoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.HobgoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.HobgoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.HobgoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.HobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.HobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.HobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.HobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.HobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.HobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.HobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.HobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.HobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.HobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.HobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.HobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.HobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        phrase = np.random.choice(
+            ['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
 
     def hurtphrase(self, parts):
@@ -2562,7 +3009,8 @@ class Hobgoblin(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -2573,7 +3021,9 @@ class Hobgoblin(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Yikes!'
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
@@ -2587,7 +3037,8 @@ class Hobgoblin(Creature):
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!',
+                                  'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -2595,8 +3046,10 @@ class Hobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2610,13 +3063,17 @@ class Hobgoblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -2625,11 +3082,12 @@ class Hobgoblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -2638,10 +3096,11 @@ class Hobgoblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -2651,6 +3110,7 @@ class Hobgoblin(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class MoleMonk(Creature):
     def __init__(self, world, world_i, x, y):
@@ -2662,20 +3122,34 @@ class MoleMonk(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.MoleMonkTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.MoleMonkArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.MoleMonkArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.MoleMonkLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.MoleMonkLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.MoleMonkHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.MoleMonkLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.MoleMonkLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.MoleMonkKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.MoleMonkKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.MoleMonkStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.MoleMonkHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.MoleMonkBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.MoleMonkEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.MoleMonkEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.MoleMonkArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.MoleMonkArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.MoleMonkLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.MoleMonkLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.MoleMonkHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.MoleMonkLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.MoleMonkLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.MoleMonkKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.MoleMonkKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.MoleMonkStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.MoleMonkHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.MoleMonkBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.MoleMonkEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.MoleMonkEye(self.bodyparts, 0, 0))
         self.targetcoords = None
         self.stance = 'fasting'
 
@@ -2687,7 +3161,8 @@ class MoleMonk(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -2698,15 +3173,19 @@ class MoleMonk(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'I am losing my zen.'
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def smellplayerphrase(self):
-        player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        player = [
+            creature for creature in self.world.creatures if 'player' in creature.factions][0]
         if not player in self.creaturesseen():
-            phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!', 'Is it just me or does it smell like a golem in here?'])
+            phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!',
+                                      'Is it just me or does it smell like a golem in here?'])
             return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
         else:
             return (0, ())
@@ -2723,7 +3202,8 @@ class MoleMonk(Creature):
         return (10, ('see and hear', 'NAME_0', 'said', 'say', 'May the force be with you.'))
 
     def idlephrase(self):
-        phrase = np.random.choice(['I am one with the Force, and the Force is with Me.', 'Omm...', 'Perhaps I should meditate.'])
+        phrase = np.random.choice(
+            ['I am one with the Force, and the Force is with Me.', 'Omm...', 'Perhaps I should meditate.'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -2731,8 +3211,10 @@ class MoleMonk(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -2745,10 +3227,12 @@ class MoleMonk(Creature):
                 for dx2 in [-1, 0, 1]:
                     for dy2 in [-1, 0, 1]:
                         if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
-                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestsmell = self.world.smells[self.x +
+                                                               dx2][self.y + dy2][player]
                             strongestdcoords = (dx2, dy2)
                 if strongestdcoords != (0, 0):
-                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
+                    self.targetcoords = (
+                        self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 i = np.random.choice(range(len(self.attackslist())))
                 atk = self.attackslist()[i]
@@ -2756,13 +3240,17 @@ class MoleMonk(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -2771,11 +3259,12 @@ class MoleMonk(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -2784,10 +3273,11 @@ class MoleMonk(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -2798,42 +3288,61 @@ class MoleMonk(Creature):
         else:
             return(['wait', 1])
 
+
 class ZombieZorcerer(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
         self.factions = ['undead']
         self.char = 'Z'
         self.color = (191, 255, 128)
-        self.name = np.random.choice(['zombie zorcerer', 'one-armed zombie zorcerer', 'crawler zombie zorcerer'], p=[0.8, 0.1, 0.1])
+        self.name = np.random.choice(
+            ['zombie zorcerer', 'one-armed zombie zorcerer', 'crawler zombie zorcerer'], p=[0.8, 0.1, 0.1])
         self.smellname = 'zombie zorcerer'
         self.x = x
         self.y = y
         self.torso = bodypart.ZombieZorcererTorso(self.bodyparts, 0, 0)
         if self.name != 'one-armed zombie zorcerer':
-            self.bodyparts[0].connect('left arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
         else:
             if np.random.choice(2):
-                self.bodyparts[0].connect('left arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'left arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
             else:
-                self.bodyparts[0].connect('right arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'right arm', bodypart.ZombieZorcererArm(self.bodyparts, 0, 0))
         if self.name != 'crawler zombie zorcerer':
-            self.bodyparts[0].connect('left leg', bodypart.ZombieZorcererLeg(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right leg', bodypart.ZombieZorcererLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.ZombieZorcererHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.ZombieZorcererLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.ZombieZorcererLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.ZombieZorcererKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.ZombieZorcererKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.ZombieZorcererStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.ZombieZorcererHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.ZombieZorcererBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.ZombieZorcererEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.ZombieZorcererEye(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left leg', bodypart.ZombieZorcererLeg(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right leg', bodypart.ZombieZorcererLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.ZombieZorcererHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.ZombieZorcererLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.ZombieZorcererLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.ZombieZorcererKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.ZombieZorcererKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.ZombieZorcererStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.ZombieZorcererHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.ZombieZorcererBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.ZombieZorcererEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.ZombieZorcererEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Join me in death!', 'Feel the power of necromancy!', 'Take this, mortal!', 'Braaaaaiiiins'])
+        phrase = np.random.choice(
+            ['Join me in death!', 'Feel the power of necromancy!', 'Take this, mortal!', 'Braaaaaiiiins'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def hurtphrase(self, parts):
@@ -2841,7 +3350,8 @@ class ZombieZorcerer(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -2852,13 +3362,16 @@ class ZombieZorcerer(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Aagh!'
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def seeplayerphrase(self):
-        phrase = np.random.choice(['Fear my magic, mortal!', 'Intruder alert!', 'Red alert!', 'Braaaaaiiiins'])
+        phrase = np.random.choice(
+            ['Fear my magic, mortal!', 'Intruder alert!', 'Red alert!', 'Braaaaaiiiins'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def seefactionmatephrase(self):
@@ -2874,17 +3387,21 @@ class ZombieZorcerer(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
                 return(['frighten', 0.75])
             elif np.any([part.incapacitated() and not part.destroyed() for part in self.bodyparts]) and len([spell for spell in self.spellsknown() if isinstance(spell, magic.HealThyself)]) > 0 and self.mana() >= [spell for spell in self.spellsknown() if isinstance(spell, magic.HealThyself)][0].manarequirement and not self.panicked():
-                spell = [spell for spell in self.spellsknown() if isinstance(spell, magic.HealThyself)][0]
-                return(['cast', spell, [self, max(spell.choices(self), key=lambda part : part.damagetaken)], spell.castingtime])
+                spell = [spell for spell in self.spellsknown(
+                ) if isinstance(spell, magic.HealThyself)][0]
+                return(['cast', spell, [self, max(spell.choices(self), key=lambda part: part.damagetaken)], spell.castingtime])
             elif fovmap[player.x, player.y] and (abs(self.x - player.x) > 1 or abs(self.y - player.y) > 1) and len([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement]) > 0 and not self.panicked():
-                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
+                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(
+                    spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
                 if isinstance(spell, magic.TargetedSpell):
                     return(['cast', spell, [self, player], spell.castingtime])
                 else:
@@ -2902,13 +3419,17 @@ class ZombieZorcerer(Creature):
                 elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                     # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                     # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                                  self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                     if len(dxdylist) > 0:
                         if not self.panicked():
-                            dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                            dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                         else:
-                            dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                            dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                            self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                         return(['move', dx, dy, time])
                     else:
                         return(['wait', 1])
@@ -2917,11 +3438,12 @@ class ZombieZorcerer(Creature):
                     dx = 0
                     dy = 0
                     repeats = 0
-                    while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
+                    while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
                         repeats += 1
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         return(['move', dx, dy, time])
                     else:
@@ -2930,10 +3452,11 @@ class ZombieZorcerer(Creature):
                     self.targetcoords = None
                     dx = 0
                     dy = 0
-                    while (dx,dy) == (0,0):
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    while (dx, dy) == (0, 0):
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         if not self.world.walls[self.x+dx, self.y+dy]:
                             return(['move', dx, dy, time])
@@ -2943,6 +3466,7 @@ class ZombieZorcerer(Creature):
                         return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Wolf(Creature):
     def __init__(self, world, world_i, x, y):
@@ -2955,21 +3479,36 @@ class Wolf(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.WolfTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.WolfHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.WolfLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.WolfLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.WolfKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.WolfKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.WolfStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('tail', bodypart.WolfTail(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.WolfHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.WolfBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.WolfEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.WolfEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right leg', bodypart.WolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.WolfHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.WolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.WolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.WolfKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.WolfKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.WolfStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'tail', bodypart.WolfTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.WolfHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.WolfBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.WolfEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.WolfEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -2983,11 +3522,11 @@ class Wolf(Creature):
         return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
 
     def smellplayerphrase(self):
-        phrase = 'Aw' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Aw' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seeplayerphrase(self):
-        phrase = 'Aw' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Aw' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seefactionmatephrase(self):
@@ -3001,8 +3540,10 @@ class Wolf(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3015,25 +3556,32 @@ class Wolf(Creature):
                 for dx2 in [-1, 0, 1]:
                     for dy2 in [-1, 0, 1]:
                         if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
-                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestsmell = self.world.smells[self.x +
+                                                               dx2][self.y + dy2][player]
                             strongestdcoords = (dx2, dy2)
                 if strongestdcoords != (0, 0):
-                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
+                    self.targetcoords = (
+                        self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
-                i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                # N.B. DIFFERENT THAN MOST CREATURES!
+                i = maxdmglist.index(max(maxdmglist))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -3042,11 +3590,12 @@ class Wolf(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -3055,10 +3604,11 @@ class Wolf(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -3068,6 +3618,7 @@ class Wolf(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Drillbot(Creature):
     def __init__(self, world, world_i, x, y):
@@ -3080,18 +3631,30 @@ class Drillbot(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.DrillbotChassis(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('arm', bodypart.DrillArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('coolant pumping system', bodypart.DrillbotPump(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('coolant aerator system', bodypart.DrillbotAerator(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('coolant filtering system', bodypart.DrillbotFilter(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('biomass processor', bodypart.DrillBotBiomassProcessor(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('central processor', bodypart.DrillbotProcessor(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right wheel', bodypart.DrillbotWheel(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'arm', bodypart.DrillArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'coolant pumping system', bodypart.DrillbotPump(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'coolant aerator system', bodypart.DrillbotAerator(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'coolant filtering system', bodypart.DrillbotFilter(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'biomass processor', bodypart.DrillBotBiomassProcessor(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'central processor', bodypart.DrillbotProcessor(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right camera', bodypart.DrillbotCamera(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -3109,6 +3672,7 @@ class Drillbot(Creature):
     def seeplayerphrase(self):
         phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
     def seefactionmatephrase(self):
         phrase = np.random.choice(['Beep bop', 'Beep beep', 'Whirr'])
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
@@ -3122,8 +3686,10 @@ class Drillbot(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3137,13 +3703,17 @@ class Drillbot(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -3152,11 +3722,12 @@ class Drillbot(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -3165,10 +3736,11 @@ class Drillbot(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -3178,6 +3750,7 @@ class Drillbot(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Lobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -3189,24 +3762,39 @@ class Lobgoblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.LobgoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.LobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.LobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.LobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.LobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.LobgoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.LobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.LobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.LobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.LobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.LobgoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.LobgoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.LobgoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.LobgoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.LobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.LobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.LobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.LobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.LobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.LobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.LobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.LobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.LobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.LobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.LobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.LobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.LobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.LobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.LobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        phrase = np.random.choice(
+            ['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
 
     def hurtphrase(self, parts):
@@ -3214,7 +3802,8 @@ class Lobgoblin(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -3225,7 +3814,9 @@ class Lobgoblin(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Yikes!'
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
@@ -3239,7 +3830,8 @@ class Lobgoblin(Creature):
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!',
+                                  'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -3247,8 +3839,10 @@ class Lobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3262,13 +3856,17 @@ class Lobgoblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -3277,11 +3875,12 @@ class Lobgoblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -3290,10 +3889,11 @@ class Lobgoblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -3303,6 +3903,7 @@ class Lobgoblin(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class RevenantCaveOctopus(Creature):
     def __init__(self, world, world_i, x, y):
@@ -3315,25 +3916,44 @@ class RevenantCaveOctopus(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.RevenantOctopusHead(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-back left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-front right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('center-back right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('central heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left gills', bodypart.RevenantOctopusGills(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right gills', bodypart.RevenantOctopusGills(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left metanephridium', bodypart.RevenantOctopusMetanephridium(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right metanephridium', bodypart.RevenantOctopusMetanephridium(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.RevenantOctopusStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('brain', bodypart.RevenantOctopusBrain(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-front left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-back left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-front right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'center-back right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right limb', bodypart.RevenantOctopusTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'central heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right heart', bodypart.RevenantOctopusHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left gills', bodypart.RevenantOctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right gills', bodypart.RevenantOctopusGills(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left metanephridium', bodypart.RevenantOctopusMetanephridium(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right metanephridium', bodypart.RevenantOctopusMetanephridium(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.RevenantOctopusStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'brain', bodypart.RevenantOctopusBrain(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right eye', bodypart.RevenantOctopusEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -3362,8 +3982,10 @@ class RevenantCaveOctopus(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3377,13 +3999,17 @@ class RevenantCaveOctopus(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -3392,11 +4018,12 @@ class RevenantCaveOctopus(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -3405,10 +4032,11 @@ class RevenantCaveOctopus(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -3419,43 +4047,62 @@ class RevenantCaveOctopus(Creature):
         else:
             return(['wait', 1])
 
+
 class Ghoul(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
         self.factions = ['undead']
         self.char = 'g'
         self.color = (191, 255, 255)
-        self.name = np.random.choice(['ghoul', 'headless ghoul', 'one-armed ghoul', 'crawler ghoul'], p=[0.7, 0.1, 0.1, 0.1])
+        self.name = np.random.choice(
+            ['ghoul', 'headless ghoul', 'one-armed ghoul', 'crawler ghoul'], p=[0.7, 0.1, 0.1, 0.1])
         self.smellname = 'ghoul'
         self.x = x
         self.y = y
         self.torso = bodypart.GhoulTorso(self.bodyparts, 0, 0)
         if self.name != 'one-armed ghoul':
-            self.bodyparts[0].connect('left arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
         else:
             if np.random.choice(2):
-                self.bodyparts[0].connect('left arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'left arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
             else:
-                self.bodyparts[0].connect('right arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'right arm', bodypart.GhoulArm(self.bodyparts, 0, 0))
         if self.name != 'crawler ghoul':
-            self.bodyparts[0].connect('left leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.GhoulHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.GhoulKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.GhoulKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.GhoulStomach(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right leg', bodypart.GhoulLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.GhoulHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.GhoulLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.GhoulKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.GhoulKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.GhoulStomach(self.bodyparts, 0, 0))
         if self.name != 'headless ghoul':
-            self.bodyparts[0].connect('head', bodypart.GhoulHead(self.bodyparts, 0, 0))
-            self.bodyparts[-1].connect('brain', bodypart.GhoulBrain(self.bodyparts, 0, 0))
-            self.bodyparts[-2].connect('left eye', bodypart.GhoulEye(self.bodyparts, 0, 0))
-            self.bodyparts[-3].connect('right eye', bodypart.GhoulEye(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'head', bodypart.GhoulHead(self.bodyparts, 0, 0))
+            self.bodyparts[-1].connect('brain',
+                                       bodypart.GhoulBrain(self.bodyparts, 0, 0))
+            self.bodyparts[-2].connect('left eye',
+                                       bodypart.GhoulEye(self.bodyparts, 0, 0))
+            self.bodyparts[-3].connect('right eye',
+                                       bodypart.GhoulEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Join me in death!', 'Take this, mortal!', 'Give me your flesh!'])
+        phrase = np.random.choice(
+            ['Join me in death!', 'Take this, mortal!', 'Give me your flesh!'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def hurtphrase(self, parts):
@@ -3463,7 +4110,8 @@ class Ghoul(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -3474,13 +4122,16 @@ class Ghoul(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Aagh!'
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def seeplayerphrase(self):
-        phrase = np.random.choice(['Intruder alert!', 'Red alert!', 'I will eat you, golem!'])
+        phrase = np.random.choice(
+            ['Intruder alert!', 'Red alert!', 'I will eat you, golem!'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def seefactionmatephrase(self):
@@ -3488,7 +4139,8 @@ class Ghoul(Creature):
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['I crave flesh...', 'Become undead, they said. It will be fun, they said.'])
+        phrase = np.random.choice(
+            ['I crave flesh...', 'Become undead, they said. It will be fun, they said.'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def ai(self):
@@ -3496,8 +4148,10 @@ class Ghoul(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
@@ -3515,13 +4169,17 @@ class Ghoul(Creature):
                 elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                     # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                     # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                                  self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                     if len(dxdylist) > 0:
                         if not self.panicked():
-                            dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                            dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                         else:
-                            dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                            dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                            self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                         return(['move', dx, dy, time])
                     else:
                         return(['wait', 1])
@@ -3530,11 +4188,12 @@ class Ghoul(Creature):
                     dx = 0
                     dy = 0
                     repeats = 0
-                    while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
+                    while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
                         repeats += 1
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         return(['move', dx, dy, time])
                     else:
@@ -3543,10 +4202,11 @@ class Ghoul(Creature):
                     self.targetcoords = None
                     dx = 0
                     dy = 0
-                    while (dx,dy) == (0,0):
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    while (dx, dy) == (0, 0):
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         if not self.world.walls[self.x+dx, self.y+dy]:
                             return(['move', dx, dy, time])
@@ -3556,6 +4216,7 @@ class Ghoul(Creature):
                         return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class SmallFireElemental(Creature):
     def __init__(self, world, world_i, x, y):
@@ -3567,20 +4228,31 @@ class SmallFireElemental(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.SmallFireElementalTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.SmallFireElementalHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.SmallFireElementalHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.SmallFireElementalBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('eye', bodypart.SmallFireElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right limb', bodypart.SmallFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.SmallFireElementalHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.SmallFireElementalHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.SmallFireElementalBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('eye',
+                                   bodypart.SmallFireElementalEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Burn, burn, burn!', 'Burn!', 'Feel the fire!'])
+        phrase = np.random.choice(
+            ['Burn, burn, burn!', 'Burn!', 'Feel the fire!'])
         return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
 
     def hurtphrase(self, parts):
@@ -3588,7 +4260,8 @@ class SmallFireElemental(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -3599,21 +4272,26 @@ class SmallFireElemental(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Aagh!'
         return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
 
     def seeplayerphrase(self):
-        phrase = np.random.choice(['Something needs to be burned!', 'No smoke without fire!', 'Fire at will!'])
+        phrase = np.random.choice(
+            ['Something needs to be burned!', 'No smoke without fire!', 'Fire at will!'])
         return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
 
     def seefactionmatephrase(self):
-        phrase = np.random.choice(['How\'s it burning?', 'Burn bright!', 'Spark and crackle!'])
+        phrase = np.random.choice(
+            ['How\'s it burning?', 'Burn bright!', 'Spark and crackle!'])
         return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Burn, baby, burn!', 'We don\'t need no water!'])
+        phrase = np.random.choice(
+            ['Burn, baby, burn!', 'We don\'t need no water!'])
         return (15, ('see and hear', 'NAME_0', 'crackled', 'crackle', phrase))
 
     def ai(self):
@@ -3621,8 +4299,10 @@ class SmallFireElemental(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3634,7 +4314,8 @@ class SmallFireElemental(Creature):
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif fovmap[player.x, player.y] and (abs(self.x - player.x) > 1 or abs(self.y - player.y) > 1) and len([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement]) > 0 and not self.panicked():
-                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
+                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(
+                    spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
                 if isinstance(spell, magic.TargetedSpell):
                     return(['cast', spell, [self, player], spell.castingtime])
                 else:
@@ -3642,13 +4323,17 @@ class SmallFireElemental(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len(
+                    [creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -3657,11 +4342,12 @@ class SmallFireElemental(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -3670,10 +4356,11 @@ class SmallFireElemental(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -3683,6 +4370,7 @@ class SmallFireElemental(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Mobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -3694,24 +4382,39 @@ class Mobgoblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.MobgoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.MobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.MobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.MobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.MobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.MobgoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.MobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.MobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.MobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.MobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.MobgoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.MobgoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.MobgoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.MobgoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.MobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.MobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.MobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.MobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.MobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.MobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.MobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.MobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.MobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.MobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.MobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.MobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.MobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.MobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.MobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        phrase = np.random.choice(
+            ['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
 
     def hurtphrase(self, parts):
@@ -3719,7 +4422,8 @@ class Mobgoblin(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -3730,7 +4434,9 @@ class Mobgoblin(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Yikes!'
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
@@ -3744,7 +4450,8 @@ class Mobgoblin(Creature):
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!',
+                                  'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -3752,8 +4459,10 @@ class Mobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3767,13 +4476,17 @@ class Mobgoblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -3782,11 +4495,12 @@ class Mobgoblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -3795,10 +4509,11 @@ class Mobgoblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -3808,6 +4523,7 @@ class Mobgoblin(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class DireWolf(Creature):
     def __init__(self, world, world_i, x, y):
@@ -3820,21 +4536,36 @@ class DireWolf(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.DireWolfTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.DireWolfHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.DireWolfKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.DireWolfKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.DireWolfStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('tail', bodypart.DireWolfTail(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.DireWolfHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.DireWolfBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.DireWolfEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.DireWolfEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right leg', bodypart.DireWolfLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.DireWolfHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.DireWolfLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.DireWolfKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.DireWolfKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.DireWolfStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'tail', bodypart.DireWolfTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.DireWolfHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.DireWolfBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.DireWolfEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.DireWolfEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -3848,11 +4579,11 @@ class DireWolf(Creature):
         return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
 
     def smellplayerphrase(self):
-        phrase = 'Ga-w' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Ga-w' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seeplayerphrase(self):
-        phrase = 'Ga-w' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Ga-w' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seefactionmatephrase(self):
@@ -3866,8 +4597,10 @@ class DireWolf(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -3880,25 +4613,32 @@ class DireWolf(Creature):
                 for dx2 in [-1, 0, 1]:
                     for dy2 in [-1, 0, 1]:
                         if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
-                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestsmell = self.world.smells[self.x +
+                                                               dx2][self.y + dy2][player]
                             strongestdcoords = (dx2, dy2)
                 if strongestdcoords != (0, 0):
-                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
+                    self.targetcoords = (
+                        self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
-                i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                # N.B. DIFFERENT THAN MOST CREATURES!
+                i = maxdmglist.index(max(maxdmglist))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -3907,11 +4647,12 @@ class DireWolf(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -3920,10 +4661,11 @@ class DireWolf(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -3933,6 +4675,7 @@ class DireWolf(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Jobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -3944,24 +4687,39 @@ class Jobgoblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.JobgoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.JobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.JobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.JobgoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.JobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.JobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.JobgoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.JobgoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.JobgoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.JobgoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.JobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.JobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.JobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.JobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.JobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.JobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.JobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.JobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.JobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.JobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.JobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.JobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.JobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        phrase = np.random.choice(
+            ['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
 
     def hurtphrase(self, parts):
@@ -3969,7 +4727,8 @@ class Jobgoblin(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -3980,7 +4739,9 @@ class Jobgoblin(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Yikes!'
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
@@ -3994,7 +4755,8 @@ class Jobgoblin(Creature):
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!',
+                                  'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -4002,8 +4764,10 @@ class Jobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -4017,13 +4781,17 @@ class Jobgoblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -4032,11 +4800,12 @@ class Jobgoblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -4045,10 +4814,11 @@ class Jobgoblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -4059,43 +4829,62 @@ class Jobgoblin(Creature):
         else:
             return(['wait', 1])
 
+
 class Ghast(Creature):
     def __init__(self, world, world_i, x, y):
         super().__init__(world, world_i)
         self.factions = ['undead']
         self.char = 'g'
         self.color = (191, 255, 255)
-        self.name = np.random.choice(['ghast', 'headless ghast', 'one-armed ghast', 'crawler ghast'], p=[0.7, 0.1, 0.1, 0.1])
+        self.name = np.random.choice(
+            ['ghast', 'headless ghast', 'one-armed ghast', 'crawler ghast'], p=[0.7, 0.1, 0.1, 0.1])
         self.smellname = 'ghast'
         self.x = x
         self.y = y
         self.torso = bodypart.GhastTorso(self.bodyparts, 0, 0)
         if self.name != 'one-armed ghast':
-            self.bodyparts[0].connect('left arm', bodypart.GhastArm(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right arm', bodypart.GhastArm(self.bodyparts, 0, 0))
         else:
             if np.random.choice(2):
-                self.bodyparts[0].connect('left arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'left arm', bodypart.GhastArm(self.bodyparts, 0, 0))
             else:
-                self.bodyparts[0].connect('right arm', bodypart.GhastArm(self.bodyparts, 0, 0))
+                self.bodyparts[0].connect(
+                    'right arm', bodypart.GhastArm(self.bodyparts, 0, 0))
         if self.name != 'crawler ghast':
-            self.bodyparts[0].connect('left leg', bodypart.GhastLeg(self.bodyparts, 0, 0))
-            self.bodyparts[0].connect('right leg', bodypart.GhastLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.GhastHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.GhastLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.GhastLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.GhastKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.GhastKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.GhastStomach(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'left leg', bodypart.GhastLeg(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'right leg', bodypart.GhastLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.GhastHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.GhastLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.GhastLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.GhastKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.GhastKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.GhastStomach(self.bodyparts, 0, 0))
         if self.name != 'headless ghast':
-            self.bodyparts[0].connect('head', bodypart.GhastHead(self.bodyparts, 0, 0))
-            self.bodyparts[-1].connect('brain', bodypart.GhastBrain(self.bodyparts, 0, 0))
-            self.bodyparts[-2].connect('left eye', bodypart.GhastEye(self.bodyparts, 0, 0))
-            self.bodyparts[-3].connect('right eye', bodypart.GhastEye(self.bodyparts, 0, 0))
+            self.bodyparts[0].connect(
+                'head', bodypart.GhastHead(self.bodyparts, 0, 0))
+            self.bodyparts[-1].connect('brain',
+                                       bodypart.GhastBrain(self.bodyparts, 0, 0))
+            self.bodyparts[-2].connect('left eye',
+                                       bodypart.GhastEye(self.bodyparts, 0, 0))
+            self.bodyparts[-3].connect('right eye',
+                                       bodypart.GhastEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Join me in death!', 'Take this, mortal!', 'Give me your flesh!'])
+        phrase = np.random.choice(
+            ['Join me in death!', 'Take this, mortal!', 'Give me your flesh!'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def hurtphrase(self, parts):
@@ -4103,7 +4892,8 @@ class Ghast(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -4114,13 +4904,16 @@ class Ghast(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Aagh!'
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def seeplayerphrase(self):
-        phrase = np.random.choice(['Intruder alert!', 'Red alert!', 'I will eat you, golem!'])
+        phrase = np.random.choice(
+            ['Intruder alert!', 'Red alert!', 'I will eat you, golem!'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def seefactionmatephrase(self):
@@ -4128,7 +4921,8 @@ class Ghast(Creature):
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['I crave flesh...', 'Become undead, they said. It will be fun, they said.'])
+        phrase = np.random.choice(
+            ['I crave flesh...', 'Become undead, they said. It will be fun, they said.'])
         return (10, ('see and hear', 'NAME_0', 'croaked', 'croak', phrase))
 
     def ai(self):
@@ -4136,8 +4930,10 @@ class Ghast(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             fovmap2 = player.fov()
             if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
@@ -4155,13 +4951,17 @@ class Ghast(Creature):
                 elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                     # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                     # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                                  self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                     if len(dxdylist) > 0:
                         if not self.panicked():
-                            dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                            dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                         else:
-                            dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                            dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                            self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                         return(['move', dx, dy, time])
                     else:
                         return(['wait', 1])
@@ -4170,11 +4970,12 @@ class Ghast(Creature):
                     dx = 0
                     dy = 0
                     repeats = 0
-                    while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
+                    while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
                         repeats += 1
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         return(['move', dx, dy, time])
                     else:
@@ -4183,10 +4984,11 @@ class Ghast(Creature):
                     self.targetcoords = None
                     dx = 0
                     dy = 0
-                    while (dx,dy) == (0,0):
-                        dx = np.random.choice([-1,0,1])
-                        dy = np.random.choice([-1,0,1])
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    while (dx, dy) == (0, 0):
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                         if not self.world.walls[self.x+dx, self.y+dy]:
                             return(['move', dx, dy, time])
@@ -4196,6 +4998,7 @@ class Ghast(Creature):
                         return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Nobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -4207,24 +5010,39 @@ class Nobgoblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.NobgoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.NobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.NobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.NobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.NobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.NobgoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.NobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.NobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.NobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.NobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.NobgoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.NobgoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.NobgoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.NobgoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.NobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.NobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.NobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.NobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.NobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.NobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.NobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.NobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.NobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.NobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.NobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.NobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.NobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.NobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.NobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        phrase = np.random.choice(
+            ['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
 
     def hurtphrase(self, parts):
@@ -4232,7 +5050,8 @@ class Nobgoblin(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -4243,7 +5062,9 @@ class Nobgoblin(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Yikes!'
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
@@ -4257,7 +5078,8 @@ class Nobgoblin(Creature):
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!',
+                                  'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -4265,8 +5087,10 @@ class Nobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -4280,13 +5104,17 @@ class Nobgoblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -4295,11 +5123,12 @@ class Nobgoblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -4308,10 +5137,11 @@ class Nobgoblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -4321,6 +5151,7 @@ class Nobgoblin(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Warg(Creature):
     def __init__(self, world, world_i, x, y):
@@ -4333,21 +5164,36 @@ class Warg(Creature):
         self.y = y
         self.speech = False
         self.torso = bodypart.WargTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('front left leg', bodypart.WargLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right leg', bodypart.WargLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left leg', bodypart.WargLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right leg', bodypart.WargLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.WargHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.WargLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.WargLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.WargKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.WargKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.WargStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('tail', bodypart.WargTail(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.WargHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.WargBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.WargEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.WargEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right leg', bodypart.WargLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.WargHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.WargLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.WargLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.WargKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.WargKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.WargStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'tail', bodypart.WargTail(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.WargHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.WargBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.WargEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.WargEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
@@ -4361,11 +5207,11 @@ class Warg(Creature):
         return (10, ('see and hear', 'NAME_0', 'whimpered nervously', 'whimper nervously'))
 
     def smellplayerphrase(self):
-        phrase = 'Ar' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Ar' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seeplayerphrase(self):
-        phrase = 'Ar' + 'o'*np.random.randint(2, 10) +'!'
+        phrase = 'Ar' + 'o'*np.random.randint(2, 10) + '!'
         return (20, ('see and hear', 'NAME_0', 'howled', 'howl', phrase))
 
     def seefactionmatephrase(self):
@@ -4379,8 +5225,10 @@ class Warg(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -4393,25 +5241,32 @@ class Warg(Creature):
                 for dx2 in [-1, 0, 1]:
                     for dy2 in [-1, 0, 1]:
                         if player in self.world.smells[self.x + dx2][self.y + dy2] and self.world.smells[self.x + dx2][self.y + dy2][player] > strongestsmell:
-                            strongestsmell = self.world.smells[self.x + dx2][self.y + dy2][player]
+                            strongestsmell = self.world.smells[self.x +
+                                                               dx2][self.y + dy2][player]
                             strongestdcoords = (dx2, dy2)
                 if strongestdcoords != (0, 0):
-                    self.targetcoords = (self.x + strongestdcoords[0], self.y + strongestdcoords[1])
+                    self.targetcoords = (
+                        self.x + strongestdcoords[0], self.y + strongestdcoords[1])
             if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
                 maxdmglist = [atk[8] for atk in self.attackslist()]
-                i = maxdmglist.index(max(maxdmglist)) # N.B. DIFFERENT THAN MOST CREATURES!
+                # N.B. DIFFERENT THAN MOST CREATURES!
+                i = maxdmglist.index(max(maxdmglist))
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -4420,11 +5275,12 @@ class Warg(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -4433,10 +5289,11 @@ class Warg(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -4446,6 +5303,7 @@ class Warg(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Fobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -4457,24 +5315,39 @@ class Fobgoblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.FobgoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.FobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.FobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.FobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.FobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.FobgoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.FobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.FobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.FobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.FobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.FobgoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.FobgoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.FobgoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.FobgoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.FobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.FobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.FobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.FobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.FobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.FobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.FobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.FobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.FobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.FobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.FobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.FobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.FobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.FobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.FobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        phrase = np.random.choice(
+            ['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
 
     def hurtphrase(self, parts):
@@ -4482,7 +5355,8 @@ class Fobgoblin(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -4493,7 +5367,9 @@ class Fobgoblin(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Yikes!'
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
@@ -4507,7 +5383,8 @@ class Fobgoblin(Creature):
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!',
+                                  'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -4515,8 +5392,10 @@ class Fobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -4530,13 +5409,17 @@ class Fobgoblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -4545,11 +5428,12 @@ class Fobgoblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -4558,10 +5442,11 @@ class Fobgoblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -4571,6 +5456,7 @@ class Fobgoblin(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class LargeFireElemental(Creature):
     def __init__(self, world, world_i, x, y):
@@ -4582,23 +5468,37 @@ class LargeFireElemental(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.LargeFireElementalTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.LargeFireElementalArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.LargeFireElementalArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front left limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back left limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('front right limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('back right limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.LargeFireElementalHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.LargeFireElementalHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.LargeFireElementalBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.LargeFireElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.LargeFireElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front left limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right limb', bodypart.LargeFireElementalTentacle(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.LargeFireElementalHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.LargeFireElementalHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.LargeFireElementalBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.LargeFireElementalEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['BURN, BURN, BURN!', 'BURN!', 'FEEL THE FIRE!'])
+        phrase = np.random.choice(
+            ['BURN, BURN, BURN!', 'BURN!', 'FEEL THE FIRE!'])
         return (20, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
 
     def hurtphrase(self, parts):
@@ -4606,7 +5506,8 @@ class LargeFireElemental(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)].upper()
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)].upper()
             elif part == self.torso:
                 partname = 'TORSO'
         if partname != '' and np.random.rand() < 0.5:
@@ -4617,21 +5518,26 @@ class LargeFireElemental(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname.upper() + ', PLEASE HELP ME!'
+            phrase = 'O ' + \
+                np.random.choice(
+                    self.godsknown()).firstname.upper() + ', PLEASE HELP ME!'
         else:
             phrase = 'AAGH!'
         return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
 
     def seeplayerphrase(self):
-        phrase = np.random.choice(['SOMETHING NEEDS TO BE BURNED!', 'NO SMOKE WITHOUT FIRE!', 'FIRE AT WILL!'])
+        phrase = np.random.choice(
+            ['SOMETHING NEEDS TO BE BURNED!', 'NO SMOKE WITHOUT FIRE!', 'FIRE AT WILL!'])
         return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
 
     def seefactionmatephrase(self):
-        phrase = np.random.choice(['HOW\'S IT BURNING?', 'BURN BRIGHT!', 'SPARK AND CRACKLE!'])
+        phrase = np.random.choice(
+            ['HOW\'S IT BURNING?', 'BURN BRIGHT!', 'SPARK AND CRACKLE!'])
         return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['BURN, BABY, BURN!', 'WE DON\'T NEED NO WATER!'])
+        phrase = np.random.choice(
+            ['BURN, BABY, BURN!', 'WE DON\'T NEED NO WATER!'])
         return (15, ('see and hear', 'NAME_0', 'roared', 'roar', phrase))
 
     def ai(self):
@@ -4639,8 +5545,10 @@ class LargeFireElemental(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -4652,7 +5560,8 @@ class LargeFireElemental(Creature):
                 atk = self.attackslist()[i]
                 return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
             elif fovmap[player.x, player.y] and (abs(self.x - player.x) > 1 or abs(self.y - player.y) > 1) and len([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement]) > 0 and not self.panicked():
-                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
+                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(
+                    spell, (magic.TargetedSpell, magic.BodypartTargetedSpell)) and self.mana() >= spell.manarequirement])
                 if isinstance(spell, magic.TargetedSpell):
                     return(['cast', spell, [self, player], spell.castingtime])
                 else:
@@ -4660,13 +5569,17 @@ class LargeFireElemental(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len(
+                    [creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -4675,11 +5588,12 @@ class LargeFireElemental(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -4688,10 +5602,11 @@ class LargeFireElemental(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -4701,6 +5616,7 @@ class LargeFireElemental(Creature):
                     return(['wait', 1])
         else:
             return(['wait', 1])
+
 
 class Dobgoblin(Creature):
     def __init__(self, world, world_i, x, y):
@@ -4712,24 +5628,39 @@ class Dobgoblin(Creature):
         self.x = x
         self.y = y
         self.torso = bodypart.DobgoblinTorso(self.bodyparts, 0, 0)
-        self.bodyparts[0].connect('left arm', bodypart.DobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right arm', bodypart.DobgoblinArm(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left leg', bodypart.DobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right leg', bodypart.DobgoblinLeg(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('heart', bodypart.DobgoblinHeart(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left lung', bodypart.DobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right lung', bodypart.DobgoblinLung(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('left kidney', bodypart.DobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('right kidney', bodypart.DobgoblinKidney(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('stomach', bodypart.DobgoblinStomach(self.bodyparts, 0, 0))
-        self.bodyparts[0].connect('head', bodypart.DobgoblinHead(self.bodyparts, 0, 0))
-        self.bodyparts[-1].connect('brain', bodypart.DobgoblinBrain(self.bodyparts, 0, 0))
-        self.bodyparts[-2].connect('left eye', bodypart.DobgoblinEye(self.bodyparts, 0, 0))
-        self.bodyparts[-3].connect('right eye', bodypart.DobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left arm', bodypart.DobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.DobgoblinArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.DobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.DobgoblinLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.DobgoblinHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.DobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.DobgoblinLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.DobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.DobgoblinKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.DobgoblinStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.DobgoblinHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.DobgoblinBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.DobgoblinEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.DobgoblinEye(self.bodyparts, 0, 0))
         self.targetcoords = None
 
     def attackphrase(self):
-        phrase = np.random.choice(['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
+        phrase = np.random.choice(
+            ['Yee-haw!', 'Boom!', 'Bang!', 'Bangarang!', 'Die! Die! Die!', 'I\'ll end you!'])
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
 
     def hurtphrase(self, parts):
@@ -4737,7 +5668,8 @@ class Dobgoblin(Creature):
         if len(parts) == 1:
             part = parts[0]
             if part.parentalconnection != None:
-                partname = list(part.parentalconnection.parent.childconnections.keys())[list(part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
             elif part == self.torso:
                 partname = 'torso'
         if partname != '' and np.random.rand() < 0.5:
@@ -4748,7 +5680,9 @@ class Dobgoblin(Creature):
 
     def scaredphrase(self):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
-            phrase = 'O ' + np.random.choice(self.godsknown()).firstname + ', please help me!'
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
         else:
             phrase = 'Yikes!'
         return (20, ('see and hear', 'NAME_0', 'screamed', 'scream', phrase))
@@ -4762,7 +5696,8 @@ class Dobgoblin(Creature):
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def idlephrase(self):
-        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!', 'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
+        phrase = np.random.choice(['Oops, I farted!', 'Burp!', 'It\'s dangerous to go alone!',
+                                  'I used to be an adventurer, then I took an arrow in the knee.', 'I could take a nap.'])
         return (15, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def ai(self):
@@ -4770,8 +5705,10 @@ class Dobgoblin(Creature):
         if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
             disoriented = True
             self.log().append('You stumbled around.')
-        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:  # This is for preventing a crash when player dies.
-            player = [creature for creature in self.world.creatures if 'player' in creature.factions][0]
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
             fovmap = self.fov()
             target = None
             if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
@@ -4785,13 +5722,17 @@ class Dobgoblin(Creature):
             elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
                 # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
                 # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
-                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                              self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
                 if len(dxdylist) > 0:
                     if not self.panicked():
-                        dx, dy = min(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
                     else:
-                        dx, dy = max(dxdylist, key=lambda dxdy : np.sqrt((self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
-                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                     return(['move', dx, dy, time])
                 else:
                     return(['wait', 1])
@@ -4800,11 +5741,12 @@ class Dobgoblin(Creature):
                 dx = 0
                 dy = 0
                 repeats = 0
-                while repeats < 10 and (dx,dy) == (0,0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or (self.world.poisongas[self.x+dx, self.y+dy] != 0 and self.world.poisongas[self.x, self.y] == 0) or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
                     repeats += 1
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     return(['move', dx, dy, time])
                 else:
@@ -4813,10 +5755,11 @@ class Dobgoblin(Creature):
                 self.targetcoords = None
                 dx = 0
                 dy = 0
-                while (dx,dy) == (0,0):
-                    dx = np.random.choice([-1,0,1])
-                    dy = np.random.choice([-1,0,1])
-                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
                 if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
                     if not self.world.walls[self.x+dx, self.y+dy]:
                         return(['move', dx, dy, time])
@@ -4828,21 +5771,22 @@ class Dobgoblin(Creature):
             return(['wait', 1])
 
 
-
-enemytypesbylevel = [ # List of tuples for each level. Each tuple is an enemy type and a probability weight for its presence.
-    [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10)], # 1
-    [(Zombie, 15), (MolePerson, 15), (Goblin, 15), (GlassElemental, 15), (CaveOctopus, 20), (Dog, 20), (Imp, 20)], # 2
-    [(CaveOctopus, 10), (Dog, 10), (Imp, 10), (Hobgoblin, 10), (MoleMonk, 10), (ZombieZorcerer, 10)], # 3
-    [(Hobgoblin, 5), (MoleMonk, 5), (ZombieZorcerer, 5), (Wolf, 15)], # 4
-    [(Wolf, 15), (Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5)], # 5
-    [(Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5), (Ghoul, 15)], # 6
-    [(Ghoul, 10), (SmallFireElemental, 5), (Mobgoblin, 5)], # 7
-    [(SmallFireElemental, 5), (Mobgoblin, 5), (DireWolf, 10)], # 8
-    [(DireWolf, 10), (Jobgoblin, 10)], # 9
-    [(Jobgoblin, 10), (Ghast, 10)], # 10
-    [(Ghast, 10), (Nobgoblin, 10)], # 11
-    [(Nobgoblin, 10), (Warg, 10)], # 12
-    [(Warg, 10), (Fobgoblin, 10)], # 13
-    [(Fobgoblin, 10), (LargeFireElemental, 10)], # 14
-    [(LargeFireElemental, 10), (Dobgoblin, 10)] # 15
-    ]
+enemytypesbylevel = [  # List of tuples for each level. Each tuple is an enemy type and a probability weight for its presence.
+    [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10)],  # 1
+    [(Zombie, 15), (MolePerson, 15), (Goblin, 15), (GlassElemental, 15),
+     (CaveOctopus, 20), (Dog, 20), (Imp, 20)],  # 2
+    [(CaveOctopus, 10), (Dog, 10), (Imp, 10), (Hobgoblin, 10),
+     (MoleMonk, 10), (ZombieZorcerer, 10)],  # 3
+    [(Hobgoblin, 5), (MoleMonk, 5), (ZombieZorcerer, 5), (Wolf, 15)],  # 4
+    [(Wolf, 15), (Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5)],  # 5
+    [(Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5), (Ghoul, 15)],  # 6
+    [(Ghoul, 10), (SmallFireElemental, 5), (Mobgoblin, 5)],  # 7
+    [(SmallFireElemental, 5), (Mobgoblin, 5), (DireWolf, 10)],  # 8
+    [(DireWolf, 10), (Jobgoblin, 10)],  # 9
+    [(Jobgoblin, 10), (Ghast, 10)],  # 10
+    [(Ghast, 10), (Nobgoblin, 10)],  # 11
+    [(Nobgoblin, 10), (Warg, 10)],  # 12
+    [(Warg, 10), (Fobgoblin, 10)],  # 13
+    [(Fobgoblin, 10), (LargeFireElemental, 10)],  # 14
+    [(LargeFireElemental, 10), (Dobgoblin, 10)]  # 15
+]
