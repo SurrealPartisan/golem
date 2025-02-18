@@ -5,8 +5,6 @@ Minor
 * Even more different blessings and smites to different gods
 
 Major
-* Sense of hearing
-  * Wolf howling
 * Make NPC:s use items (and consider carrying capacity)
 
 Never ready

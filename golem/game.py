@@ -4217,6 +4217,9 @@ def credits():
                     'Software Tester 7 by Sizenko Alexander, Style-7. Freeware.',
                     'Square by Wouter van Oortmerssen. CC BY 3.0 Deed license.',
                     '',
+                    'The game and its source code are licensed with the WTFPL license.',
+                    'No warranty given, no rights reserved.',
+                    '',
                     'This game is dedicated to the transgender community.']
         for i in range(len(credlist)):
             cred = credlist[i]
