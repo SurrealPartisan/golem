@@ -1618,6 +1618,7 @@ def game():
             else:  # Shouldn't happen, but just in case
                 player.stance = 'neutral'
             if oldstance == 'flying':
+                player.fovuptodate = False
                 for it in cave.items:
                     if (it.x, it.y) == (player.x, player.y) and it.trap:
                         part = player.approxfastestpart()
@@ -3428,6 +3429,7 @@ def game():
                             player.stance = selected
                             player.preferredstance = selected
                             if oldstance == 'flying' and player.stance != 'flying':
+                                player.fovuptodate = False
                                 for it in cave.items:
                                     if (it.x, it.y) == (player.x, player.y) and it.trap:
                                         part = player.approxfastestpart()
@@ -3439,6 +3441,8 @@ def game():
                                         else:
                                             it.entrap(player, part)
                                             player.itemsseen().append(it)
+                            if oldstance != 'flying' and player.stance == 'flying':
+                                player.fovuptodate = False
                             detecthiddenitems()
                             player.previousaction = ('choosestance',)
                     if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):

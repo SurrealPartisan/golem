@@ -613,7 +613,7 @@ class Creature():
                     else:
                         self.log().append('You smell a ' + smellname +
                                           '. The smell is at its strongest right here.')
-                    if 'player' in creat.factions:
+                    if 'player' in creat.factions and not self.alreadysmelledplayer:
                         self.alreadysmelledplayer = True
                         volume, details = self.smellplayerphrase()
                         if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
@@ -887,14 +887,6 @@ class Creature():
             self.log().append('You were unable to finish your throw.')
 
     def fight(self, target, targetbodypart, attack, thrown=False, magical=False, sound=True, kiai=True):
-        volume, details = self.attackphrase()
-        if kiai and np.random.rand() < 0.2 and len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
-            if len(details) == 5:
-                self.log().append(
-                    'You ' + details[2] + ': "' + details[4] + '".')
-            elif len(details) == 4:
-                self.log().append('You ' + details[2] + '.')
-            infoblast(self.world, self.x, self.y, volume, [self], details)
         wornlist = [
             it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         if attack.weapon in self.bodyparts or attack.weapon == None:
@@ -907,6 +899,14 @@ class Creature():
             if targetbodypart in target.bodyparts and not targetbodypart.destroyed():
                 if thrown or magical or (abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1):
                     if (not self.scared() or np.random.rand() < 0.5) and not self.panicked():
+                        volume, details = self.attackphrase()
+                        if kiai and np.random.rand() < 0.2 and len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                            if len(details) == 5:
+                                self.log().append(
+                                    'You ' + details[2] + ': "' + details[4] + '".')
+                            elif len(details) == 4:
+                                self.log().append('You ' + details[2] + '.')
+                            infoblast(self.world, self.x, self.y, volume, [self], details)
                         if self.stance == 'aggressive':
                             attackerstancecoefficient = 1.25
                         elif self.stance == 'defensive':
@@ -1439,7 +1439,7 @@ class Creature():
                                             'see only', 'NAME_0 ' + 'sneakily '*sneak + attack.verb3rd + ' at NAME_1\'s ' + partname + attack.post3rd + ' knocking it against the ' + knocked_to_obstacle + '!'))
                                 volume, details = target.hurtphrase(
                                     [targetbodypart])
-                                if damage > 0 and np.random.rand() < 0.2 and len(details) > 0 and volume > 0:
+                                if damage > 0 and np.random.rand() < 0.2 and len(details) > 0 and volume > 0 and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                     if len(details) == 5:
                                         target.log().append(
                                             'You ' + details[2] + ': "' + details[4] + '".')
@@ -1727,6 +1727,7 @@ class Creature():
             else:  # Shouldn't happen, but just in case
                 self.stance = 'neutral'
             if oldstance == 'flying':
+                self.fovuptodate = False
                 for it in self.world.items:
                     if (it.x, it.y) == (self.x, self.y) and it.trap:
                         part = self.approxfastestpart()
@@ -1906,7 +1907,7 @@ class Creature():
                                 creat.log().append('The ' + self.name + ' noticed you!')
                                 if np.any([faction in self.factions for faction in creat.factions]):
                                     volume, details = self.seefactionmatephrase()
-                                    if len(details) > 0 and volume > 0:
+                                    if len(details) > 0 and volume > 0  and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                         if len(details) == 5:
                                             self.log().append(
                                                 'You ' + details[2] + ': "' + details[4] + '".')
@@ -1916,7 +1917,7 @@ class Creature():
                                         infoblast(self.world, self.x, self.y, volume, [
                                                   self], details)
                                     volume, details = creat.seefactionmatephrase()
-                                    if len(details) > 0 and volume > 0:
+                                    if len(details) > 0 and volume > 0 and len([p for p in creat.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                         if len(details) == 5:
                                             creat.log().append(
                                                 'You ' + details[2] + ': "' + details[4] + '".')
@@ -1930,7 +1931,7 @@ class Creature():
                                               '. It hasn\'t noticed you.' + stancetext + vomitimbalancedtext)
                         if 'player' in creat.factions:
                             volume, details = self.seeplayerphrase()
-                            if len(details) > 0 and volume > 0:
+                            if len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                 if len(details) == 5:
                                     self.log().append(
                                         'You ' + details[2] + ': "' + details[4] + '".')
@@ -2146,9 +2147,12 @@ class MolePerson(Creature):
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def smellplayerphrase(self):
-        player = [
-            creature for creature in self.world.creatures if 'player' in creature.factions][0]
-        if not player in self.creaturesseen():
+        player = None
+        potentialplayers = [
+            creature for creature in self.world.creatures if 'player' in creature.factions]
+        if len(potentialplayers) > 0:
+            player = potentialplayers[0]
+        if player != None and not player in self.creaturesseen():
             phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!',
                                       'Is it just me or does it smell like a golem in here?'])
             return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
@@ -3181,9 +3185,12 @@ class MoleMonk(Creature):
         return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
 
     def smellplayerphrase(self):
-        player = [
-            creature for creature in self.world.creatures if 'player' in creature.factions][0]
-        if not player in self.creaturesseen():
+        player = None
+        potentialplayers = [
+            creature for creature in self.world.creatures if 'player' in creature.factions]
+        if len(potentialplayers) > 0:
+            player = potentialplayers[0]
+        if player != None and not player in self.creaturesseen():
             phrase = np.random.choice(['I smell an intruder!', 'I smell something... a golem!',
                                       'Is it just me or does it smell like a golem in here?'])
             return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
