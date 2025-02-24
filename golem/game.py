@@ -242,35 +242,135 @@ def game():
         cave = caves[cave_i]
 
         player = creature.Creature(cave, cave_i)
-        player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
-        player.bodyparts[0].connect(
-            'left arm', bodypart.HumanArm(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'right arm', bodypart.HumanArm(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'left leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'right leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'left lung', bodypart.HumanLung(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'right lung', bodypart.HumanLung(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'left kidney', bodypart.HumanKidney(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'right kidney', bodypart.HumanKidney(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'stomach', bodypart.HumanStomach(player.bodyparts, 0, 0))
-        player.bodyparts[0].connect(
-            'head', bodypart.HumanHead(player.bodyparts, 0, 0))
-        player.bodyparts[-1].connect('brain',
-                                     bodypart.HumanBrain(player.bodyparts, 0, 0))
-        player.bodyparts[-2].connect('left eye',
-                                     bodypart.HumanEye(player.bodyparts, 0, 0))
-        player.bodyparts[-3].connect('right eye',
-                                     bodypart.HumanEye(player.bodyparts, 0, 0))
+
+        for i in range(mapwidth + hpbarwidth + hpmargin):
+            for j in range(mapheight + statuslines + logheight):
+                win.putchars(' ', x=i, y=j, bgcolor='black')
+        prompt = 'Give your character a name and press Return:'
+        win.autoupdate = True
+        win.write(prompt, x=0, y=0, fgcolor=(255, 255, 255))
+        while player.individualname == '':
+            player.individualname = win.input(maxlength=15)
+        win.autoupdate = False
+
+        classes = ['Warrior', 'Wizard', 'Dog']
+        class_i = 0
+        classchosen = False
+        while not classchosen:
+            for i in range(mapwidth + hpbarwidth + hpmargin):
+                for j in range(mapheight + statuslines + logheight):
+                    win.putchars(' ', x=i, y=j, bgcolor='black')
+            prompt = 'Give your character a name and press Return:'
+            win.write(prompt, x=0, y=0, fgcolor=(255, 255, 255))
+            win.write(player.individualname, x=0, y=1, fgcolor=(128, 128, 128))
+            instruction = 'Choose your starting class with left and right arrow keys and press Return:'
+            win.write(instruction, x=0, y=3, fgcolor=(255, 255, 255))
+            win.write('< ' + classes[class_i] + ' >', x=0, y=4, fgcolor=(128, 128, 128))
+            win.update()
+
+            for event in pygame.event.get():
+                if event.type == pygame.locals.KEYDOWN:
+                    if event.key == pygame.locals.K_LEFT:
+                        class_i = (class_i - 1) % len(classes)
+                    if event.key == pygame.locals.K_RIGHT:
+                        class_i = (class_i + 1) % len(classes)
+                    if event.key == pygame.locals.K_RETURN:
+                        classchosen = True
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+        if classes[class_i] in ['Warrior', 'Wizard']:
+            player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
+            player.bodyparts[0].connect(
+                'left arm', bodypart.HumanArm(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'right arm', bodypart.HumanArm(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'left leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'right leg', bodypart.HumanLeg(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'heart', bodypart.HumanHeart(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'left lung', bodypart.HumanLung(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'right lung', bodypart.HumanLung(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'left kidney', bodypart.HumanKidney(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'right kidney', bodypart.HumanKidney(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'stomach', bodypart.HumanStomach(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'head', bodypart.HumanHead(player.bodyparts, 0, 0))
+            player.bodyparts[-1].connect('brain',
+                                         bodypart.HumanBrain(player.bodyparts, 0, 0))
+            player.bodyparts[-2].connect('left eye',
+                                         bodypart.HumanEye(player.bodyparts, 0, 0))
+            player.bodyparts[-3].connect('right eye',
+                                         bodypart.HumanEye(player.bodyparts, 0, 0))
+        elif classes[class_i] == 'Dog':
+            player.torso = bodypart.DogTorso(player.bodyparts, 0, 0)
+            player.bodyparts[0].connect(
+                'front left leg', bodypart.DogLeg(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'front right leg', bodypart.DogLeg(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'back left leg', bodypart.DogLeg(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'back right leg', bodypart.DogLeg(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'heart', bodypart.DogHeart(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'left lung', bodypart.DogLung(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'right lung', bodypart.DogLung(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'left kidney', bodypart.DogKidney(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'right kidney', bodypart.DogKidney(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'stomach', bodypart.DogStomach(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'tail', bodypart.DogTail(player.bodyparts, 0, 0))
+            player.bodyparts[0].connect(
+                'head', bodypart.DogHead(player.bodyparts, 0, 0))
+            player.bodyparts[-1].connect('brain',
+                                       bodypart.DogBrain(player.bodyparts, 0, 0))
+            player.bodyparts[-2].connect('left eye',
+                                       bodypart.DogEye(player.bodyparts, 0, 0))
+            player.bodyparts[-3].connect('right eye',
+                                       bodypart.DogEye(player.bodyparts, 0, 0))
+
+        if classes[class_i] == 'Warrior':
+            item.randomarmor(player.torso.worn['chest armor'], 0, 0, 0, armortype='chest armor')
+            item.randomarmor(player.bodyparts[11].worn['helmet'], 0, 0, 0, armortype='helmet')
+            item.randomweapon(player.bodyparts[np.random.randint(1, 3)].wielded, 0, 0, 0)
+            for i in range(3):
+                item.Cure(player.inventory, 0, 0, drugtypes[np.random.randint(
+                    13)], np.random.randint(1, 4))
+            item.randomfood(player.inventory, 0, 0)
+        elif classes[class_i] == 'Wizard':
+            item.randomstaff(player.bodyparts[np.random.randint(1, 3)].wielded, 0, 0, 0)
+            for i in range(5):
+                sp = magic.randomspell(1)
+                while np.any([isinstance(sp, type(sp2)) for sp2 in player.spellsknown()]):
+                    sp = magic.randomspell(1)
+                player.spellsknown().append(sp)
+            for i in range(2):
+                item.Spellbooklet(player.inventory, 0, 0, None)
+            item.Cure(player.inventory, 0, 0, drugtypes[np.random.randint(
+                13)], np.random.randint(1, 4))
+            for i in range(2):
+                item.ManaPotion(player.inventory, 0, 0)
+            item.randomfood(player.inventory, 0, 0)
+        elif classes[class_i] == 'Dog':
+            for i in range(3):
+                item.Cure(player.inventory, 0, 0, drugtypes[np.random.randint(
+                    13)], np.random.randint(1, 4))
+            item.randomfood(player.inventory, 0, 0)
+            
         #item.Backpack(player.torso.worn['backpack'], 0, 0)
         player.factions = ['player']
         player.x = cave.stairsupcoords[0]
@@ -279,17 +379,6 @@ def game():
 
         player.log().append('You are a golem, a Frankensteinian creature. The humans saw you as a monster and exiled you into these caves. Now your short-term goal is to survive, and the long-term goal is to gather power for revenge. Your ability to change your bodyparts should become useful.')
         player.log().append("Press 'h' for help.")
-
-        for i in range(mapwidth + hpbarwidth + hpmargin):
-            for j in range(mapheight + statuslines + logheight):
-                # For some reason the above commented line doesn't work on Windows, so have to do it this way instead.
-                win.putchars(' ', x=i, y=j, bgcolor='black')
-        prompt = 'Give your character a name:'
-        win.autoupdate = True
-        win.write(prompt, x=0, y=0, fgcolor=(255, 255, 255))
-        while player.individualname == '':
-            player.individualname = win.input()
-        win.autoupdate = False
 
     logback = 0  # How far the log has been scrolled
     chosen = 0  # Used for different item choosing gamestates
@@ -2880,7 +2969,7 @@ def game():
                                 selected.owner = player.inventory
                                 player.log().append('You removed the ' + selected.name +
                                                     ' from your ' + part.wearwieldname() + '.')
-                                selecteditem.on_unwearunwield(player)
+                                selected.on_unwearunwield(player)
                             detecthiddenitems()
                             player.previousaction = ('unwield',)
                     if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
@@ -3000,7 +3089,7 @@ def game():
                                 player.inventory.append(selected)
                                 selected.owner = player.inventory
                                 player.log().append('You removed the ' + selected.name + ' from your ' + partname + '.')
-                                selecteditem.on_unwearunwield(player)
+                                selected.on_unwearunwield(player)
                             detecthiddenitems()
                             player.previousaction = ('undress',)
                     if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):

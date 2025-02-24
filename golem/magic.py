@@ -143,7 +143,7 @@ class CreateWeapon(ChoiceSpell):
         self._info = 'Create a random weapon of the chosen type.'
 
     def choices(self, caster):
-        return [item.randomdagger, item.randomspear, item.randommace, item.randomsword, item.randompickaxe]
+        return [item.randomdagger, item.randomspear, item.randommace, item.randomsword, item.randompickaxe, item.randomstaff]
 
     def choicedescription(self, caster, choice):
         if choice == item.randomdagger:
@@ -156,6 +156,8 @@ class CreateWeapon(ChoiceSpell):
             return 'Sword'
         if choice == item.randompickaxe:
             return 'Pickaxe'
+        if choice == item.randomstaff:
+            return 'Staff'
 
     def cast(self, caster, choice):
         super().cast(caster, choice)
