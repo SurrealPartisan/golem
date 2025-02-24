@@ -11,7 +11,7 @@ import numpy as np
 from golem import item
 from golem.item import Attack
 from golem import magic
-from golem.utils import constantfunction, listwithowner, loglist, mapwidth, mapheight, numlevels, difficulty
+from golem.utils import constantfunction, listwithowner, loglist, mapwidth, mapheight, numlevels, npcrelativebodyparthp
 
 
 class BodyPartConnection():
@@ -104,7 +104,7 @@ class BodyPart(item.Item):
 
     def incapacitated(self):
         if hasattr(self.owner, 'owner') and not 'player' in self.owner.owner.factions:
-            return self.damagetaken >= difficulty*self.maxhp
+            return self.damagetaken >= npcrelativebodyparthp*self.maxhp
         else:
             return False
 

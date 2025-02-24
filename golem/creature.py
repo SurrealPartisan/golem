@@ -10,7 +10,7 @@ import numpy as np
 from golem import bodypart
 from golem import item
 from golem import magic
-from golem.utils import fov, listwithowner, numlevels, mapwidth, mapheight, difficulty, anglebetween, directionnames, infoblast
+from golem.utils import fov, listwithowner, numlevels, mapwidth, mapheight, npcrelativebodyparthp, npcrelativetotalhp, anglebetween, directionnames, infoblast
 
 
 def checkitems(creat, cave, x, y):
@@ -708,7 +708,7 @@ class Creature():
     def dying(self):
         maxtotalhp = sum([part.maxhp for part in self.bodyparts])/2
         if not 'player' in self.factions:
-            maxtotalhp *= difficulty
+            maxtotalhp *= npcrelativetotalhp
         return self.dead or sum([part.damagetaken for part in self.bodyparts]) >= maxtotalhp or np.any([part.vital() and (part.destroyed() or part.incapacitated()) for part in self.bodyparts])
 
     def die(self):
@@ -1161,11 +1161,11 @@ class Creature():
                                 totalthreequartershp = sum(
                                     [part.maxhp for part in target.bodyparts])/2*3/4
                             else:
-                                targetparthalfhp = targetbodypart.maxhp * difficulty / 2
+                                targetparthalfhp = targetbodypart.maxhp * npcrelativebodyparthp / 2
                                 if secondarytargetbodypart != None:
-                                    secondarytargetparthalfhp = secondarytargetbodypart.maxhp * difficulty / 2
+                                    secondarytargetparthalfhp = secondarytargetbodypart.maxhp * npcrelativebodyparthp / 2
                                 totalthreequartershp = sum(
-                                    [part.maxhp for part in target.bodyparts])/2*3/4*difficulty
+                                    [part.maxhp for part in target.bodyparts])/2*3/4*npcrelativetotalhp
                             vitalalreadyunderhalf = (targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (
                                 secondarytargetbodypart != None and secondarytargetbodypart.vital() and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp)
                             totalalreadyunderquarter = sum(
