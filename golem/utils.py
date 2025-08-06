@@ -38,7 +38,24 @@ def infusionname():
 def unpronounceablename(length):
     return ''.join(np.random.choice(list(letters), length)).capitalize()
 
+magicwordlist = 'abracadabra ajji majji la tarajji alakazam chhu montor hocus pocus jantar mantar jadu mantar cary mary fuk presto chango hey bibbidi bobbidi boo azarath metrion zinthos boom zahramay klaatu barada nikto ostagazuzulum rampung ngising semar tilem shazam simsalabim sim sala bim anexhexeton ablanathanalba abraxas agape agla alhim ararita aumgn babalon hriliu iao ipsos jahbulon lashtal meithras nox on thelema viaov vitriol xnoubis micrato raepy sathonich anitay nalkri sator arepo tenet opera rotas in nomine dei benedicite fiat lux '
+
+def markovword(wordlist):
+    # wordlist is a string separated by spaces and ending in space
+    word = ''
+    while len(word) < 3 or word in wordlist.split():
+        word = ''
+        word += np.random.choice([w[0] for w in wordlist.split()])
+        while word[-1] != ' ':
+            newletter = np.random.choice([wordlist[i+1] for i in range(len(wordlist)) if wordlist[i] == word[-1]])
+            if not (newletter == word[-1] and len(word) > 1 and newletter == word[-2]):
+                word += newletter
+    return word[:-1]
+
 def magicwords():
+    return markovword(magicwordlist).upper() + ' ' +  markovword(magicwordlist).upper()
+
+def magicwords_old():
     length1 = np.random.randint(3, 11)
     length2 = np.random.randint(3, 11)
     return ''.join(np.random.choice(list(letters), length1)).upper() + ' ' + ''.join(np.random.choice(list(letters), length2)).upper()
