@@ -1585,6 +1585,10 @@ class Creature():
             self.log().append('You dropped your weapon before you could finish the attack!')
             target.log().append('The ' + self.name +
                                 ' dropped its weapon before it could finish its attack!')
+        if not target.dying():
+            for part in target.bodyparts:
+                part._situationaldefensecoefficient = 0.8 + np.random.rand()*0.4
+            
 
     def ai(self):
         # Return something to put in self.nextaction. It should be a list,

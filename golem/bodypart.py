@@ -51,6 +51,7 @@ class BodyPart(item.Item):
         self.consumable = True
         self.edible = True
         self._defensecoefficient = 0.8
+        self._situationaldefensecoefficient = 0.8 + np.random.rand()*0.4
         self._attackpoisonresistance = 0
         self._wearwieldname = name
         self.bleedclocks = []
@@ -131,9 +132,9 @@ class BodyPart(item.Item):
 
     def defensecoefficient(self):
         if self.parentalconnection == None:
-            return self._defensecoefficient
+            return self._situationaldefensecoefficient*self._defensecoefficient
         else:
-            return self.parentalconnection.defensecoefficient*self._defensecoefficient
+            return self.parentalconnection.defensecoefficient*self._situationaldefensecoefficient*self._defensecoefficient
 
     def attackpoisonresistance(self):
         return self._attackpoisonresistance
