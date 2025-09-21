@@ -9,7 +9,7 @@ from collections import namedtuple
 import numpy as np
 from golem import utils
 
-Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'verbinfinitive', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'weaponlength', 'bane', 'special', 'weapon'])
+Attack = namedtuple('Attack', ['name', 'verb2nd', 'verb3rd', 'verbinfinitive', 'post2nd', 'post3rd', 'hitprobability', 'time', 'mindamage', 'maxdamage', 'damagetype', 'weaponlength', 'bane', 'magical', 'special', 'weapon'])
 
 Material = namedtuple('Material', ['damage', 'hitbonus', 'minespeed', 'armor', 'hp', 'density', 'color'])
 materials = {'leather': Material(None, None, None, 3, 25, 4, (186, 100, 13)),
@@ -313,18 +313,19 @@ class Dagger(Item):
         self.throwable = True
         self.throwrange = 5 + enchantment
         self.bane = bane
+        self.magical = enchantment > 0
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
         self.weight = 6*density
-        self._info = 'A one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time). Can be thrown up to five (plus enchantment) paces.'
+        self._info = 'A ' + 'magical '*self.magical + 'one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time). Can be thrown up to five (plus enchantment) paces.'
 
     def attackslist(self):
-        return[Attack(self.name, 'stabbed', 'stabbed', 'stab', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
+        return[Attack(self.name, 'stabbed', 'stabbed', 'stab', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, self.magical, [('bleed', 0.2)], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, [('bleed', 0.2)], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, self.magical, [('bleed', 0.2)], self)]
 
 def randomdagger(owner, x, y, level):
     enchantment = 0
@@ -353,21 +354,22 @@ class Spear(Item):
         self.throwable = True
         self.throwrange = 10 + enchantment
         self.bane = bane
+        self.magical = enchantment > 0
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = materials[material].damage + enchantment
         density = materials[material].density
         self.weight = 6*density + 1000
-        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack. Can be thrown up to ten (plus enchantment) paces.'
+        self._info = 'A ' + 'magical '*self.magical + 'weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack. Can be thrown up to ten (plus enchantment) paces.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'thrust', 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
+            return[Attack(self.name, 'thrust', 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, self.magical, [('charge',)], self)]
         else:
-            return[Attack(self.name, 'thrust', 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 100, self.bane, [('charge',)], self)]
+            return[Attack(self.name, 'thrust', 'thrust', 'thrust', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 100, self.bane, self.magical, [('charge',)], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, [('charge',)], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 100, self.bane, self.magical, [('charge',)], self)]
 
 def randomspear(owner, x, y, level):
     enchantment = 0
@@ -394,15 +396,16 @@ class Mace(Item):
         self.wieldable = True
         self.weapon = True
         self.bane = bane
+        self.magical = enchantment > 0
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = int(materials[material].damage*1.2) + enchantment
         density = materials[material].density
         self.weight = 50*density
-        self._info = 'A weapon made of ' + material + '. Can knock enemies back.'
+        self._info = 'A ' + 'magical '*self.magical + 'one-handed weapon made of ' + material + '. Can knock enemies back.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, [('knockback', 0.2)], self)]
+        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, self.magical, [('knockback', 0.2)], self)]
 
 def randommace(owner, x, y, level):
     enchantment = 0
@@ -430,18 +433,19 @@ class Staff(Item):
         self.weapon = True
         self.supporting = True
         self.bane = bane
+        self.magical = enchantment > 0
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = int(materials[material].damage*1.2) + enchantment
         density = materials[material].density
         self.weight = 100*density
-        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). When wielded, prevents getting imbalanced.'
+        self._info = 'A ' + 'magical '*self.magical + 'weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). When wielded, prevents getting imbalanced.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 100, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 100, self.bane, self.magical, [], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', 100, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'blunt', 100, self.bane, self.magical, [], self)]
 
 def randomstaff(owner, x, y, level):
     enchantment = 0
@@ -468,18 +472,19 @@ class Sword(Item):
         self.wieldable = True
         self.weapon = True
         self.bane = bane
+        self.magical = enchantment > 0
         self.hitpropability = 0.8 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = int(materials[material].damage*1.2) + enchantment
         density = materials[material].density
         self.weight = 50*density
-        self._info = 'A weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Because of its long sharp blade, can directly attack internal organs.'
+        self._info = 'A ' + 'magical '*self.magical + 'weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Because of its long sharp blade, can directly attack internal organs.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'slashed', 'slashed', 'slash', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 50, self.bane, [('internals-seeking',)], self)]
+            return[Attack(self.name, 'slashed', 'slashed', 'slash', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 50, self.bane, self.magical, [('internals-seeking',)], self)]
         else:
-            return[Attack(self.name, 'slashed', 'slashed', 'slash', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 50, self.bane, [('internals-seeking',)], self)]
+            return[Attack(self.name, 'slashed', 'slashed', 'slash', ' with a ' + self.name, ' with a ' + self.name, 0.75*self.hitpropability, 1, self.mindamage, int(self.maxdamage*0.75), 'sharp', 50, self.bane, self.magical, [('internals-seeking',)], self)]
 
 def randomsword(owner, x, y, level):
     enchantment = 0
@@ -506,19 +511,20 @@ class PickAxe(Item):
         self.wieldable = True
         self.weapon = True
         self.bane = bane
+        self.magical = enchantment > 0
         self.hitpropability = 0.7 + materials[material].hitbonus + 0.01*enchantment
         self.mindamage = 1 + enchantment
         self.maxdamage = int(materials[material].damage*1.75) + enchantment
         self._minespeed = materials[material].minespeed
         density = materials[material].density
         self.weight = 12*density + 500
-        self._info = 'A weapon and a tool, made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can be used for mining.'
+        self._info = 'A ' + 'magical '*self.magical + 'weapon and a tool, made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can be used for mining.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
-            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.25, self.mindamage, self.maxdamage, 'rough', 50, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1.25, self.mindamage, self.maxdamage, 'rough', 50, self.bane, self.magical, [], self)]
         else:
-            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 1.5, self.mindamage, int(0.67*self.maxdamage), 'rough', 50, self.bane, [], self)]
+            return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, 0.67*self.hitpropability, 1.5, self.mindamage, int(0.67*self.maxdamage), 'rough', 50, self.bane, self.magical, [], self)]
 
     def minespeed(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -552,10 +558,10 @@ class Stone(Item):
         self._info = 'A blunt improvised weapon. Can be thrown up to five paces.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
+        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], False, [], self)]
 
     def thrownattackslist(self):
-        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], [], self)]
+        return[Attack(self.name, 'threw a ' + self.name, 'threw a ' + self.name, 'throw a ' + self.name, '', '', self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 0, [], False, [], self)]
 
 class Torch(Item):
     def __init__(self, owner, x, y):
@@ -569,7 +575,7 @@ class Torch(Item):
         self._info = 'A light source and an improvised weapon. When wielded, increases your range of vision, as long as you have eyes. Deals fire damage.'
 
     def attackslist(self):
-        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'fire', 50, [], [], self)]
+        return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'fire', 50, [], False, [], self)]
 
     def sight(self):
         if len([part for part in self.owner.owner.owner if 'eye' in part.categories and not (part.destroyed() or part.incapacitated())]) > 0:

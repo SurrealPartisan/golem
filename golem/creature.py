@@ -886,7 +886,7 @@ class Creature():
         else:
             self.log().append('You were unable to finish your throw.')
 
-    def fight(self, target, targetbodypart, attack, thrown=False, magical=False, sound=True, kiai=True):
+    def fight(self, target, targetbodypart, attack, thrown=False, is_spell=False, sound=True, kiai=True):
         wornlist = [
             it[0] for part in self.bodyparts for it in part.worn.values() if len(it) > 0]
         if attack.weapon in self.bodyparts or attack.weapon == None:
@@ -895,9 +895,9 @@ class Creature():
             attackingpart = attack.weapon.owner.owner
         else:
             attackingpart = None
-        if thrown or magical or (attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated())):
+        if thrown or is_spell or (attackingpart != None and not (attackingpart.destroyed() or attackingpart.incapacitated())):
             if targetbodypart in target.bodyparts and not targetbodypart.destroyed():
-                if thrown or magical or (abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1):
+                if thrown or is_spell or (abs(self.x - target.x) <= 1 and abs(self.y - target.y) <= 1):
                     if (not self.scared() or np.random.rand() < 0.5) and not self.panicked():
                         volume, details = self.attackphrase()
                         if kiai and np.random.rand() < 0.2 and len(details) > 0 and volume > 0 and len([p for p in self.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
@@ -929,7 +929,7 @@ class Creature():
                             highgroundcoefficient = 0.95
                         else:
                             highgroundcoefficient = 1
-                        if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                        if not thrown and not is_spell and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
                             upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + \
                                 attack.weaponlength
                             upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + \
@@ -976,7 +976,7 @@ class Creature():
                             elif len([connection for connection in targetbodypart.childconnections if targetbodypart.childconnections[connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()]) > 0 and np.random.rand() < 0.5:
                                 internaltarget = np.random.choice([targetbodypart.childconnections[connection].child for connection in targetbodypart.childconnections if targetbodypart.childconnections[
                                                                   connection].child != None and targetbodypart.childconnections[connection].internal and not targetbodypart.childconnections[connection].child.destroyed()])
-                                if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                                if not thrown and not is_spell and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
                                     upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + \
                                         attack.weaponlength
                                     upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + \
@@ -1024,7 +1024,7 @@ class Creature():
                             if len(adjacentparts) > 0:
                                 targetbodypart = np.random.choice(
                                     adjacentparts)
-                                if not thrown and not magical and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
+                                if not thrown and not is_spell and not (np.any([hasattr(it, 'martialartist') and it.martialartist for it in wornlist]) and attack.weapon in self.bodyparts):
                                     upperpoorlimit = attackingpart.baseheight() + attackingpart.upperpoorlimit + \
                                         attack.weaponlength
                                     upperfinelimit = attackingpart.baseheight() + attackingpart.upperfinelimit + \
@@ -1077,7 +1077,7 @@ class Creature():
                                         totaldamage = int(1.5*totaldamage)
                                     if not thrown:
                                         attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6],
-                                                             attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
+                                                             attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14], attack[15])
                                 if special[0] == 'knockback' and np.random.rand() < special[1]:
                                     dx = target.x - self.x
                                     dy = target.y - self.y
@@ -1095,11 +1095,11 @@ class Creature():
                                 alreadyimbalanced = True
                             else:
                                 alreadyimbalanced = False
-                            if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2) and not magical:
+                            if self.stance == 'running' and not 'charge' in [special[0] for special in attack.special] and self.previousaction[0] == 'move' and np.sqrt((self.x-target.x)**2 + (self.y-target.y)**2) < np.sqrt((self.x_old-target.x)**2 + (self.y_old-target.y)**2) and not is_spell:
                                 totaldamage = int(1.5*totaldamage)
                                 if not thrown:
                                     attack = item.Attack(attack[0], 'charged', 'charged', 'charge', attack[4], attack[5], attack[6],
-                                                         attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14])
+                                                         attack[7], attack[8], attack[9], attack[10], attack[11], attack[12], attack[13], attack[14], attack[15])
                             if self.stance == 'fasting' and attack.weapon in self.bodyparts and self.starving():
                                 totaldamage *= 3
                             elif self.stance == 'fasting' and attack.weapon in self.bodyparts and self.hungry():
@@ -1109,7 +1109,7 @@ class Creature():
                                 sneak = True
                             else:
                                 sneak = False
-                            if self.weakened() and not magical:
+                            if self.weakened() and not is_spell:
                                 totaldamage //= 2
                             if targetbodypart.armor() != None:
                                 armor = targetbodypart.armor()
@@ -1131,8 +1131,12 @@ class Creature():
                                 secondaryresistancemultiplier = 1 - \
                                     secondarytargetbodypart.resistance(
                                         attack.damagetype)
+                                if secondarytargetbodypart.demonic and attack.magical:
+                                    secondarydemonicresistancemultiplier = 0.5
+                                else:
+                                    secondarydemonicresistancemultiplier = 1
                                 secondarydamage = min(
-                                    int(secondaryresistancemultiplier*_secondarydamage), secondarytargetbodypart.hp())
+                                    int(secondaryresistancemultiplier*secondarydemonicresistancemultiplier*_secondarydamage), secondarytargetbodypart.hp())
                             elif secondarytargetbodypart != None and armorpassingdamage < 2:
                                 targetbodypart = secondarytargetbodypart
                                 secondarytargetbodypart = None
@@ -1143,8 +1147,12 @@ class Creature():
                                 secondarydamage = 0
                             resistancemultiplier = 1 - \
                                 targetbodypart.resistance(attack.damagetype)
+                            if targetbodypart.demonic and attack.magical:
+                                demonicresistancemultiplier = 0.5
+                            else:
+                                demonicresistancemultiplier = 1
                             damage = min(int(
-                                resistancemultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
+                                resistancemultiplier*demonicresistancemultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
                             bleed = False
                             for special in attack.special:
                                 if special[0] == 'bleed' and np.random.rand() < special[1]:
@@ -1347,6 +1355,8 @@ class Creature():
                                                               ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
                                             target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd +
                                                                 ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
+                                    if targetbodypart.demonic and attack.magical:
+                                        self.log().append('Your nonmagical attack was not completely effective against the demonic target.')
                                     if armordamage > 0:
                                         if not armor.destroyed():
                                             target.log().append('Your ' + armor.name + ' took ' + repr(armordamage) + ' damage!')

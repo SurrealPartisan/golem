@@ -341,7 +341,7 @@ class MissileSpell(BodypartTargetedSpell):
         super().cast(caster, target, targetbodypart)
         if not target.dead:
             caster.fight(target, targetbodypart, item.Attack(self.name, 'blasted', 'blasted', 'blast', ' with ' + self.name, ' with ' + self.name,
-                         self.hitprobability, 0, self.mindamage, self.maxdamage, self.damagetype, 0, [], [], None), magical=True, sound=False, kiai=False)
+                         self.hitprobability, 0, self.mindamage, self.maxdamage, self.damagetype, 0, [], True, [], None), is_spell=True, sound=False, kiai=False)
         else:
             caster.log().append('The ' + target.name + ' died while you were casting the spell.')
 
