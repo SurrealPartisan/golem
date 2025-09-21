@@ -305,8 +305,12 @@ class Creature():
                         part = np.random.choice(adjacentparts)
                     totaldamage = np.random.randint(1, 11)
                     resistancemultiplier = 1 - part.resistance('fire')
+                    if part.demonic:
+                        demonicresistancemultiplier = 0.5
+                    else:
+                        demonicresistancemultiplier = 1
                     damage = min(
-                        int(resistancemultiplier*totaldamage), part.hp())
+                        int(resistancemultiplier*demonicresistancemultiplier*totaldamage), part.hp())
                     alreadyincapacitated = part.incapacitated()
                     part.damagetaken += damage
                     alreadyimbalanced = self.imbalanced()
@@ -365,8 +369,12 @@ class Creature():
                     for part in [part for part in self.bodyparts if not part.internal()]:
                         totaldamage = np.random.randint(1, 21)
                         resistancemultiplier = 1 - part.resistance('fire')
+                        if part.demonic:
+                            demonicresistancemultiplier = 0.5
+                        else:
+                            demonicresistancemultiplier = 1
                         damage = min(
-                            int(resistancemultiplier*totaldamage), part.hp())
+                            int(resistancemultiplier*demonicresistancemultiplier*totaldamage), part.hp())
                         alreadyincapacitated = part.incapacitated()
                         part.damagetaken += damage
                         alreadyimbalanced = self.imbalanced()
@@ -1131,7 +1139,7 @@ class Creature():
                                 secondaryresistancemultiplier = 1 - \
                                     secondarytargetbodypart.resistance(
                                         attack.damagetype)
-                                if secondarytargetbodypart.demonic and attack.magical:
+                                if secondarytargetbodypart.demonic and not attack.magical:
                                     secondarydemonicresistancemultiplier = 0.5
                                 else:
                                     secondarydemonicresistancemultiplier = 1
@@ -1147,7 +1155,7 @@ class Creature():
                                 secondarydamage = 0
                             resistancemultiplier = 1 - \
                                 targetbodypart.resistance(attack.damagetype)
-                            if targetbodypart.demonic and attack.magical:
+                            if targetbodypart.demonic and not attack.magical:
                                 demonicresistancemultiplier = 0.5
                             else:
                                 demonicresistancemultiplier = 1
@@ -1355,7 +1363,7 @@ class Creature():
                                                               ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage1 + ' and knocking it against the ' + knocked_to_obstacle + '!')
                                             target.log().append('The ' + self.name + ' ' + 'sneakily '*sneak + attack.verb3rd + ' at your ' + partname + attack.post3rd +
                                                                 ', hitting for ' + repr(damage) + ' damage' + andorspace + secondarymessage2 + ' and knocking you against the ' + knocked_to_obstacle + '!')
-                                    if targetbodypart.demonic and attack.magical:
+                                    if targetbodypart.demonic and not attack.magical:
                                         self.log().append('Your nonmagical attack was not completely effective against the demonic target.')
                                     if armordamage > 0:
                                         if not armor.destroyed():
@@ -1634,6 +1642,10 @@ class Creature():
                 part = np.random.choice(
                     [part for part in self.bodyparts if not part.internal() and not part.destroyed()])
                 resistancemultiplier = 1 - part.resistance('blunt')
+                if part.demonic:
+                    demonicresistancemultiplier = 0.5
+                else:
+                    demonicresistancemultiplier = 1
                 totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
                 if part.armor() != None:
                     armor = part.armor()
@@ -1643,7 +1655,7 @@ class Creature():
                 else:
                     armor = None
                     armordamage = 0
-                damage = min(int(resistancemultiplier *
+                damage = min(int(resistancemultiplier * demonicresistancemultiplier *
                              (totaldamage - armordamage)), part.hp())
                 alreadyincapacitated = part.incapacitated()
                 part.damagetaken += damage

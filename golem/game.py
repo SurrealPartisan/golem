@@ -1847,6 +1847,10 @@ def game():
                     part = np.random.choice(
                         [part for part in player.bodyparts if not part.internal() and not part.destroyed()])
                     resistancemultiplier = 1 - part.resistance('blunt')
+                    if part.demonic:
+                        demonicresistancemultiplier = 0.5
+                    else:
+                        demonicresistancemultiplier = 1
                     totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
                     if part.armor() != None:
                         armor = part.armor()
@@ -1856,7 +1860,7 @@ def game():
                     else:
                         armor = None
                         armordamage = 0
-                    damage = min(int(resistancemultiplier *
+                    damage = min(int(resistancemultiplier * demonicresistancemultiplier *
                                  (totaldamage - armordamage)), part.hp())
                     part.damagetaken += damage
                     alreadyimbalanced = player.imbalanced()

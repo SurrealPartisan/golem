@@ -601,6 +601,10 @@ class GlassShards(Item):
 
     def entrap(self, creat, part):
         resistancemultiplier = 1 - part.resistance('sharp')
+        if part.demonic:
+            demonicresistancemultiplier = 0.5
+        else:
+            demonicresistancemultiplier = 1
         totaldamage = np.random.randint(self.mindamage, self.maxdamage+1)
         if part.armor() != None:
             armor = part.armor()
@@ -609,7 +613,7 @@ class GlassShards(Item):
         else:
             armor = None
             armordamage = 0
-        damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        damage = min(int(resistancemultiplier*demonicresistancemultiplier*(totaldamage - armordamage)), part.hp())
         alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
         alreadyimbalanced = creat.imbalanced()
@@ -682,6 +686,7 @@ class Caltrops(Item):
         self.hidden = True
         self.trap = True
         self.bane = bane
+        self.magical = enchantment > 0
         self.mindamage = 1 + enchantment
         self.maxdamage = int(materials[material].damage) + enchantment
         density = materials[material].density
@@ -694,6 +699,10 @@ class Caltrops(Item):
         else:
             banemultiplier = 1
         resistancemultiplier = 1 - part.resistance('sharp')
+        if part.demonic and not self.magical:
+            demonicresistancemultiplier = 0.5
+        else:
+            demonicresistancemultiplier = 1
         totaldamage = np.random.randint(self.mindamage, self.maxdamage+1)
         if part.armor() != None:
             armor = part.armor()
@@ -702,7 +711,7 @@ class Caltrops(Item):
         else:
             armor = None
             armordamage = 0
-        damage = min(int(banemultiplier*resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        damage = min(int(banemultiplier*resistancemultiplier*demonicresistancemultiplier*(totaldamage - armordamage)), part.hp())
         alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
         alreadyimbalanced = creat.imbalanced()
@@ -782,6 +791,10 @@ class LooseRoundPebbles(Item):
     def entrap(self, creat, part):
         part = np.random.choice([part for part in creat.bodyparts if not part.internal() and not part.destroyed()])
         resistancemultiplier = 1 - part.resistance('blunt')
+        if part.demonic:
+            demonicresistancemultiplier = 0.5
+        else:
+            demonicresistancemultiplier = 1
         totaldamage = np.random.randint(1, max(1, part.maxhp//5)+1)
         if part.armor() != None:
             armor = part.armor()
@@ -790,7 +803,7 @@ class LooseRoundPebbles(Item):
         else:
             armor = None
             armordamage = 0
-        damage = min(int(resistancemultiplier*(totaldamage - armordamage)), part.hp())
+        damage = min(int(resistancemultiplier*demonicresistancemultiplier*(totaldamage - armordamage)), part.hp())
         alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
         alreadyimbalanced = creat.imbalanced()
@@ -873,8 +886,12 @@ class ExposedWires(Item):
             shockedlist = []
             for part in [part for part in creat.bodyparts if not part.destroyed()]:
                 resistancemultiplier = 1 - part.resistance('electric')
+                if part.demonic:
+                    demonicresistancemultiplier = 0.5
+                else:
+                    demonicresistancemultiplier = 1
                 totaldamage = np.random.randint(0, int(self.maxdamage*(1/2)**part.bottomheight())+1)
-                damage = min(int(resistancemultiplier*totaldamage), part.hp())
+                damage = min(int(resistancemultiplier*demonicresistancemultiplier*totaldamage), part.hp())
                 alreadyincapacitated = part.incapacitated()
                 part.damagetaken += damage
                 if damage > 0:
