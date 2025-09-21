@@ -2029,7 +2029,7 @@ def game():
                         pickle.dump(highscores, f)
                     gamestate = 'dead'
                     numchosen = False
-                    player.log().append('Press escape to end.')
+                    player.log().append('Press shift + escape to end.')
                     logback = 0
 
                 if gamestate == 'free':
@@ -2150,7 +2150,7 @@ def game():
                                 player.log().append("Lower levels not yet implemented!")
                                 player.log().append("You won the current alpha!")
                                 player.log().append("Congratulations!")
-                                player.log().append("Press escape to end.")
+                                player.log().append("Press shift + escape to end.")
                                 gamestate = 'win'
                                 numchosen = False
                                 if file_exists('highscores.pickle'):
@@ -2513,7 +2513,7 @@ def game():
                     if (event.key == keybindings['help'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][0][1])) or (event.key == keybindings['help'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['help'][1][1])):
                         player.log().append('Default keybindings (change in options):')
                         player.log().append(
-                            '  - page up, page down, home, end: explore the log (including this help message)')
+                            '  - page up, page down, home, end: explore the log (INCLUDING THIS HELP MESSAGE)')
                         player.log().append('  - arrows or numpad: move or attack')
                         player.log().append('  - period or numpad 5: wait a moment')
                         player.log().append('  - < or >: go up or down')
@@ -2557,7 +2557,10 @@ def game():
                     if (event.key == keybindings['log end'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log end'][0][1])) or (event.key == keybindings['log end'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['log end'][1][1])):
                         logback = 0
 
-                    if event.key == pygame.locals.K_ESCAPE:
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
+                        player.log().append('Just pressing escape does nothing when you are not in a list selection. Press shift + escape to save and exit.')
+                        logback = 0
+                    if (event.key == keybindings['save and exit'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['save and exit'][0][1])) or (event.key == keybindings['save and exit'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['save and exit'][1][1])):
                         win.settint(0, 0, 0, (0, 0, mapwidth + hpbarwidth +
                                     hpmargin, mapheight + statuslines + logheight))
                         for i in range(mapwidth + hpbarwidth + hpmargin):
@@ -2601,7 +2604,7 @@ def game():
                         if fovmap[lookx+1, looky+1]:
                             lookx += 1
                             looky += 1
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2623,7 +2626,7 @@ def game():
                         gamestate, logback = mine(-1, 1)
                     if (event.key == keybindings['move southeast'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][0][1])) or (event.key == keybindings['move southeast'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['move southeast'][1][1])):
                         gamestate, logback = mine(1, 1)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2661,7 +2664,7 @@ def game():
                             player.log().append('You picked up the ' + selected.name + '.')
                             detecthiddenitems()
                             player.previousaction = ('pick',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2697,7 +2700,7 @@ def game():
                             player.log().append('You dropped the ' + selected.name + '.')
                             detecthiddenitems()
                             player.previousaction = ('drop',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2726,7 +2729,7 @@ def game():
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2809,7 +2812,7 @@ def game():
                                 player.previousaction = ('consume',)
                                 logback = 0
                             detecthiddenitems()
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2851,7 +2854,7 @@ def game():
                             player.log().append('You roasted the ' + selected.name + '.')
                             detecthiddenitems()
                             player.previousaction = ('cook',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2884,7 +2887,7 @@ def game():
                         gamestate = 'wieldchoosebodypart'
                         numchosen = False
                         chosen = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2929,7 +2932,7 @@ def game():
                                                     ' was destroyed before you could wield the ' + selecteditem.name + '!')
                             detecthiddenitems()
                             player.previousaction = ('wield',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -2972,7 +2975,7 @@ def game():
                                 selected.on_unwearunwield(player)
                             detecthiddenitems()
                             player.previousaction = ('unwield',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3012,7 +3015,7 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3054,7 +3057,7 @@ def game():
                                                     ' was destroyed before you could wear the ' + selecteditem.name + '!')
                             detecthiddenitems()
                             player.previousaction = ('wear',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3092,7 +3095,7 @@ def game():
                                 selected.on_unwearunwield(player)
                             detecthiddenitems()
                             player.previousaction = ('undress',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3126,7 +3129,7 @@ def game():
                                 part for part in target.bodyparts if not part.internal() and not part.destroyed()]
                         logback = len(targetbodypartlist) - logheight + 1
                         chosen = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3171,7 +3174,7 @@ def game():
                                 player.previousaction = ('wait',)
                             detecthiddenitems()
                         logback = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3202,7 +3205,7 @@ def game():
                         chosen = 0
                         lookx = player.x
                         looky = player.y
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3266,7 +3269,7 @@ def game():
                             logback = len(limblist) - logheight + 1
                         numchosen = False
                         chosen = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3299,7 +3302,7 @@ def game():
                         logback = len(targetbodypartlist) - logheight + 1
                         numchosen = False
                         chosen = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3343,7 +3346,7 @@ def game():
                                 player.previousaction = ('throw',)
                             detecthiddenitems()
                         logback = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3428,7 +3431,7 @@ def game():
                                 player.log().append('You have selected your bodyparts.')
                                 detecthiddenitems()
                                 player.previousaction = ('choosebody',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3483,7 +3486,7 @@ def game():
                         chosen = 0
                         gamestate = 'choosebodypartconnection'
                         numchosen = False
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = len(connectioncandidates) - logheight + 1
                         chosen = 0
                         gamestate = 'choosebodypartconnection'
@@ -3534,7 +3537,7 @@ def game():
                                 player.fovuptodate = False
                             detecthiddenitems()
                             player.previousaction = ('choosestance',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3583,7 +3586,7 @@ def game():
                                     player.log().append('You prayed, but no one answered.')
                             detecthiddenitems()
                             player.previousaction = ('pray',)
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3631,7 +3634,7 @@ def game():
                             logback = 0
                             gamestate = 'free'
                             numchosen = False
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3667,7 +3670,7 @@ def game():
                             player.previousaction = ('cast',)
                             detecthiddenitems()
                         logback = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3713,7 +3716,7 @@ def game():
                                 player.previousaction = ('cast',)
                                 detecthiddenitems()
                             logback = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3772,7 +3775,7 @@ def game():
                                 logback = 0
                                 gamestate = 'free'
                                 numchosen = False
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3809,7 +3812,7 @@ def game():
                             player.previousaction = ('cast',)
                             detecthiddenitems()
                         logback = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3841,7 +3844,7 @@ def game():
                             selected.read(player)
                             detecthiddenitems()
                         logback = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
@@ -3874,13 +3877,13 @@ def game():
                                 'empty spellbooklet'][0].write(player, selected)
                             detecthiddenitems()
                         logback = 0
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
                         logback = 0
                         gamestate = 'free'
                         numchosen = False
 
                 elif gamestate == 'dead' or gamestate == 'win':
-                    if (event.key == keybindings['escape'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][0][1])) or (event.key == keybindings['escape'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape'][1][1])):
+                    if (event.key == keybindings['save and exit'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['save and exit'][0][1])) or (event.key == keybindings['save and exit'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['save and exit'][1][1])):
                         gamegoeson = False
 
                     # log scrolling

@@ -6,8 +6,9 @@ dist/
 bin
 pyvenv.cfg
 
-# Pickle files
+# Saves and settings
 *.pickle
+*.json
 
 # ??
 __pycache__

@@ -215,7 +215,8 @@ DEFAULT_BINDINGS = {
     'list up': ((pygame.locals.K_UP, False, False), (None, False, True)),
     'list down': ((pygame.locals.K_DOWN, False, False), (None, False, True)),
     'list select': ((pygame.locals.K_RETURN, False, False), (None, False, True)),
-    'escape': ((pygame.locals.K_ESCAPE, False, False), (None, False, True)),
+    'escape list': ((pygame.locals.K_ESCAPE, False, False), (None, False, True)),
+    'save and exit': ((pygame.locals.K_ESCAPE, True, False), (None, False, True)),
 }
 
 RESERVED_KEYS = [
