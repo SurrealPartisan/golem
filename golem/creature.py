@@ -1189,6 +1189,16 @@ class Creature():
                             targetbodypart.damagetaken += damage
                             if secondarytargetbodypart != None:
                                 secondarytargetbodypart.damagetaken += secondarydamage
+                            poisoned = False
+                            if 'venom' in [special[0] for special in attack.special]:
+                                livingparts = [part for part in target.bodyparts if part.material ==
+                                               'living flesh' and not part.destroyed()]
+                                if ((damage > 0 and targetbodypart.material == 'living flesh' and np.random.rand() > targetbodypart.attackpoisonresistance()) or (secondarydamage > 0 and secondarytargetbodypart.material == 'living flesh' and np.random.rand() > secondarytargetbodypart.attackpoisonresistance())) and len(livingparts) > 0:
+                                    oldaccumulation = target.accumulatedpoison
+                                    target.accumulatedpoison = min(
+                                        50, target.accumulatedpoison + np.random.rand()*40)
+                                    if target.accumulatedpoison > 5 and oldaccumulation <= 5:
+                                        poisoned = True
                             reasontopanic = (not vitalalreadyunderhalf and ((targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (secondarytargetbodypart != None and secondarytargetbodypart.vital(
                             ) and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp))) or (not totalalreadyunderquarter and sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp)
                             panic = False
@@ -1466,6 +1476,9 @@ class Creature():
                                             'You ' + details[2] + '.')
                                     infoblast(target.world, target.x,
                                               target.y, volume, [target], details)
+                                if poisoned:
+                                    self.log().append('The ' + target.name + ' was poisoned by the attack.')
+                                    target.log().append('You were poisoned by the attack.')
                                 if not alreadyimbalanced and target.imbalanced():
                                     self.log().append('The ' + target.name + ' was imbalanced by the attack.')
                                     target.log().append('You were imbalanced by the attack.')
@@ -3497,6 +3510,162 @@ class ZombieZorcerer(Creature):
                             return(['bump', time/2])
                     else:
                         return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+
+class PoisonGasElemental(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.factions = ['elemental']
+        self.char = 'p'
+        self.color = (0, 255, 0)
+        self.name = 'poison gas elemental'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.PoisonGasElementalTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect(
+            'front left arm', bodypart.PoisonGasElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'front right arm', bodypart.PoisonGasElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back left arm', bodypart.PoisonGasElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'back right arm', bodypart.PoisonGasElementalArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.PoisonGasElementalHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.PoisonGasElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.PoisonGasElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('brain',
+                                   bodypart.PoisonGasElementalBrain(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front left eye',
+                                   bodypart.PoisonGasElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('front right eye',
+                                   bodypart.PoisonGasElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back left eye',
+                                   bodypart.PoisonGasElementalEye(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect('back right eye',
+                                   bodypart.PoisonGasElementalEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+        self.stance = 'flying'
+        self.preferredstance = 'flying'
+
+    def attackphrase(self):
+        phrase = np.random.choice(
+            ['I ssshhhall poissson you.', 'Tasssste my poissson.'])
+        return (15, ('see and hear', 'NAME_0', 'hissed', 'hiss', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouchhh, my ' + partname + '!'
+        else:
+            phrase = 'Ouchhh!'
+        return (10, ('see and hear', 'NAME_0', 'hissed', 'hiss', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
+        else:
+            phrase = 'Sheesh!'
+        return (15, ('see and hear', 'NAME_0', 'hissed', 'hissed', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(
+            ['I sssee you.'])
+        return (10, ('see and hear', 'NAME_0', 'hissed', 'hiss', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Greetingsss'])
+        return (10, ('see and hear', 'NAME_0', 'hissed', 'hiss', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(
+            ['Ssshhh.'])
+        return (10, ('see and hear', 'NAME_0', 'hissed', 'hiss', phrase))
+
+    def ai(self):
+        disoriented = False
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
+            disoriented = True
+            self.log().append('You stumbled around.')
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
+            fovmap = self.fov()
+            target = None
+            if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                target = player
+            elif fovmap[player.x, player.y]:
+                self.targetcoords = (player.x, player.y)
+            if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                i = np.random.choice(range(len(self.attackslist())))
+                atk = self.attackslist()[i]
+                return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
+            elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                if self.stance == 'flying':
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len(
+                        [creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy]]
+                else:
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                                  self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                if len(dxdylist) > 0:
+                    if not self.panicked():
+                        dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    else:
+                        dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                            (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            elif not disoriented:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                repeats = 0
+                while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or (self.world.lavapits[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (self.world.campfires[self.x+dx, self.y+dy] != 0 and self.stance != 'flying') or (len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0 and self.stance != 'flying'):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                    repeats += 1
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    return(['move', dx, dy, time])
+                else:
+                    return(['wait', 1])
+            else:
+                self.targetcoords = None
+                dx = 0
+                dy = 0
+                while (dx, dy) == (0, 0):
+                    dx = np.random.choice([-1, 0, 1])
+                    dy = np.random.choice([-1, 0, 1])
+                time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                    self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                    if not self.world.walls[self.x+dx, self.y+dy]:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['bump', time/2])
+                else:
+                    return(['wait', 1])
         else:
             return(['wait', 1])
 
@@ -5809,8 +5978,9 @@ enemytypesbylevel = [  # List of tuples for each level. Each tuple is an enemy t
     [(Zombie, 15), (MolePerson, 15), (Goblin, 15), (GlassElemental, 15),
      (CaveOctopus, 20), (Dog, 20), (Imp, 20)],  # 2
     [(CaveOctopus, 10), (Dog, 10), (Imp, 10), (Hobgoblin, 10),
-     (MoleMonk, 10), (ZombieZorcerer, 10)],  # 3
-    [(Hobgoblin, 5), (MoleMonk, 5), (ZombieZorcerer, 5), (Wolf, 15)],  # 4
+     (MoleMonk, 10), (ZombieZorcerer, 10), (PoisonGasElemental, 10)],  # 3
+    [(Hobgoblin, 5), (MoleMonk, 5), (ZombieZorcerer, 5), 
+     (PoisonGasElemental, 5), (Wolf, 20)],  # 4
     [(Wolf, 15), (Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5)],  # 5
     [(Drillbot, 5), (Lobgoblin, 5), (RevenantCaveOctopus, 5), (Ghoul, 15)],  # 6
     [(Ghoul, 10), (SmallFireElemental, 5), (Mobgoblin, 5)],  # 7

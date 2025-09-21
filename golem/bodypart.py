@@ -3431,6 +3431,235 @@ class ZombieZorcererStomach(BodyPart):
         self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
+class PoisonGasElementalTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'poison gas elemental torso', '*', (0, 255, 0))
+        self.categories = ['torso']
+        self.childconnections = {
+            'front left arm': BodyPartConnection(self, ['arm'], False, 'front left ', constantfunction(0)),
+            'back left arm': BodyPartConnection(self, ['arm'], False, 'back left ', constantfunction(0)),
+            'front right arm': BodyPartConnection(self, ['arm'], False, 'front right ', constantfunction(0)),
+            'back right arm': BodyPartConnection(self, ['arm'], False, 'back right ', constantfunction(0)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(70)),
+            'front left eye': BodyPartConnection(self, ['eye'], False, 'front left ', constantfunction(50)),
+            'back left eye': BodyPartConnection(self, ['eye'], False, 'back left ', constantfunction(50)),
+            'front right eye': BodyPartConnection(self, ['eye'], False, 'front right ', constantfunction(50)),
+            'back right eye': BodyPartConnection(self, ['eye'], False, 'back right ', constantfunction(50)),
+            'heart': BodyPartConnection(self, ['heart'], True, '', constantfunction(50), internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', constantfunction(50), internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', constantfunction(50), internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', constantfunction(30), internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', constantfunction(30), internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', constantfunction(30), internal=True)
+        }
+        self._topheight = 100
+        self.maxhp = 100
+        self._wearwieldname = 'torso'
+        self.weight = 5
+        self.carryingcapacity = 60000
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = -1
+        self._resistances['electric'] = -1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['rough'] = 0.5
+        self.smell = 2
+        self.hearing = 1
+        self.sound = 1
+        self._info = 'A headless torso consisting of elemental poison gas. Has extremely good carrying capacity. Enables flying and moves without legs. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
+
+    def baseheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def stances(self):
+        return ['flying']
+    
+    def flyingspeed(self):
+        return 1
+
+    def speed(self):
+        return 1
+
+
+class PoisonGasElementalEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'poison gas elemental eye', '*', (0, 255, 0))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 3
+        self._bottomheight = -3
+        self.maxhp = 10
+        self.weight = 0
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = -1
+        self._resistances['electric'] = -1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['rough'] = 0.5
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
+        self._info = 'An eye consisting of elemental poison gas. Somewhat shortsighted on its own. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 2
+        else:
+            return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
+
+class PoisonGasElementalBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'poison gas elemental brain', '*', (0, 255, 0))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 20
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 0
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(
+                [[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.frightenedby = []
+        self.intelligence = 3
+        self.manacapacity = 20
+        self.spellsknown = []
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = -1
+        self._resistances['electric'] = -1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['rough'] = 0.5
+        self._info = 'A brain consisting of elemental poison gas. Intelligence 3, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+
+
+class PoisonGasElementalHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'poison gas elemental heart', '*', (0, 255, 0))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 20
+        self.material = "elemental"
+        self.consumable = False
+        self.edible = False
+        self.weight = 0
+        self.bravery = 0.5
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = -1
+        self._resistances['electric'] = -1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['rough'] = 0.5
+        self._info = 'A heart consisting of elemental poison gas. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+
+
+class PoisonGasElementalLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'poison gas elemental bellows', '*', (255, 0, 0))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 20
+        self.material = 'elemental'
+        self.weight = 0
+        self.breathepoisonresistance = 0
+        self.runstaminarecoveryspeed = 0.5
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = -1
+        self._resistances['electric'] = -1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['rough'] = 0.5
+        self._info = 'A lung consisting of elemental poison gas. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+
+
+class PoisonGasElementalArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'poison gas elemental arm', '~', (0, 255, 0))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = 0
+        self.upperpoorlimit = 100
+        self.upperfinelimit = 75
+        self.lowerfinelimit = -75
+        self.lowerpoorlimit = -100
+        self.maxhp = 30
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.97
+        self.throwspeed = 1
+        self.protectiveness = 0.15
+        self.capableofwielding = True
+        # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self.wielded = listwithowner([], self)
+        self._wearwieldname = 'hand'
+        self.worn = {'ring': listwithowner([], self)}
+        self.weight = 1
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self._attackpoisonresistance = 1
+        self._resistances['fire'] = -1
+        self._resistances['electric'] = -1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['rough'] = 0.5
+        self.carefulness = 0.5
+        self.smell = 2
+        self._info = 'An arm consisting of elemental fire. Protects other bodyparts quite well. Does magical damage and poisons targets. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.84, 1, 1, 15, 'sharp', 0, [], True, [('venom',)], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+
 class WolfTorso(BodyPart):
     def __init__(self, owner, x, y):
         super().__init__(owner, x, y, 'wolf torso', '*', (100, 100, 150))
@@ -4958,9 +5187,10 @@ class SmallFireElementalBellows(BodyPart):
         self._bottomheight = -10
         self.maxhp = 30
         self.material = 'elemental'
-        self.weight = 600
+        self.weight = 10
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
+        self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire damage, and very resistant against electric damage.'
@@ -7214,9 +7444,10 @@ class LargeFireElementalBellows(BodyPart):
         self._bottomheight = -12
         self.maxhp = 75
         self.material = 'elemental'
-        self.weight = 600
+        self.weight = 10
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
+        self._attackpoisonresistance = 1
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire damage, and very resistant against electric damage.'
