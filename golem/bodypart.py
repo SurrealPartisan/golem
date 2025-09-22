@@ -53,6 +53,7 @@ class BodyPart(item.Item):
         self._defensecoefficient = 0.8
         self._situationaldefensecoefficient = 0.8 + np.random.rand()*0.4
         self._attackpoisonresistance = 0
+        self._silversicknessresistance = 1
         self._wearwieldname = name
         self.bleedclocks = []
         self.imbalanceclock = 0
@@ -68,6 +69,7 @@ class BodyPart(item.Item):
         self.bravery = 0
         self.scariness = 0
         self.endotoxicity = 0
+        self.silveraccumulation = 0
         self.smell = 0
         self.demonic = False
         self._stances = []
@@ -139,6 +141,9 @@ class BodyPart(item.Item):
 
     def attackpoisonresistance(self):
         return self._attackpoisonresistance
+
+    def silversicknessresistance(self):
+        return self._silversicknessresistance
 
     def resistance(self, damagetype):
         return self._resistances[damagetype]
@@ -502,6 +507,7 @@ class HumanKidney(BodyPart):
         self.maxhp = 10
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 
@@ -550,11 +556,12 @@ class ZombieTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -590,12 +597,13 @@ class ZombieArm(BodyPart):
             [], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -644,13 +652,14 @@ class ZombieLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.maxrunstamina = 20
         self.smell = 2
-        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -702,13 +711,14 @@ class ZombieHead(BodyPart):
         self.weight = 7000
         self.scariness = 5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
         self.hearing = 1
         self.sound = 1
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 5 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -728,12 +738,13 @@ class ZombieEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -770,10 +781,11 @@ class ZombieBrain(BodyPart):
         self.manacapacity = 25
         self.spellsknown = []
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A brain consisting of undead flesh. Intelligence 0, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 0, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class ZombieHeart(BodyPart):
@@ -788,9 +800,10 @@ class ZombieHeart(BodyPart):
         self.weight = 250
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class ZombieLung(BodyPart):
@@ -806,10 +819,11 @@ class ZombieLung(BodyPart):
         self.runstaminarecoveryspeed = 0.25
         self.breathepoisonresistance = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class ZombieKidney(BodyPart):
@@ -823,10 +837,12 @@ class ZombieKidney(BodyPart):
         self.material = 'undead flesh'
         self.weight = 100
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = -0.5
+        self.silveraccumulation = -0.5
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage.'
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage.'
 
 
 class ZombieStomach(BodyPart):
@@ -846,10 +862,11 @@ class ZombieStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
         }
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class MolePersonTorso(BodyPart):
@@ -1113,6 +1130,7 @@ class MolePersonKidney(BodyPart):
         self.maxhp = 10
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 
@@ -1402,6 +1420,7 @@ class GoblinKidney(BodyPart):
         self.maxhp = 10
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -1451,11 +1470,12 @@ class GlassElementalTorso(BodyPart):
         self.edible = False
         self.maxrunstamina = 20
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
-        self._info = 'A snake-like torso consisting of elemental glass. Has very good carrying capacity. Doesn\'t have leg slots, but has a movement speed itself. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
+        self._info = 'A snake-like torso consisting of elemental glass. Has very good carrying capacity. Doesn\'t have leg slots, but has a movement speed itself. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1500,13 +1520,14 @@ class GlassElementalHead(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
         self.hearing = 1
         self.sound = 1
-        self._info = 'A head consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
+        self._info = 'A head consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
 
     def on_destruction(self, dead):
         if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
@@ -1528,13 +1549,14 @@ class GlassElementalEye(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of elemental glass. Very short-sighted on its own. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive.'
+        self._info = 'An eye consisting of elemental glass. Very short-sighted on its own. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1576,11 +1598,12 @@ class GlassElementalBrain(BodyPart):
         self.manacapacity = 20
         self.spellsknown = []
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
-        self._info = 'A brain consisting of elemental glass. Intelligence 1, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. Breaks into glass shards when destroyed.'
+        self._info = 'A brain consisting of elemental glass. Intelligence 1, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. Breaks into glass shards when destroyed.'
 
     def on_destruction(self, dead):
         if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
@@ -1603,11 +1626,12 @@ class GlassElementalHeart(BodyPart):
         self.weight = 100
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
-        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. Breaks into glass shards when destroyed.'
+        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. Breaks into glass shards when destroyed.'
 
     def on_destruction(self, dead):
         if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
@@ -1629,12 +1653,43 @@ class GlassElementalLung(BodyPart):
         self.edible = False
         self.weight = 600
         self.breathepoisonresistance = 0
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.runstaminarecoveryspeed = 0.5
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
-        self._info = 'A lung consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. Breaks into glass shards when destroyed.'
+        self._info = 'A lung consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas and can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. Breaks into glass shards when destroyed.'
+
+    def on_destruction(self, dead):
+        if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
+            item.GlassShards(self.owner.owner.world.items,
+                             self.owner.owner.x, self.owner.owner.y)
+        super().on_destruction(dead)
+
+
+class GlassElementalKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'glass elemental kidney', '*', (0, 255, 255))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 5
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self.weight = 120
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = -1
+        self.silveraccumulation = -1
+        self._resistances['blunt'] = -1
+        self._resistances['rough'] = -1
+        self._resistances['electric'] = 1
+        self.nonconductive = True
+        self._info = 'A kidney consisting of elemental glass. Filters toxins at an average speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. Breaks into glass shards when destroyed.'
 
     def on_destruction(self, dead):
         if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
@@ -1670,12 +1725,13 @@ class GlassElementalArm(BodyPart):
         self.edible = False
         self.weight = 1000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
         self.carefulness = 0.5
-        self._info = 'An arm consisting of elemental glass. Protects other bodyparts quite well. Does magical damage. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
+        self._info = 'An arm consisting of elemental glass. Protects other bodyparts quite well. Does magical damage. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -1723,11 +1779,12 @@ class GlassElementalTail(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['blunt'] = -1
         self._resistances['rough'] = -1
         self._resistances['electric'] = 1
         self.nonconductive = True
-        self._info = 'A tail consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
+        self._info = 'A tail consisting of elemental glass. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very weak against blunt and rough damage, but completely resistant against electric damage and nonconductive. No smell. Breaks into glass shards when destroyed.'
 
     def on_destruction(self, dead):
         if not np.any([it.x == self.owner.owner.x and it.y == self.owner.owner.y and it.name == 'glass shards' for it in self.owner.owner.world.items]):
@@ -1950,6 +2007,7 @@ class OctopusMetanephridium(BodyPart):
         self.maxhp = 20
         self.weight = 100
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney-like organ consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -2173,6 +2231,7 @@ class DogKidney(BodyPart):
         self.maxhp = 15
         self.weight = 90
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -2508,6 +2567,7 @@ class ImpKidney(BodyPart):
         self.maxhp = 10
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self.demonic = True
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed. Very resistant against nonmagical damage.'
 
@@ -2799,6 +2859,7 @@ class HobgoblinKidney(BodyPart):
         self.maxhp = 20
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -3082,6 +3143,7 @@ class MoleMonkKidney(BodyPart):
         self.maxhp = 20
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -3130,11 +3192,12 @@ class ZombieZorcererTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -3170,12 +3233,13 @@ class ZombieZorcererArm(BodyPart):
             [], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3224,13 +3288,14 @@ class ZombieZorcererLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.maxrunstamina = 20
         self.smell = 2
-        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A leg consisting of undead flesh. Quite slow and somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -3282,13 +3347,14 @@ class ZombieZorcererHead(BodyPart):
         self.weight = 7000
         self.scariness = 7
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
         self.hearing = 1
         self.sound = 1
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 7 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 7 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3308,12 +3374,13 @@ class ZombieZorcererEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3351,10 +3418,11 @@ class ZombieZorcererBrain(BodyPart):
         self.spellsknown = [np.random.choice([magic.SharpMissile, magic.BluntMissile, magic.RoughMissile, magic.FireMissile])(np.random.randint(
             1, 3)), np.random.choice([magic.CurseOfSlowness, magic.CurseOfWeakness])(np.random.randint(1, 3)), magic.HealThyself(np.random.randint(1, 3))]
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A brain consisting of undead flesh. Intelligence 2, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 2, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class ZombieZorcererHeart(BodyPart):
@@ -3369,9 +3437,10 @@ class ZombieZorcererHeart(BodyPart):
         self.weight = 250
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class ZombieZorcererLung(BodyPart):
@@ -3387,10 +3456,11 @@ class ZombieZorcererLung(BodyPart):
         self.runstaminarecoveryspeed = 0.25
         self.breathepoisonresistance = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class ZombieZorcererKidney(BodyPart):
@@ -3404,10 +3474,12 @@ class ZombieZorcererKidney(BodyPart):
         self.material = 'undead flesh'
         self.weight = 100
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = -0.5
+        self.silveraccumulation = -0.5
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage.'
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage.'
 
 
 class ZombieZorcererStomach(BodyPart):
@@ -3427,10 +3499,11 @@ class ZombieZorcererStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
         }
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class PoisonGasElementalTorso(BodyPart):
@@ -3463,6 +3536,7 @@ class PoisonGasElementalTorso(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = -1
         self._resistances['electric'] = -1
         self._resistances['sharp'] = 0.5
@@ -3471,7 +3545,7 @@ class PoisonGasElementalTorso(BodyPart):
         self.smell = 2
         self.hearing = 1
         self.sound = 1
-        self._info = 'A headless torso consisting of elemental poison gas. Has extremely good carrying capacity. Enables flying and moves without legs. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
+        self._info = 'A headless torso consisting of elemental poison gas. Has extremely good carrying capacity. Enables flying and moves without legs. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
 
     def baseheight(self):
         if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
@@ -3502,6 +3576,7 @@ class PoisonGasElementalEye(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = -1
         self._resistances['electric'] = -1
         self._resistances['sharp'] = 0.5
@@ -3509,7 +3584,7 @@ class PoisonGasElementalEye(BodyPart):
         self._resistances['rough'] = 0.5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of elemental poison gas. Somewhat shortsighted on its own. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+        self._info = 'An eye consisting of elemental poison gas. Somewhat shortsighted on its own. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3548,12 +3623,13 @@ class PoisonGasElementalBrain(BodyPart):
         self.manacapacity = 20
         self.spellsknown = []
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = -1
         self._resistances['electric'] = -1
         self._resistances['sharp'] = 0.5
         self._resistances['blunt'] = 0.5
         self._resistances['rough'] = 0.5
-        self._info = 'A brain consisting of elemental poison gas. Intelligence 3, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+        self._info = 'A brain consisting of elemental poison gas. Intelligence 3, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
 
 
 class PoisonGasElementalHeart(BodyPart):
@@ -3570,17 +3646,18 @@ class PoisonGasElementalHeart(BodyPart):
         self.weight = 0
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = -1
         self._resistances['electric'] = -1
         self._resistances['sharp'] = 0.5
         self._resistances['blunt'] = 0.5
         self._resistances['rough'] = 0.5
-        self._info = 'A heart consisting of elemental poison gas. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+        self._info = 'A heart consisting of elemental poison gas. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
 
 
 class PoisonGasElementalLung(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'poison gas elemental lung', '*', (255, 0, 0))
+        super().__init__(owner, x, y, 'poison gas elemental lung', '*', (0, 255, 0))
         self.categories = ['lung']
         self.childconnections = {}
         self._topheight = 10
@@ -3593,12 +3670,37 @@ class PoisonGasElementalLung(BodyPart):
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = -1
         self._resistances['electric'] = -1
         self._resistances['sharp'] = 0.5
         self._resistances['blunt'] = 0.5
         self._resistances['rough'] = 0.5
-        self._info = 'A lung consisting of elemental poison gas. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+        self._info = 'A lung consisting of elemental poison gas. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas and can be made silversick. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
+
+
+class PoisonGasElementalKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'poison gas elemental kidney', '*', (0, 255, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 20
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self.weight = 0
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = -1
+        self.silveraccumulation = -1
+        self._resistances['fire'] = -1
+        self._resistances['electric'] = -1
+        self._resistances['sharp'] = 0.5
+        self._resistances['blunt'] = 0.5
+        self._resistances['rough'] = 0.5
+        self._info = 'A kidney consisting of elemental poison gas. Filters toxins at an average speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage.'
 
 
 class PoisonGasElementalArm(BodyPart):
@@ -3627,6 +3729,7 @@ class PoisonGasElementalArm(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = -1
         self._resistances['electric'] = -1
         self._resistances['sharp'] = 0.5
@@ -3634,7 +3737,7 @@ class PoisonGasElementalArm(BodyPart):
         self._resistances['rough'] = 0.5
         self.carefulness = 0.5
         self.smell = 2
-        self._info = 'An arm consisting of elemental poison gas. Protects other bodyparts quite well. Does magical damage and poisons targets. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
+        self._info = 'An arm consisting of elemental poison gas. Protects other bodyparts quite well. Does magical damage and poisons targets. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -3865,6 +3968,7 @@ class WolfKidney(BodyPart):
         self.maxhp = 20
         self.weight = 95
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -3931,7 +4035,7 @@ class DrillbotChassis(BodyPart):
         self._resistances['electric'] = -0.2
         self.hearing = 1
         self.sound = 1
-        self._info = 'A torso consisting of electronics. Has very good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage, but weak against electric damage. No smell.'
+        self._info = 'A torso consisting of electronics. Has very good carrying capacity. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Resistant against sharp damage, but weak against electric damage. No smell.'
 
 
 class DrillbotWheel(BodyPart):
@@ -3957,7 +4061,7 @@ class DrillbotWheel(BodyPart):
         self.nonconductive = True
         self.carefulness = 0.5
         self.maxrunstamina = 20
-        self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against electric damage and nonconductive, but very weak against sharp and rough damage. Very fast if there are at least four legs or wheels, and quite fast even when there are two. High "running" stamina. No smell.'
+        self._info = 'A leg-like organ consisting of electronics. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Completely resistant against electric damage and nonconductive, but very weak against sharp and rough damage. Very fast if there are at least four legs or wheels, and quite fast even when there are two. High "running" stamina. No smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -4001,7 +4105,7 @@ class DrillArm(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
         self._resistances['electric'] = -0.2
-        self._info = 'A dual-purpose pneumatic drill arm consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage, but weak against electric damage. Can directly attack internal organs. Can be used for mining. No smell.'
+        self._info = 'A dual-purpose pneumatic drill arm consisting of electronics. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Resistant against sharp damage, but weak against electric damage. Can directly attack internal organs. Can be used for mining. No smell.'
 
     def minespeed(self):
         return 0.5
@@ -4030,7 +4134,7 @@ class DrillbotCamera(BodyPart):
         self._resistances['electric'] = -0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
-        self._info = 'An eye consisting of electronics. Good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage, but weak against electric damage.'
+        self._info = 'An eye consisting of electronics. Good at detecting traps. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Resistant against sharp damage, but weak against electric damage.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4059,7 +4163,7 @@ class DrillbotPump(BodyPart):
         self._resistances['sharp'] = 0.2
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
-        self._info = 'A heart consisting of electronics. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage, but weak against electric damage.'
+        self._info = 'A heart consisting of electronics. Average bravery. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Resistant against sharp damage, but weak against electric damage.'
 
 
 class DrillbotAerator(BodyPart):
@@ -4077,7 +4181,7 @@ class DrillbotAerator(BodyPart):
         self.runstaminarecoveryspeed = 1
         self._resistances['sharp'] = 0.2
         self._resistances['electric'] = -0.2
-        self._info = 'A lung consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Protects living bodyparts from poison gas quite well. Recovers running stamina quickly. Resistant against sharp damage, but weak against electric damage.'
+        self._info = 'A lung consisting of electronics. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Protects living bodyparts from poison gas quite well. Recovers running stamina quickly. Resistant against sharp damage, but weak against electric damage.'
 
 
 class DrillbotFilter(BodyPart):
@@ -4092,9 +4196,10 @@ class DrillbotFilter(BodyPart):
         self.material = 'electronics'
         self._attackpoisonresistance = 1
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._resistances['sharp'] = 0.2
         self._resistances['electric'] = -0.2
-        self._info = 'A kidney consisting of electronics. Doesn\'t gain hunger and can\'t be poisoned. Filters toxins at an average speed. Resistant against sharp damage, but weak against electric damage.'
+        self._info = 'A kidney consisting of electronics. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Filters toxins at an average speed. Resistant against sharp damage, but weak against electric damage.'
 
 
 class DrillbotProcessor(BodyPart):
@@ -4125,7 +4230,7 @@ class DrillbotProcessor(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
         self._resistances['electric'] = -0.2
-        self._info = 'A brain consisting of electronics. Intelligence 6, low mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage, but weak against electric damage.'
+        self._info = 'A brain consisting of electronics. Intelligence 6, low mana capacity. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Resistant against sharp damage, but weak against electric damage.'
 
 
 class DrillBotBiomassProcessor(BodyPart):
@@ -4149,7 +4254,7 @@ class DrillBotBiomassProcessor(BodyPart):
             'living flesh': (1, 1, None),
             'undead flesh': (1, 1, None)
         }
-        self._info = 'A stomach consisting of electronics. Processes everything even somewhat edible perfectly. Doesn\'t gain hunger and can\'t be poisoned. Resistant against sharp damage, but weak against electric damage.'
+        self._info = 'A stomach consisting of electronics. Processes everything even somewhat edible perfectly. Doesn\'t gain hunger and can neither be poisoned nor made silversick. Resistant against sharp damage, but weak against electric damage.'
 
 
 class LobgoblinTorso(BodyPart):
@@ -4420,6 +4525,7 @@ class LobgoblinKidney(BodyPart):
         self.maxhp = 30
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -4479,13 +4585,14 @@ class RevenantOctopusHead(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 20000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
         self.hearing = 1
         self.sound = 1
-        self._info = 'A torso (despite being called head!) consisting of undead flesh. Needs neither brain nor hearts. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso (despite being called head!) consisting of undead flesh. Needs neither brain nor hearts. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4523,12 +4630,13 @@ class RevenantOctopusTentacle(BodyPart):
         self.carefulness = 0.4
         self.maxrunstamina = 2.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'A tentacle consisting of undead flesh. Works both as an arm and as a leg. Slow at moving, but faster if there are more of them. Also faster at attacking if there are more of them. Slow and rather inaccurate at throwing. Individually very low running stamina, collectively average. Slightly clumsy. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A tentacle consisting of undead flesh. Works both as an arm and as a leg. Slow at moving, but faster if there are more of them. Also faster at attacking if there are more of them. Slow and rather inaccurate at throwing. Individually very low running stamina, collectively average. Slightly clumsy. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed(
@@ -4590,12 +4698,13 @@ class RevenantOctopusEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 10
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.detectiondistance = 2.9
         self.detectionprobability = 0.2
-        self._info = 'An eye consisting of undead flesh. Can detect traps from farther away than most. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Can detect traps from farther away than most. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4632,10 +4741,11 @@ class RevenantOctopusBrain(BodyPart):
         self.manacapacity = 25
         self.spellsknown = []
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A brain consisting of undead flesh. Intelligence 4, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 4, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class RevenantOctopusHeart(BodyPart):
@@ -4650,9 +4760,10 @@ class RevenantOctopusHeart(BodyPart):
         self.weight = 500
         self.bravery = 0.25
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Individually easily scared (luckily the octopus has three of them). Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Individually easily scared (luckily the octopus has three of them). Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class RevenantOctopusGills(BodyPart):
@@ -4668,10 +4779,11 @@ class RevenantOctopusGills(BodyPart):
         self.breathepoisonresistance = 0.5
         self.runstaminarecoveryspeed = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A lung-like organ consisting of undead flesh. Protects living bodyparts from poison gas quite well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung-like organ consisting of undead flesh. Protects living bodyparts from poison gas quite well. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class RevenantOctopusMetanephridium(BodyPart):
@@ -4685,10 +4797,12 @@ class RevenantOctopusMetanephridium(BodyPart):
         self.material = 'undead flesh'
         self.weight = 100
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = -0.5
+        self.silveraccumulation = -0.5
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A kidney-like organ consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage.'
+        self._info = 'A kidney-like organ consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage.'
 
 
 class RevenantOctopusStomach(BodyPart):
@@ -4708,10 +4822,11 @@ class RevenantOctopusStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
         }
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A hypercarnivorous stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A hypercarnivorous stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class GhoulTorso(BodyPart):
@@ -4741,11 +4856,12 @@ class GhoulTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 60000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -4781,12 +4897,13 @@ class GhoulArm(BodyPart):
             [], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4835,13 +4952,14 @@ class GhoulLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.maxrunstamina = 20
         self.smell = 2
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -4893,13 +5011,14 @@ class GhoulHead(BodyPart):
         self.weight = 7000
         self.scariness = 10
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
         self.hearing = 1
         self.sound = 1
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 10 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 10 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4919,12 +5038,13 @@ class GhoulEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -4961,10 +5081,11 @@ class GhoulBrain(BodyPart):
         self.manacapacity = 25
         self.spellsknown = []
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A brain consisting of undead flesh. Intelligence 5, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 5, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class GhoulHeart(BodyPart):
@@ -4978,10 +5099,11 @@ class GhoulHeart(BodyPart):
         self.material = "undead flesh"
         self.weight = 250
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self.bravery = 0.5
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class GhoulLung(BodyPart):
@@ -4999,8 +5121,9 @@ class GhoulLung(BodyPart):
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class GhoulKidney(BodyPart):
@@ -5014,10 +5137,12 @@ class GhoulKidney(BodyPart):
         self.material = 'undead flesh'
         self.weight = 120
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = -0.5
+        self.silveraccumulation = -0.5
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage.'
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage.'
 
 
 class GhoulStomach(BodyPart):
@@ -5037,10 +5162,11 @@ class GhoulStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
         }
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class SmallFireElementalTorso(BodyPart):
@@ -5071,9 +5197,10 @@ class SmallFireElementalTorso(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
-        self._info = 'A torso consisting of elemental fire. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
+        self._info = 'A torso consisting of elemental fire. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
 
 
 class SmallFireElementalHead(BodyPart):
@@ -5095,11 +5222,12 @@ class SmallFireElementalHead(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self.hearing = 1
         self.sound = 1
-        self._info = 'A head consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
+        self._info = 'A head consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
 
 
 class SmallFireElementalEye(BodyPart):
@@ -5115,11 +5243,12 @@ class SmallFireElementalEye(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
-        self._info = 'An eye consisting of elemental fire. Sees much farther than most, and is rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage.'
+        self._info = 'An eye consisting of elemental fire. Sees much farther than most, and is rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5158,9 +5287,10 @@ class SmallFireElementalBrain(BodyPart):
         self.manacapacity = 20
         self.spellsknown = [magic.FireMissile(np.random.randint(1, 8))]
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
-        self._info = 'A brain consisting of elemental fire. Intelligence 7, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage.'
+        self._info = 'A brain consisting of elemental fire. Intelligence 7, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
 
 
 class SmallFireElementalHeart(BodyPart):
@@ -5177,9 +5307,10 @@ class SmallFireElementalHeart(BodyPart):
         self.weight = 10
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.2
-        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and resistant against electric damage.'
+        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and resistant against electric damage.'
 
 
 class SmallFireElementalBellows(BodyPart):
@@ -5197,9 +5328,31 @@ class SmallFireElementalBellows(BodyPart):
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
-        self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire damage, and very resistant against electric damage.'
+        self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas and can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
+
+
+class SmallFireElementalKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'small fire elemental kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 30
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self.weight = 5
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = -1
+        self.silveraccumulation = -1
+        self._resistances['fire'] = 1
+        self._resistances['electric'] = 0.5
+        self._info = 'A kidney consisting of elemental fire. Filters toxins at an average speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
 
 
 class SmallFireElementalTentacle(BodyPart):
@@ -5231,11 +5384,12 @@ class SmallFireElementalTentacle(BodyPart):
         self.weight = 100
         self.carryingcapacity = 20000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self.carefulness = 0.5
         self.maxrunstamina = 10
-        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Does magical damage. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
+        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Does magical damage. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
 
     def standingheight(self):
         legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed(
@@ -5554,6 +5708,7 @@ class MobgoblinKidney(BodyPart):
         self.maxhp = 40
         self.weight = 120
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at average speed.'
 
 
@@ -5776,6 +5931,7 @@ class DireWolfKidney(BodyPart):
         self.maxhp = 45
         self.weight = 160
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 
@@ -6077,6 +6233,7 @@ class JobgoblinKidney(BodyPart):
         self.maxhp = 50
         self.weight = 100
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 
@@ -6125,11 +6282,12 @@ class GhastTorso(BodyPart):
         self.weight = 40000
         self.carryingcapacity = 60000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
-        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def topheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -6165,12 +6323,13 @@ class GhastArm(BodyPart):
             [], self), 'ring': listwithowner([], self)}
         self.weight = 4000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.smell = 2
-        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -6219,13 +6378,14 @@ class GhastLeg(BodyPart):
         self.weight = 15000
         self.carryingcapacity = 30000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.carefulness = 0.3
         self.maxrunstamina = 20
         self.smell = 2
-        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def standingheight(self):
         legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
@@ -6277,13 +6437,14 @@ class GhastHead(BodyPart):
         self.weight = 7000
         self.scariness = 15
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.smell = 2
         self.hearing = 1
         self.sound = 1
-        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 15 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 15 s. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -6303,12 +6464,13 @@ class GhastEye(BodyPart):
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
-        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -6345,10 +6507,11 @@ class GhastBrain(BodyPart):
         self.manacapacity = 25
         self.spellsknown = []
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A brain consisting of undead flesh. Intelligence 9, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A brain consisting of undead flesh. Intelligence 9, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class GhastHeart(BodyPart):
@@ -6363,9 +6526,10 @@ class GhastHeart(BodyPart):
         self.weight = 250
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
-        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class GhastLung(BodyPart):
@@ -6380,11 +6544,12 @@ class GhastLung(BodyPart):
         self.weight = 600
         self.breathepoisonresistance = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
         self.runstaminarecoveryspeed = 0.25
-        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class GhastKidney(BodyPart):
@@ -6398,10 +6563,12 @@ class GhastKidney(BodyPart):
         self.material = 'undead flesh'
         self.weight = 120
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = -0.5
+        self.silveraccumulation = -0.5
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage.'
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage.'
 
 
 class GhastStomach(BodyPart):
@@ -6421,10 +6588,11 @@ class GhastStomach(BodyPart):
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
         }
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self.endotoxicity = 0.25
         self._resistances['sharp'] = -0.2
         self._resistances['electric'] = 0.2
-        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class NobgoblinTorso(BodyPart):
@@ -6695,6 +6863,7 @@ class NobgoblinKidney(BodyPart):
         self.maxhp = 60
         self.weight = 100
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 
@@ -6917,6 +7086,7 @@ class WargKidney(BodyPart):
         self.maxhp = 65
         self.weight = 160
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 
@@ -7218,6 +7388,7 @@ class FobgoblinKidney(BodyPart):
         self.maxhp = 70
         self.weight = 100
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 
@@ -7269,9 +7440,10 @@ class LargeFireElementalTorso(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
-        self._info = 'A torso consisting of elemental fire. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
+        self._info = 'A torso consisting of elemental fire. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
 
 
 class LargeFireElementalArm(BodyPart):
@@ -7301,10 +7473,11 @@ class LargeFireElementalArm(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self.carefulness = 0.5
-        self._info = 'An arm consisting of elemental fire. Protects other bodyparts quite well. Does magical damage. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
+        self._info = 'An arm consisting of elemental fire. Protects other bodyparts quite well. Does magical damage. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -7354,11 +7527,12 @@ class LargeFireElementalHead(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self.hearing = 1
         self.sound = 1
-        self._info = 'A head consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
+        self._info = 'A head consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
 
 
 class LargeFireElementalEye(BodyPart):
@@ -7374,11 +7548,12 @@ class LargeFireElementalEye(BodyPart):
         self.consumable = False
         self.edible = False
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
-        self._info = 'An eye consisting of elemental fire. Rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage.'
+        self._info = 'An eye consisting of elemental fire. Rather good at detecting traps. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
 
     def sight(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -7417,9 +7592,10 @@ class LargeFireElementalBrain(BodyPart):
         self.manacapacity = 20
         self.spellsknown = [magic.FireMissile(np.random.randint(8, 15))]
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
-        self._info = 'A brain consisting of elemental fire. Intelligence 14, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage.'
+        self._info = 'A brain consisting of elemental fire. Intelligence 14, average mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
 
 
 class LargeFireElementalHeart(BodyPart):
@@ -7436,9 +7612,10 @@ class LargeFireElementalHeart(BodyPart):
         self.weight = 10
         self.bravery = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.2
-        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and resistant against electric damage.'
+        self._info = 'A heart consisting of elemental fire. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and resistant against electric damage.'
 
 
 class LargeFireElementalBellows(BodyPart):
@@ -7456,9 +7633,31 @@ class LargeFireElementalBellows(BodyPart):
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
-        self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas. Completely resistant against fire damage, and very resistant against electric damage.'
+        self._info = 'A lung consisting of elemental fire. Doesn\'t gain hunger and can\'t be poisoned, but doesn\'t protect living body parts from poison gas and can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
+
+
+class LargeFireElementalKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'large fire elemental kidney', '*', (255, 0, 0))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 75
+        self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
+        self.weight = 5
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = -1
+        self.silveraccumulation = -1
+        self._resistances['fire'] = 1
+        self._resistances['electric'] = 0.5
+        self._info = 'A kidney consisting of elemental fire. Filters toxins at an average speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage.'
 
 
 class LargeFireElementalTentacle(BodyPart):
@@ -7490,11 +7689,12 @@ class LargeFireElementalTentacle(BodyPart):
         self.weight = 200
         self.carryingcapacity = 20000
         self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
         self._resistances['fire'] = 1
         self._resistances['electric'] = 0.5
         self.carefulness = 0.5
         self.maxrunstamina = 10
-        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Does magical damage. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
+        self._info = 'A tentacle consisting of elemental fire. Works both as an arm and as a leg. Does magical damage. Faster at moving and attacking if there are more of them. Slow and rather inaccurate at throwing. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Completely resistant against fire damage, and very resistant against electric damage. No smell.'
 
     def standingheight(self):
         legsnotentacles = [part for part in self.owner if 'leg' in part.categories and not 'tentacle' in part.categories and not part.destroyed(
@@ -7813,6 +8013,7 @@ class DobgoblinKidney(BodyPart):
         self.maxhp = 80
         self.weight = 100
         self.endotoxicity = -1
+        self.silveraccumulation = -1
         self._info = 'A kidney consisting of living flesh. Filters toxins at an average speed.'
 
 

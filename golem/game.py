@@ -189,6 +189,13 @@ def game():
                     y = np.random.randint(mapheight)
                 item.Venom(cave.items, x, y)
 
+            for j in range(np.random.randint(0, 2)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                item.Silversheen(cave.items, x, y)
+
             for j in range(np.random.randint(0, 6)):
                 x = y = 0
                 while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
@@ -637,6 +644,11 @@ def game():
                     statuseffects.append(('Poisoned', (255, 0, 0)))
                 else:
                     statuseffects.append(('Poisoned', (0, 0, 0)))
+            if player.accumulatedsilver > 5:
+                if len([part for part in player.bodyparts if part.material == 'undead flesh' or part.material == 'elemental']) > 0:
+                    statuseffects.append(('Silversick', (255, 0, 0)))
+                else:
+                    statuseffects.append(('Silversick', (0, 0, 0)))
             if player.slowed() == 1:
                 statuseffects.append(('Slowed', (255, 255, 0)))
             if player.slowed() > 1:
@@ -1814,6 +1826,7 @@ def game():
             infoblast(cave, player.x, player.y, 0, [
                       player], ('see only', 'NAME_0 regained it\'s balance.'))
         player.applypoison(time)
+        player.applysilversickness(time)
         player.weakenedclock = max(0, player.weakenedclock - time)
         player.disorientedclock = max(0, player.disorientedclock - time)
         player.slowedclock = max(0, player.slowedclock - time)

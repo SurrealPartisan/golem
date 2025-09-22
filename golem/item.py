@@ -69,6 +69,7 @@ materials = {'leather': Material(None, None, None, 3, 25, 4, (186, 100, 13)),
              'eternium': Material(73, 0.5, 0.5, 68, 675, 50, (255, 255, 255))}
 armormaterials = [material for material in materials if not materials[material].armor == None]
 weaponmaterials = [material for material in materials if not materials[material].damage == None]
+argentmaterials = ['silver', 'zzzilver', 'mithril', 'mithril carbide']
 likeliestmaterialbylevel = ['bone',           # 1
                             'bronze',         # 2
                             'elven steel',    # 3
@@ -283,6 +284,16 @@ class Venom(Item):
         self.wearoffpropability = 0.5
         self._info = 'Venom to spread on sharp or rough weapons. Poisons enemies made of living flesh.'
 
+class Silversheen(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dose of silversheen', '!', (192, 192, 192))
+        self.material = 'chemical'
+        self.weight = 100
+        self.spreadable_on = (Dagger, Spear, Sword, PickAxe, Mace, Staff)
+        self._coatingname = 'silversheen'
+        self.wearoffpropability = 0.5
+        self._info = 'Silvery chemical to spread on weapons to temporarily make them argent. Causes silversickness to undead and elemental enemies.'
+
 class Spellbooklet(Item):
     def __init__(self, owner, x, y, spell):
         if spell == None:
@@ -347,6 +358,8 @@ class Dagger(Item):
         density = materials[material].density
         self.weight = 6*density
         self._info = 'A ' + 'magical '*self.magical + 'one-handed weapon made of ' + material + '. Can make enemies bleed (double damage over time). Can be thrown up to five (plus enchantment) paces.'
+        if self.material in argentmaterials:
+            self._info += ' As ' + material + ' is an argent material, it can cause silversickness in undead and elemental enemies.'
 
     def attackslist(self):
         return[Attack(self.name, 'stabbed', 'stabbed', 'stab', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'sharp', 20, self.bane, self.magical, [('bleed', 0.2)], self)]
@@ -388,6 +401,8 @@ class Spear(Item):
         density = materials[material].density
         self.weight = 6*density + 1000
         self._info = 'A ' + 'magical '*self.magical + 'weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). A charge weapon deals half again as much damage when you have moved towards the enemy just before the attack. Can be thrown up to ten (plus enchantment) paces.'
+        if self.material in argentmaterials:
+            self._info += ' As ' + material + ' is an argent material, it can cause silversickness in undead and elemental enemies.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -430,6 +445,8 @@ class Mace(Item):
         density = materials[material].density
         self.weight = 50*density
         self._info = 'A ' + 'magical '*self.magical + 'one-handed weapon made of ' + material + '. Can knock enemies back.'
+        if self.material in argentmaterials:
+            self._info += ' As ' + material + ' is an argent material, it can cause silversickness in undead and elemental enemies.'
 
     def attackslist(self):
         return[Attack(self.name, 'hit', 'hit', 'hit', ' with a ' + self.name, ' with a ' + self.name, self.hitpropability, 1, self.mindamage, self.maxdamage, 'blunt', 50, self.bane, self.magical, [('knockback', 0.2)], self)]
@@ -467,6 +484,8 @@ class Staff(Item):
         density = materials[material].density
         self.weight = 100*density
         self._info = 'A ' + 'magical '*self.magical + 'weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). When wielded, prevents getting imbalanced.'
+        if self.material in argentmaterials:
+            self._info += ' As ' + material + ' is an argent material, it can cause silversickness in undead and elemental enemies.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -506,6 +525,8 @@ class Sword(Item):
         density = materials[material].density
         self.weight = 50*density
         self._info = 'A ' + 'magical '*self.magical + 'weapon made of ' + material + '. Better used with two hands (leave another hand free when wielding). Because of its long sharp blade, can directly attack internal organs.'
+        if self.material in argentmaterials:
+            self._info += ' As ' + material + ' is an argent material, it can cause silversickness in undead and elemental enemies.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -546,6 +567,8 @@ class PickAxe(Item):
         density = materials[material].density
         self.weight = 12*density + 500
         self._info = 'A ' + 'magical '*self.magical + 'weapon and a tool, made of ' + material + '. Better used with two hands (leave another hand free when wielding). Can be used for mining.'
+        if self.material in argentmaterials:
+            self._info += ' As ' + material + ' is an argent material, it can cause silversickness in undead and elemental enemies.'
 
     def attackslist(self):
         if len([part for part in self.owner.owner.owner if part.capableofwielding and len(part.wielded) == 0 and not (part.destroyed() or part.incapacitated())]) > 0:  # looking for free hands or other appendages capable of wielding.
@@ -719,6 +742,8 @@ class Caltrops(Item):
         density = materials[material].density
         self.weight = 12*density
         self._info = 'A trap made of ' + material + '.'
+        if self.material in argentmaterials:
+            self._info += ' As ' + material + ' is an argent material, it can cause silversickness in undead and elemental creatures that step in the trap.'
 
     def entrap(self, creat, part):
         if np.any([faction in self.bane for faction in creat.factions]):
@@ -741,6 +766,16 @@ class Caltrops(Item):
         damage = min(int(banemultiplier*resistancemultiplier*demonicresistancemultiplier*(totaldamage - armordamage)), part.hp())
         alreadyincapacitated = part.incapacitated()
         part.damagetaken += damage
+        silversick = False
+        if self.material in argentmaterials:
+            undeadorelementalparts = [p for p in creat.bodyparts if (p.material ==
+                           'undead flesh' or p.material == 'elemental') and not p.destroyed()]
+            if (damage > 0 and (part.material == 'undead flesh' or part.material == 'elemental') and np.random.rand() > part.silversicknessresistance()) and len(undeadorelementalparts) > 0:
+                oldaccumulation = creat.accumulatedsilver
+                creat.accumulatedsilver = min(
+                    50, creat.accumulatedsilver + np.random.rand()*40)
+                if creat.accumulatedsilver > 5 and oldaccumulation <= 5:
+                    silversick = True
         alreadyimbalanced = creat.imbalanced()
         if 'leg' in part.categories:
             numlegs = len([p for p in creat.bodyparts if 'leg' in p.categories and not p.destroyed() and not p.incapacitated()])
@@ -780,6 +815,8 @@ class Caltrops(Item):
                         creat.log().append('Your ' + armor.name + ' was also destroyed!')
                         armor.owner.remove(armor)
                 part.on_destruction(False)
+            if silversick:
+                creat.log().append('You became silversick.')
             volume, details = creat.hurtphrase([part])
             if len(details) > 0 and volume > 0 and len([p for p in creat.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                 if len(details) == 5:

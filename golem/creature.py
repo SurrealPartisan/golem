@@ -51,6 +51,8 @@ class Creature():
         self.slowedclock = 0
         self.poisonclock = 0
         self.accumulatedpoison = 0
+        self.silversicknessclock = 0
+        self.accumulatedsilver = 0
         self.burnclock = 0
         self.scaredclock = 0
         self.panickedclock = 0
@@ -462,6 +464,9 @@ class Creature():
     def endotoxicity(self):
         return 0.1 + sum([part.endotoxicity for part in self.bodyparts if not (part.destroyed() or part.incapacitated())])
 
+    def silveraccumulation(self):
+        return sum([part.silveraccumulation for part in self.bodyparts if not (part.destroyed() or part.incapacitated())])
+
     def breathepoisonresistance(self):
         lungresistances = [part.breathepoisonresistance for part in self.bodyparts if 'lung' in part.categories and not (
             part.destroyed() or part.incapacitated())]
@@ -511,6 +516,49 @@ class Creature():
             self.log().append('You are no longer poisoned, but some aftereffects may linger.')
         if oldaccumulation <= 5 and self.accumulatedpoison > 5:
             self.log().append('The endotoxins of your body poisoned you!')
+
+    def applysilversickness(self, time):
+        oldaccumulation = self.accumulatedsilver
+        self.accumulatedsilver = min(
+            50, max(0, self.accumulatedsilver + self.silveraccumulation()*time))
+        if self.accumulatedsilver > 5 and oldaccumulation > 5:
+            self.silversicknessclock = self.silversicknessclock + time
+        elif self.accumulatedsilver > 5:
+            self.silversicknessclock = self.silversicknessclock + \
+                (self.accumulatedsilver - 5)/self.silveraccumulation()
+        elif oldaccumulation > 5:
+            self.silversicknessclock = self.silversicknessclock + \
+                (oldaccumulation - 5)/self.silveraccumulation()
+        else:
+            self.silversicknessclock = 0
+        ticks = int(self.silversicknessclock)
+        self.silversicknessclock -= ticks
+        if len([part for part in self.bodyparts if part.material == 'undead flesh' or part.material == 'elemental']) > 0:
+            for i in range(ticks):
+                if np.random.rand() < 0.5:
+                    affliction = np.random.randint(4)
+                    if affliction == 0:
+                        if self.weakenedclock == 0:
+                            self.log().append('The silversickness made you weak!')
+                        self.weakenedclock += np.random.rand()*10
+                    if affliction == 1:
+                        if self.vomitclock == 0:
+                            self.log().append('The silversickness made you start vomiting!')
+                            infoblast(self.world, self.x, self.y, 15, [
+                                      self], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
+                        self.vomitclock += np.random.rand()*10
+                    if affliction == 2:
+                        if self.disorientedclock == 0:
+                            self.log().append('The silversickness made you disoriented!')
+                        self.disorientedclock += np.random.rand()*10
+                    if affliction == 3:
+                        if self.slowedclock == 0:
+                            self.log().append('The silversickness made you slowed!')
+                        self.slowedclock += np.random.rand()*10
+        if oldaccumulation > 5 and self.accumulatedsilver <= 5:
+            self.log().append('You are no longer silversick, but some aftereffects may linger.')
+        if oldaccumulation <= 5 and self.accumulatedsilver > 5:
+            self.log().append('The endotoxins of your body made you silversick!')
 
     def burdened(self):
         return self.weightcarried() > self.carryingcapacity()/2
@@ -1199,6 +1247,16 @@ class Creature():
                                         50, target.accumulatedpoison + np.random.rand()*40)
                                     if target.accumulatedpoison > 5 and oldaccumulation <= 5:
                                         poisoned = True
+                            silversick = False
+                            if attack.weapon.material in item.argentmaterials or (len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], item.Silversheen)):
+                                undeadorelementalparts = [part for part in target.bodyparts if (part.material ==
+                                               'undead flesh' or part.material == 'elemental') and not part.destroyed()]
+                                if ((damage > 0 and (targetbodypart.material == 'undead flesh' or targetbodypart.material == 'elemental') and np.random.rand() > targetbodypart.silversicknessresistance()) or (secondarydamage > 0 and (secondarytargetbodypart.material == 'undead flesh' or secondarytargetbodypart.material == 'elemental') and np.random.rand() > secondarytargetbodypart.silversicknessresistance())) and len(undeadorelementalparts) > 0:
+                                    oldaccumulation = target.accumulatedsilver
+                                    target.accumulatedsilver = min(
+                                        50, target.accumulatedsilver + np.random.rand()*40)
+                                    if target.accumulatedsilver > 5 and oldaccumulation <= 5:
+                                        silversick = True
                             reasontopanic = (not vitalalreadyunderhalf and ((targetbodypart.vital() and targetbodypart.damagetaken > targetparthalfhp) or (secondarytargetbodypart != None and secondarytargetbodypart.vital(
                             ) and secondarytargetbodypart.damagetaken > secondarytargetparthalfhp))) or (not totalalreadyunderquarter and sum([part.damagetaken for part in target.bodyparts]) > totalthreequartershp)
                             panic = False
@@ -1479,6 +1537,9 @@ class Creature():
                                 if poisoned:
                                     self.log().append('The ' + target.name + ' was poisoned by the attack.')
                                     target.log().append('You were poisoned by the attack.')
+                                if silversick:
+                                    self.log().append('The ' + target.name + ' was made silversick by the attack.')
+                                    target.log().append('You were made silversick by the attack.')
                                 if not alreadyimbalanced and target.imbalanced():
                                     self.log().append('The ' + target.name + ' was imbalanced by the attack.')
                                     target.log().append('You were imbalanced by the attack.')
@@ -1810,6 +1871,7 @@ class Creature():
                           self], ('see only', 'NAME_0 regained it\'s balance.'))
 
             self.applypoison(time)
+            self.applysilversickness(time)
             self.weakenedclock = max(0, self.weakenedclock - time)
             self.disorientedclock = max(0, self.disorientedclock - time)
             self.slowedclock = max(0, self.slowedclock - time)
@@ -1852,6 +1914,7 @@ class Creature():
                 infoblast(self.world, self.x, self.y, 0, [
                           self], ('see only', 'NAME_0 regained it\'s balance.'))
             self.applypoison(timetoact)
+            self.applysilversickness(timetoact)
             self.weakenedclock = max(0, self.weakenedclock - timetoact)
             self.disorientedclock = max(0, self.disorientedclock - timetoact)
             self.slowedclock = max(0, self.slowedclock - timetoact)
@@ -2444,6 +2507,10 @@ class GlassElemental(Creature):
             'left lung', bodypart.GlassElementalLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
             'right lung', bodypart.GlassElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.GlassElementalKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.GlassElementalKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
             'tail', bodypart.GlassElementalTail(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
@@ -3551,6 +3618,10 @@ class PoisonGasElemental(Creature):
             'left lung', bodypart.PoisonGasElementalLung(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
             'right lung', bodypart.PoisonGasElementalLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.PoisonGasElementalKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.PoisonGasElementalKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('brain',
                                    bodypart.PoisonGasElementalBrain(self.bodyparts, 0, 0))
         self.bodyparts[0].connect('front left eye',
@@ -4457,6 +4528,10 @@ class SmallFireElemental(Creature):
             'left bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
             'right bellows', bodypart.SmallFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.SmallFireElementalKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.SmallFireElementalKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
             'head', bodypart.SmallFireElementalHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain',
@@ -5701,6 +5776,10 @@ class LargeFireElemental(Creature):
             'left bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
             'right bellows', bodypart.LargeFireElementalBellows(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.LargeFireElementalKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.LargeFireElementalKidney(self.bodyparts, 0, 0))
         self.bodyparts[0].connect(
             'head', bodypart.LargeFireElementalHead(self.bodyparts, 0, 0))
         self.bodyparts[-1].connect('brain',
