@@ -125,6 +125,9 @@ class Item():
         self.writable = False # If True, must have the write(creature, content) method
         self.hidden = False
         self.trap = False  # If True, must have the entrap(creature, bodypart) method
+        self.spreadable_on = () # Keep empty if the item is not a spreadable substance. Otherwise tuple of classes of items.
+        self.wearoffpropability = 0
+        self.coated_with = utils.listwithowner([], self) # Should contain at most one item, spreadable on this one, added by the coat method.
         self._info = 'No information available.'
 
     def hp(self):
@@ -144,6 +147,20 @@ class Item():
 
     def minespeed(self):
         return 0
+
+    def coatingname(self):
+        if hasattr(self, '_coatingname'):
+            return self._coatingname
+        else:
+            return self.name
+
+    def coat(self, coating):
+        if len(self.coated_with) == 0 and isinstance(self, coating.spreadable_on):
+            if coating.owner != None:
+                coating.owner.remove(coating)
+            coating.owner = self.coated_with
+            self.coated_with.append(coating)
+            self.name = coating.coatingname() + '-coated ' + self.name
 
     def info(self):
         return self._info
@@ -218,7 +235,7 @@ class Cure(Item):
             name = 'dose of medication labeled "' + curetype.name + ', ' + repr(int(curetype.dosage*level)) + ' mg"'
             info = 'A cure for living flesh.'
         elif curetype.curedmaterial == 'undead flesh':
-            color = (0, 255, 0)
+            color = (255, 255, 0)
             name = 'vial of ectoplasmic infusion labeled "' + curetype.name + ', ' + repr(int(curetype.dosage*level)) + ' mmol/l"'
             info = 'A cure for undead flesh.'
         super().__init__(owner, x, y, name, '!', color)
@@ -255,6 +272,16 @@ class ManaPotion(Item):
         user.manaused = 0
         user.log().append('Your mana was restored.')
         self.owner.remove(self)
+
+class Venom(Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'dose of venom', '!', (0, 255, 0))
+        self.material = 'chemical'
+        self.weight = 100
+        self.spreadable_on = (Dagger, Spear, Sword, PickAxe)
+        self._coatingname = 'venom'
+        self.wearoffpropability = 0.5
+        self._info = 'Venom to spread on sharp or rough weapons. Poisons enemies made of living flesh.'
 
 class Spellbooklet(Item):
     def __init__(self, owner, x, y, spell):

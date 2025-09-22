@@ -182,6 +182,13 @@ def game():
                     y = np.random.randint(mapheight)
                 item.ManaPotion(cave.items, x, y)
 
+            for j in range(np.random.randint(0, 2)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                item.Venom(cave.items, x, y)
+
             for j in range(np.random.randint(0, 6)):
                 x = y = 0
                 while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
@@ -253,7 +260,7 @@ def game():
             player.individualname = win.input(maxlength=15)
         win.autoupdate = False
 
-        classes = ['Warrior', 'Wizard', 'Dog']
+        classes = ['Warrior', 'Wizard', 'Venomer', 'Dog']
         class_i = 0
         classchosen = False
         while not classchosen:
@@ -280,7 +287,7 @@ def game():
                     pygame.quit()
                     sys.exit()
 
-        if classes[class_i] in ['Warrior', 'Wizard']:
+        if classes[class_i] in ['Warrior', 'Wizard', 'Venomer']:
             player.torso = bodypart.HumanTorso(player.bodyparts, 0, 0)
             player.bodyparts[0].connect(
                 'left arm', bodypart.HumanArm(player.bodyparts, 0, 0))
@@ -364,6 +371,17 @@ def game():
                 13)], np.random.randint(1, 4))
             for i in range(2):
                 item.ManaPotion(player.inventory, 0, 0)
+            item.randomfood(player.inventory, 0, 0)
+        elif classes[class_i] == 'Venomer':
+            dagger1 = item.randomdagger(player.bodyparts[1].wielded, 0, 0, 0)
+            dagger2 = item.randomdagger(player.bodyparts[2].wielded, 0, 0, 0)
+            dagger1.coat(item.Venom(None, 0, 0))
+            dagger2.coat(item.Venom(None, 0, 0))
+            for i in range(10):
+                item.Venom(player.inventory, 0, 0)
+            for i in range(3):
+                item.Cure(player.inventory, 0, 0, drugtypes[np.random.randint(
+                    13)], np.random.randint(1, 4))
             item.randomfood(player.inventory, 0, 0)
         elif classes[class_i] == 'Dog':
             for i in range(3):
@@ -838,6 +856,67 @@ def game():
                     win.write(itname, x=0, y=mapheight+statuslines +
                               i+1, bgcolor=(255, 255, 255), fgcolor=(0, 0, 0))
 
+        elif gamestate == 'chooseappliable':
+            applymessage = 'Choose the item to apply:'
+            win.write(applymessage, x=0, y=mapheight +
+                      statuslines, fgcolor=(0, 255, 255))
+            logrows = min(
+                logheight-1, len(appliablelist))
+            for i in range(logrows):
+                if len(appliablelist) <= logheight-1:
+                    j = i
+                else:
+                    j = len(appliablelist)+i-logrows-logback
+                if j < 9:
+                    num = repr(j + 1) + ': '
+                elif j == 9:
+                    num = '0: '
+                else:
+                    num = ''
+                it = appliablelist[j]
+                itname = it.name
+                itemdescription = num + itname
+                if j != chosen:
+                    win.write(itemdescription, x=0, y=mapheight +
+                              statuslines+i+1, fgcolor=(255, 255, 255))
+                if j == chosen:
+                    win.write(itemdescription, x=0, y=mapheight+statuslines +
+                              i+1, bgcolor=(255, 255, 255), fgcolor=(0, 0, 0))
+
+        elif gamestate == 'choosecoatable':
+            applymessage = 'Choose the item to coat with ' + selectedappliable.coatingname() + ':'
+            win.write(applymessage, x=0, y=mapheight +
+                      statuslines, fgcolor=(0, 255, 255))
+            logrows = min(
+                logheight-1, len(coatablelist))
+            for i in range(logrows):
+                if len(coatablelist) <= logheight-1:
+                    j = i
+                else:
+                    j = len(coatablelist)+i-logrows-logback
+                if j < 9:
+                    num = repr(j + 1) + ': '
+                elif j == 9:
+                    num = '0: '
+                else:
+                    num = ''
+                it = coatablelist[j]
+                if it in player.bodyparts:
+                    if it.parentalconnection != None:
+                        itname = 'your ' + list(it.parentalconnection.parent.childconnections.keys())[list(
+                            it.parentalconnection.parent.childconnections.values()).index(it.parentalconnection)]
+                    elif it == player.torso:
+                        itname = 'your torso'
+                else:
+                    itname = it.name
+                itemdescription = num + itname
+                if j != chosen:
+                    win.write(itemdescription, x=0, y=mapheight +
+                              statuslines+i+1, fgcolor=(255, 255, 255))
+                if j == chosen:
+                    win.write(itemdescription, x=0, y=mapheight+statuslines +
+                              i+1, bgcolor=(255, 255, 255), fgcolor=(0, 0, 0))
+
         elif gamestate == 'consume':
             consumemessage = 'Choose the item to consume:'
             win.write(consumemessage, x=0, y=mapheight +
@@ -1096,6 +1175,8 @@ def game():
                         attackdescription += ', charge'
                     if special[0] == 'internals-seeking':
                         attackdescription += ', directly target internal organs'
+                if 'venom' in [special[0] for special in player.attackslist()[j].special] or (len(player.attackslist()[j].weapon.coated_with) > 0 and isinstance(player.attackslist()[j].weapon.coated_with[0], item.Venom)):
+                    attackdescription += ', venom'
                 attackdescription += ')'
                 if j != chosen:
                     win.write(attackdescription, x=0, y=mapheight +
@@ -2318,6 +2399,17 @@ def game():
                         chosen = 0
                         numchosen = False
 
+                    if (event.key == keybindings['apply'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['apply'][0][1])) or (event.key == keybindings['apply'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['apply'][1][1])):
+                        appliablelist = [item for item in player.inventory if len(item.spreadable_on) > 0]
+                        if len(appliablelist) > 0:
+                            gamestate = 'chooseappliable'
+                            logback = len(appliablelist) - logheight + 1
+                            chosen = 0
+                            numchosen = False
+                        else:
+                            player.log().append("You don't have anything to apply.")
+                            logback = 0
+
                     if (event.key == keybindings['consume'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['consume'][0][1])) or (event.key == keybindings['consume'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['consume'][1][1])):
                         if len([item for item in player.inventory if item.consumable]) > 0:
                             gamestate = 'consume'
@@ -2532,6 +2624,7 @@ def game():
                         player.log().append('  - I: information on your items and bodyparts')
                         player.log().append('  - b: list your body parts')
                         player.log().append('  - B: choose your body parts')
+                        player.log().append('  - a: apply')
                         player.log().append('  - c: consume')
                         player.log().append('  - C: cook')
                         player.log().append('  - w: wield an item')
@@ -2738,6 +2831,92 @@ def game():
                         gamestate = 'free'
                         numchosen = False
 
+                elif gamestate == 'chooseappliable':
+                    if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                        chosen = (chosen-1) % len(appliablelist)
+                        if chosen == len(appliablelist) - logback - (logheight - 1) - 1:
+                            logback += 1
+                        if chosen == len(appliablelist) - 1:
+                            logback = 0
+                    if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                        chosen = (chosen+1) % len(appliablelist)
+                        if chosen == len(appliablelist) - logback:
+                            logback -= 1
+                        if chosen == 0:
+                            logback = len(appliablelist) - logheight + 1
+                    for i in range(10):
+                        if event.key in numkeys[i] and i < len(appliablelist):
+                            chosen = i
+                            numchosen = True
+                    if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                        selectedappliable = appliablelist[chosen]
+                        if len(selectedappliable.spreadable_on) > 0:
+                            coatablelist = []
+                            coatablelist += [part.wielded[0] for part in player.bodyparts if part.capableofwielding and len(part.wielded) > 0 and isinstance(part.wielded[0], selectedappliable.spreadable_on) and len(part.wielded[0].coated_with) == 0]
+                            coatablelist += [it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0 and isinstance(it[0], selectedappliable.spreadable_on) and len(it[0].coated_with) == 0]
+                            coatablelist += [part for part in player.bodyparts if isinstance(part, selectedappliable.spreadable_on) and len(part.coated_with) == 0]
+                            coatablelist += [it for it in player.inventory if isinstance(it, selectedappliable.spreadable_on) and len(it.coated_with) == 0]
+                            if len(coatablelist) > 0:
+                                logback = len(coatablelist) - logheight + 1
+                                numchosen = False
+                                chosen = 0
+                                gamestate = 'choosecoatable'
+                            else:
+                                logback = 0
+                                gamestate = 'free'
+                                numchosen = False
+                                player.log().append('You have nothing to apply the ' + selectedappliable.name + ' to.')
+                        else:
+                            logback = 0
+                            gamestate = 'free'
+                            numchosen = False
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
+                        logback = 0
+                        gamestate = 'free'
+                        numchosen = False
+
+                elif gamestate == 'choosecoatable':
+                    if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
+                        chosen = (chosen-1) % len(coatablelist)
+                        if chosen == len(coatablelist) - logback - (logheight - 1) - 1:
+                            logback += 1
+                        if chosen == len(coatablelist) - 1:
+                            logback = 0
+                    if (event.key == keybindings['list down'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][0][1])) or (event.key == keybindings['list down'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list down'][1][1])):
+                        chosen = (chosen+1) % len(coatablelist)
+                        if chosen == len(coatablelist) - logback:
+                            logback -= 1
+                        if chosen == 0:
+                            logback = len(coatablelist) - logheight + 1
+                    for i in range(10):
+                        if event.key in numkeys[i] and i < len(coatablelist):
+                            chosen = i
+                            numchosen = True
+                    if numchosen or (event.key == keybindings['list select'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][0][1])) or (event.key == keybindings['list select'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list select'][1][1])):
+                        logback = 0
+                        gamestate = 'free'
+                        numchosen = False
+                        updatetime(2 * (1 + player.slowed()))
+                        if not player.dying():
+                            selectedcoatable = coatablelist[chosen]
+                            if selectedcoatable in player.bodyparts:
+                                if selectedcoatable.parentalconnection != None:
+                                    selectedname = 'your ' + list(selectedcoatable.parentalconnection.parent.childconnections.keys())[list(
+                                        selectedcoatable.parentalconnection.parent.childconnections.values()).index(selectedcoatable.parentalconnection)]
+                                elif selectedcoatable == player.torso:
+                                    selectedname = 'your torso'
+                            else:
+                                selectedname = 'the ' + selectedcoatable.name
+                            coatingname = selectedappliable.coatingname()
+                            selectedcoatable.coat(selectedappliable)
+                            player.log().append('You coated ' + selectedname + ' with ' + coatingname + '.')
+                            detecthiddenitems()
+                            player.previousaction = ('apply',)
+                    if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):
+                        logback = 0
+                        gamestate = 'free'
+                        numchosen = False
+
                 elif gamestate == 'consume':
                     if (event.key == keybindings['list up'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][0][1])) or (event.key == keybindings['list up'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['list up'][1][1])):
                         chosen = (
@@ -2850,6 +3029,10 @@ def game():
                             selected = [
                                 item for item in player.inventory if item.material == 'living flesh'][chosen]
                             player.inventory.remove(selected)
+                            if len(selected.coated_with) > 0:
+                                coatingname = selected.coated_with[0].coatingname()
+                                selected.name = selected.name[len(coatingname + '-coated '):]
+                                selected.coated_with.remove(selected.coated_with[0])
                             newname = 'roast ' + selected.name
                             if newname[-11:] == ' [UNUSABLE]':
                                 newname = newname[:-11]
@@ -3303,7 +3486,7 @@ def game():
                         if selectedattack.weapon.owner != player.inventory:
                             limblist = [
                                 selectedattack.weapon.owner.owner] + limblist
-                        logback = len(targetbodypartlist) - logheight + 1
+                        logback = len(limblist) - logheight + 1
                         numchosen = False
                         chosen = 0
                     if (event.key == keybindings['escape list'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][0][1])) or (event.key == keybindings['escape list'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['escape list'][1][1])):

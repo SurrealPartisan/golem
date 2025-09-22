@@ -1190,7 +1190,7 @@ class Creature():
                             if secondarytargetbodypart != None:
                                 secondarytargetbodypart.damagetaken += secondarydamage
                             poisoned = False
-                            if 'venom' in [special[0] for special in attack.special]:
+                            if 'venom' in [special[0] for special in attack.special] or (len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], item.Venom)):
                                 livingparts = [part for part in target.bodyparts if part.material ==
                                                'living flesh' and not part.destroyed()]
                                 if ((damage > 0 and targetbodypart.material == 'living flesh' and np.random.rand() > targetbodypart.attackpoisonresistance()) or (secondarydamage > 0 and secondarytargetbodypart.material == 'living flesh' and np.random.rand() > secondarytargetbodypart.attackpoisonresistance())) and len(livingparts) > 0:
@@ -1573,6 +1573,19 @@ class Creature():
                             if sound:
                                 infoblast(target.world, target.x, target.y, 15, [
                                           self, target], ('hear only', 'sounds of fighting'))
+                            if len(attack.weapon.coated_with) > 0 and np.random.rand() < attack.weapon.coated_with[0].wearoffpropability:
+                                coatingname = attack.weapon.coated_with[0].coatingname()
+                                attack.weapon.name = attack.weapon.name[len(coatingname + '-coated '):]
+                                attack.weapon.coated_with.remove(attack.weapon.coated_with[0])
+                                if attack.weapon == attackingpart:
+                                    if attackingpart.parentalconnection != None:
+                                        weaponname = list(attackingpart.parentalconnection.parent.childconnections.keys())[list(
+                                            attackingpart.parentalconnection.parent.childconnections.values()).index(attackingpart.parentalconnection)]
+                                    elif attackingpart == self.torso:
+                                        weaponname = 'torso'
+                                else:
+                                    weaponname = attack.weapon.name
+                                self.log().append('The ' + coatingname + ' on your ' + weaponname + ' wore off.')
                         else:
                             self.log().append('The ' + target.name + ' evaded your ' +
                                               'thrown '*thrown + attack.name + '!')

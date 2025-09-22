@@ -193,6 +193,7 @@ DEFAULT_BINDINGS = {
     'throw': ((pygame.locals.K_t, False, True), (None, False, True)),
     'inventory': ((pygame.locals.K_i, False, True), (None, False, True)),
     'information': ((pygame.locals.K_i, True, True), (None, False, True)),
+    'apply': ((pygame.locals.K_a, False, True), (None, False, True)),
     'consume': ((pygame.locals.K_c, False, True), (None, False, True)),
     'cook': ((pygame.locals.K_c, True, True), (None, False, True)),
     'wield': ((pygame.locals.K_w, False, True), (None, False, True)),

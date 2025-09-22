@@ -1625,6 +1625,8 @@ class GlassElementalLung(BodyPart):
         self._bottomheight = -10
         self.maxhp = 5
         self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
         self.weight = 600
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -3578,13 +3580,15 @@ class PoisonGasElementalHeart(BodyPart):
 
 class PoisonGasElementalLung(BodyPart):
     def __init__(self, owner, x, y):
-        super().__init__(owner, x, y, 'poison gas elemental bellows', '*', (255, 0, 0))
+        super().__init__(owner, x, y, 'poison gas elemental lung', '*', (255, 0, 0))
         self.categories = ['lung']
         self.childconnections = {}
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 20
         self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
         self.weight = 0
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -3630,7 +3634,7 @@ class PoisonGasElementalArm(BodyPart):
         self._resistances['rough'] = 0.5
         self.carefulness = 0.5
         self.smell = 2
-        self._info = 'An arm consisting of elemental fire. Protects other bodyparts quite well. Does magical damage and poisons targets. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
+        self._info = 'An arm consisting of elemental poison gas. Protects other bodyparts quite well. Does magical damage and poisons targets. Doesn\'t gain hunger and can\'t be poisoned. Very resistant against sharp, blunt. and rough damage, but very weak against fire and electric damage. Strong smell.'
 
     def speed(self):
         if not (self.destroyed() or self.incapacitated()):
@@ -5187,6 +5191,8 @@ class SmallFireElementalBellows(BodyPart):
         self._bottomheight = -10
         self.maxhp = 30
         self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
         self.weight = 10
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -7444,6 +7450,8 @@ class LargeFireElementalBellows(BodyPart):
         self._bottomheight = -12
         self.maxhp = 75
         self.material = 'elemental'
+        self.consumable = False
+        self.edible = False
         self.weight = 10
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
