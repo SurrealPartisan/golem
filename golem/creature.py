@@ -3660,7 +3660,7 @@ class PoisonGasElemental(Creature):
         if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
             phrase = 'O ' + \
                 np.random.choice(self.godsknown()).firstname + \
-                ', please help me!'
+                ', pleassse help me!'
         else:
             phrase = 'Sheesh!'
         return (15, ('see and hear', 'NAME_0', 'hissed', 'hissed', phrase))

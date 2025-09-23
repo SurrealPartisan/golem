@@ -1189,6 +1189,8 @@ def game():
                         attackdescription += ', directly target internal organs'
                 if 'venom' in [special[0] for special in player.attackslist()[j].special] or (len(player.attackslist()[j].weapon.coated_with) > 0 and isinstance(player.attackslist()[j].weapon.coated_with[0], item.Venom)):
                     attackdescription += ', venom'
+                if player.attackslist()[j].weapon.material in item.argentmaterials:
+                    attackdescription += ', argent'
                 attackdescription += ')'
                 if j != chosen:
                     win.write(attackdescription, x=0, y=mapheight +
@@ -1318,6 +1320,10 @@ def game():
                         attackdescription += ', charge'
                     if special[0] == 'internals-seeking':
                         attackdescription += ', directly target internal organs'
+                if 'venom' in [special[0] for special in player.thrownattackslist()[j].special] or (len(player.thrownattackslist()[j].weapon.coated_with) > 0 and isinstance(player.thrownattackslist()[j].weapon.coated_with[0], item.Venom)):
+                    attackdescription += ', venom'
+                if player.thrownattackslist()[j].weapon.material in item.argentmaterials:
+                    attackdescription += ', argent'
                 attackdescription += ')'
                 if j != chosen:
                     win.write(attackdescription, x=0, y=mapheight +
