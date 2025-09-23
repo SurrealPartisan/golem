@@ -74,7 +74,7 @@ class Creature():
             if not self.dead:
                 return ['You have no brain, so nothing is logged.']
             else:
-                return ['You have no brain, so nothing is logged.', 'You are dead!', 'Press escape to end.']
+                return ['You have no brain, so nothing is logged.', 'You are dead!', 'Press shift + escape to end.']
 
     def seen(self):
         brains = [part for part in self.bodyparts if 'brain' in part.categories and not (
@@ -1194,7 +1194,7 @@ class Creature():
                                     secondarydemonicresistancemultiplier = 0.5
                                 else:
                                     secondarydemonicresistancemultiplier = 1
-                                if secondarytargetbodypart.vampiric and len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], bodypart.Aioli):
+                                if secondarytargetbodypart.vampiric and attack.weapon != None and len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], bodypart.Aioli):
                                     secondaryvampiricmultiplier = 2
                                 else:
                                     secondaryvampiricmultiplier = 1
@@ -1214,14 +1214,14 @@ class Creature():
                                 demonicresistancemultiplier = 0.5
                             else:
                                 demonicresistancemultiplier = 1
-                            if targetbodypart.vampiric and len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], bodypart.Aioli):
+                            if targetbodypart.vampiric and attack.weapon != None and len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], bodypart.Aioli):
                                 vampiricmultiplier = 2
                             else:
                                 vampiricmultiplier = 1
                             damage = min(int(
                                 resistancemultiplier*demonicresistancemultiplier*vampiricmultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
                             attackerheal = 0
-                            if 'life-sucking' in [special[0] for special in attack.special] or attack.weapon.material == 'vampiric gold':
+                            if 'life-sucking' in [special[0] for special in attack.special] or (attack.weapon != None and attack.weapon.material == 'vampiric gold'):
                                 if targetbodypart.material == 'living flesh':
                                     attackerheal += int(damage/2)
                                 if secondarytargetbodypart != None and secondarytargetbodypart.material == 'living flesh':
@@ -1255,7 +1255,7 @@ class Creature():
                             if secondarytargetbodypart != None:
                                 secondarytargetbodypart.damagetaken += secondarydamage
                             poisoned = False
-                            if 'venom' in [special[0] for special in attack.special] or (len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], item.Venom)):
+                            if 'venom' in [special[0] for special in attack.special] or (attack.weapon != None and len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], item.Venom)):
                                 livingparts = [part for part in target.bodyparts if part.material ==
                                                'living flesh' and not part.destroyed()]
                                 if ((damage > 0 and targetbodypart.material == 'living flesh' and np.random.rand() > targetbodypart.attackpoisonresistance()) or (secondarydamage > 0 and secondarytargetbodypart.material == 'living flesh' and np.random.rand() > secondarytargetbodypart.attackpoisonresistance())) and len(livingparts) > 0:
@@ -1265,7 +1265,7 @@ class Creature():
                                     if target.accumulatedpoison > 5 and oldaccumulation <= 5:
                                         poisoned = True
                             silversick = False
-                            if attack.weapon.material in item.argentmaterials or (len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], item.Silversheen)):
+                            if attack.weapon != None and (attack.weapon.material in item.argentmaterials or (len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], item.Silversheen))):
                                 undeadorelementalparts = [part for part in target.bodyparts if (part.material ==
                                                'undead flesh' or part.material == 'elemental') and not part.destroyed()]
                                 if ((damage > 0 and (targetbodypart.material == 'undead flesh' or targetbodypart.material == 'elemental') and np.random.rand() > targetbodypart.silversicknessresistance()) or (secondarydamage > 0 and (secondarytargetbodypart.material == 'undead flesh' or secondarytargetbodypart.material == 'elemental') and np.random.rand() > secondarytargetbodypart.silversicknessresistance())) and len(undeadorelementalparts) > 0:
@@ -1657,7 +1657,7 @@ class Creature():
                                     self.heal(max(partlist, key=lambda part : part.damagetaken), attackerheal)
                                     if not target.dead:
                                         target.log().append('The ' + self.name + ' was healed by your blood!')
-                            if len(attack.weapon.coated_with) > 0 and np.random.rand() < attack.weapon.coated_with[0].wearoffpropability:
+                            if attack.weapon != None and len(attack.weapon.coated_with) > 0 and np.random.rand() < attack.weapon.coated_with[0].wearoffpropability:
                                 coatingname = attack.weapon.coated_with[0].coatingname()
                                 attack.weapon.name = attack.weapon.name[len(coatingname + '-coated '):]
                                 attack.weapon.coated_with.remove(attack.weapon.coated_with[0])
@@ -2026,7 +2026,7 @@ class Creature():
                     if fovmap[creat.x, creat.y] and not creat in self.creaturesseen() and creat != self:
                         self.creaturesseen().append(creat)
                         if creat.stance != 'neutral':
-                            stancetext = 'It is ' + creat.stance + '.'
+                            stancetext = ' It is ' + creat.stance + '.'
                         else:
                             stancetext = ''
                         if creat.vomitclock > 0 and creat.imbalanced():

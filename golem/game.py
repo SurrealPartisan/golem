@@ -196,6 +196,13 @@ def game():
                     y = np.random.randint(mapheight)
                 item.Silversheen(cave.items, x, y)
 
+            for j in range(np.random.randint(0, 1)):
+                x = y = 0
+                while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
+                    x = np.random.randint(mapwidth)
+                    y = np.random.randint(mapheight)
+                bodypart.Aioli(cave.items, x, y)
+
             for j in range(np.random.randint(0, 6)):
                 x = y = 0
                 while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
@@ -519,7 +526,7 @@ def game():
                 if not player.dead and not npc in player.creaturesseen():
                     player.creaturesseen().append(npc)
                     if npc.stance != 'neutral':
-                        stancetext = 'It is ' + npc.stance + '.'
+                        stancetext = ' It is ' + npc.stance + '.'
                     else:
                         stancetext = ''
                     if npc.vomitclock > 0 and npc.imbalanced():
@@ -1186,9 +1193,11 @@ def game():
                     if special[0] == 'charge':
                         attackdescription += ', charge'
                     if special[0] == 'internals-seeking':
-                        attackdescription += ', directly target internal organs'
+                        attackdescription += ', long'
                 if 'venom' in [special[0] for special in player.attackslist()[j].special] or (len(player.attackslist()[j].weapon.coated_with) > 0 and isinstance(player.attackslist()[j].weapon.coated_with[0], item.Venom)):
                     attackdescription += ', venom'
+                if (len(player.attackslist()[j].weapon.coated_with) > 0 and isinstance(player.attackslist()[j].weapon.coated_with[0], bodypart.Aioli)):
+                    attackdescription += ', garlicky'
                 if player.attackslist()[j].weapon.material in item.argentmaterials:
                     attackdescription += ', argent'
                 attackdescription += ')'
@@ -1319,9 +1328,11 @@ def game():
                     if special[0] == 'charge':
                         attackdescription += ', charge'
                     if special[0] == 'internals-seeking':
-                        attackdescription += ', directly target internal organs'
+                        attackdescription += ', long'
                 if 'venom' in [special[0] for special in player.thrownattackslist()[j].special] or (len(player.thrownattackslist()[j].weapon.coated_with) > 0 and isinstance(player.thrownattackslist()[j].weapon.coated_with[0], item.Venom)):
                     attackdescription += ', venom'
+                if (len(player.thrownattackslist()[j].weapon.coated_with) > 0 and isinstance(player.thrownattackslist()[j].weapon.coated_with[0], bodypart.Aioli)):
+                    attackdescription += ', garlicky'
                 if player.thrownattackslist()[j].weapon.material in item.argentmaterials:
                     attackdescription += ', argent'
                 attackdescription += ')'
@@ -2370,16 +2381,6 @@ def game():
                             player.log().append('You have nothing to drop!')
 
                     if (event.key == keybindings['inventory'][0][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['inventory'][0][1])) or (event.key == keybindings['inventory'][1][0] and ((event.mod & pygame.KMOD_SHIFT) == keybindings['inventory'][1][1])):
-                        player.log().append('Items carried:')
-                        if len(player.inventory) == 0:
-                            player.log().append('  - nothing')
-                        else:
-                            for it in player.inventory:
-                                if it.maxhp < np.inf:
-                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) +
-                                                        ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
-                                else:
-                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
                         player.log().append('Items wielded:')
                         wieldlist = [part.wielded[0] for part in player.bodyparts if part.capableofwielding and len(
                             part.wielded) > 0]
@@ -2399,6 +2400,16 @@ def game():
                             player.log().append('  - nothing')
                         else:
                             for it in wornlist:
+                                if it.maxhp < np.inf:
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) +
+                                                        ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
+                                else:
+                                    player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) + ' g)')
+                        player.log().append('Items carried:')
+                        if len(player.inventory) == 0:
+                            player.log().append('  - nothing')
+                        else:
+                            for it in player.inventory:
                                 if it.maxhp < np.inf:
                                     player.log().append('  - a ' + it.name + ' (wt: ' + repr(it.weight) +
                                                         ' g,' + ' hp: ' + repr(it.hp()) + '/' + repr(it.maxhp) + ')')
