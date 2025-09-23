@@ -208,6 +208,16 @@ class Food(Item):
             if user.hunger == 0:
                 user.log().append('You are satiated.')
 
+    def coat(self, coating):
+        if len(self.coated_with) == 0 and isinstance(self, coating.spreadable_on):
+            if coating.owner != None:
+                coating.owner.remove(coating)
+            coating.owner = self.coated_with
+            self.coated_with.append(coating)
+            eatenportion = self.name[:-len(self.basename)]
+            self.basename = coating.coatingname() + '-coated ' + self.basename
+            self.name = eatenportion + self.basename
+
 def randomfood(owner, x, y):
     i = np.random.randint(8)
     if i == 0:

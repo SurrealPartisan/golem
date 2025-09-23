@@ -72,6 +72,7 @@ class BodyPart(item.Item):
         self.silveraccumulation = 0
         self.smell = 0
         self.demonic = False
+        self.vampiric = False
         self._stances = []
 
     def connect(self, connection_name, child):
@@ -520,11 +521,11 @@ class HumanStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -855,7 +856,7 @@ class ZombieStomach(BodyPart):
         self.maxhp = 10
         self.material = "undead flesh"
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -1143,11 +1144,11 @@ class MolePersonStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -1433,11 +1434,11 @@ class GoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -2020,11 +2021,11 @@ class OctopusStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
-            'vegetables': (-1,),
+            'vegetables': (-1, 0.75, None),
             'living flesh': (1, 1, None),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A hypercarnivorous stomach consisting of living flesh.'
 
@@ -2244,11 +2245,11 @@ class DogStomach(BodyPart):
         self._bottomheight = -8
         self.maxhp = 15
         self.weight = 800
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
             'living flesh': (1, 1, None),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh. Very poor at processing vegetables.'
 
@@ -2581,11 +2582,11 @@ class ImpStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 10
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self.demonic = True
         self._info = 'A stomach consisting of living flesh. Very resistant against nonmagical damage.'
@@ -2872,11 +2873,11 @@ class HobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 20
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -3156,11 +3157,11 @@ class MoleMonkStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 20
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -3492,7 +3493,7 @@ class ZombieZorcererStomach(BodyPart):
         self.maxhp = 20
         self.material = "undead flesh"
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -3981,11 +3982,11 @@ class WolfStomach(BodyPart):
         self._bottomheight = -9
         self.maxhp = 20
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
             'living flesh': (1, 1, None),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh. Very poor at processing vegetables.'
 
@@ -4248,7 +4249,7 @@ class DrillBotBiomassProcessor(BodyPart):
         self._attackpoisonresistance = 1
         self._resistances['sharp'] = 0.2
         self._resistances['electric'] = -0.2
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (1, 1, None),
@@ -4538,11 +4539,11 @@ class LobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 30
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -4815,9 +4816,9 @@ class RevenantOctopusStomach(BodyPart):
         self.maxhp = 10
         self.material = 'undead flesh'
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
-            'vegetables': (-1,),
+            'vegetables': (-1, 0.75, None),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
         }
@@ -5155,7 +5156,7 @@ class GhoulStomach(BodyPart):
         self.maxhp = 25
         self.material = "undead flesh"
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -5721,11 +5722,11 @@ class MobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 40
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -5944,11 +5945,11 @@ class DireWolfStomach(BodyPart):
         self._bottomheight = -9
         self.maxhp = 45
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
             'living flesh': (1, 1, None),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh. Very poor at processing vegetables.'
 
@@ -6246,11 +6247,11 @@ class JobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 50
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -6581,7 +6582,7 @@ class GhastStomach(BodyPart):
         self.maxhp = 55
         self.material = "undead flesh"
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
             'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
@@ -6876,11 +6877,11 @@ class NobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 60
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -7099,11 +7100,11 @@ class WargStomach(BodyPart):
         self._bottomheight = -9
         self.maxhp = 65
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 0.25, 'Your carnivorous stomach is very poor at processing vegetables.'),
             'living flesh': (1, 1, None),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh. Very poor at processing vegetables.'
 
@@ -7401,11 +7402,11 @@ class FobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 70
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
 
@@ -8026,13 +8027,363 @@ class DobgoblinStomach(BodyPart):
         self._bottomheight = -7
         self.maxhp = 80
         self.weight = 1000
-        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (only necessary if first is not -1) is efficiency. Third is message to be displayed, if any.
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
             'vegetables': (1, 1, None),
             'living flesh': (0, 0.75, 'That was disgusting, but at least it easened your hunger.'),
-            'undead flesh': (-1,)
+            'undead flesh': (-1, 0.75, None)
         }
         self._info = 'A stomach consisting of living flesh.'
+
+
+class VampireTorso(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire torso', '*', (191, 255, 255))
+        self.categories = ['torso']
+        self.childconnections = {
+            'left arm': BodyPartConnection(self, ['arm'], False, 'left ', heightfuncuprightorprone(self, 55, 20)),
+            'right arm': BodyPartConnection(self, ['arm'], False, 'right ', heightfuncuprightorprone(self, 55, 20)),
+            'left leg': BodyPartConnection(self, ['leg'], False, 'left ', constantfunction(0)),
+            'right leg': BodyPartConnection(self, ['leg'], False, 'right ', constantfunction(0)),
+            'head': BodyPartConnection(self, ['head'], False, '', heightfuncuprightorprone(self, 60, 20)),
+            'heart': BodyPartConnection(self, ['heart'], False, '', heightfuncuprightorprone(self, 40, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left lung': BodyPartConnection(self, ['lung'], False, 'left ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'right lung': BodyPartConnection(self, ['lung'], False, 'right ', heightfuncuprightorprone(self, 45, 15), defensecoefficient=0.5, armorapplies=True, internal=True),
+            'left kidney': BodyPartConnection(self, ['kidney'], False, 'left ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'right kidney': BodyPartConnection(self, ['kidney'], False, 'right ', heightfuncuprightorprone(self, 25, 15), defensecoefficient=0.8, armorapplies=True, internal=True),
+            'stomach': BodyPartConnection(self, ['stomach'], False, '', heightfuncuprightorprone(self, 30, 15), defensecoefficient=0.8, armorapplies=True, internal=True)
+        }
+        self._topheight = 60
+        self._pronetopheight = 30
+        self.maxhp = 425
+        self.material = "undead flesh"
+        self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
+            [], self), 'belt': listwithowner([], self)}
+        self._wearwieldname = 'torso'
+        self.weight = 40000
+        self.carryingcapacity = 60000
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self.smell = 2
+        self._info = 'A torso consisting of undead flesh. Needs neither head nor heart. Has extremely good carrying capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def topheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
+        ) and not part.incapacitated()]
+        if len(legs) == 0:
+            return self.baseheight() + self._pronetopheight
+        else:
+            return self.baseheight() + self._topheight
+
+
+class VampireArm(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire arm', '~', (191, 255, 255))
+        self.categories = ['arm']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -20
+        self.upperpoorlimit = 30
+        self.upperfinelimit = 15
+        self.lowerfinelimit = -15
+        self.lowerpoorlimit = -30
+        self.maxhp = 95
+        self.material = "undead flesh"
+        self.capableofthrowing = True
+        self.throwaccuracy = 0.97
+        self.throwspeed = 0.75
+        self.protectiveness = 0.1
+        self.capableofwielding = True
+        # It's a list so that it can be an item's owner. However, it shouldn't hold more than one item at a time.
+        self.wielded = listwithowner([], self)
+        self._wearwieldname = 'hand'
+        self.worn = {'gauntlet': listwithowner(
+            [], self), 'ring': listwithowner([], self)}
+        self.weight = 4000
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self.carefulness = 0.3
+        self.smell = 2
+        self._info = 'An arm consisting of undead flesh. Slow at throwing. Protects other bodyparts but not that well. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'arm' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 0.2
+            else:
+                return 0.1
+        else:
+            return 0
+
+    def minespeed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return 0
+            else:
+                return self.wielded[0].minespeed()
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len(self.wielded) == 0:
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.12, 1, 1, 80, 'blunt', 0, [], False, [], self)]
+            else:
+                return self.wielded[0].attackslist()
+        else:
+            return []
+
+
+class VampireLeg(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire leg', '~', (191, 255, 255))
+        self.categories = ['leg']
+        self.childconnections = {}
+        self._topheight = 0
+        self._bottomheight = -90
+        self.upperpoorlimit = 40
+        self.upperfinelimit = -15
+        self.lowerfinelimit = -90
+        self.lowerpoorlimit = -90
+        self.maxheight = 90
+        self.maxhp = 95
+        self.material = "undead flesh"
+        self.worn = {'leg armor': listwithowner([], self)}
+        self._wearwieldname = 'leg'
+        self.weight = 15000
+        self.carryingcapacity = 30000
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self.carefulness = 0.3
+        self.maxrunstamina = 20
+        self.smell = 2
+        self._info = 'A leg consisting of undead flesh. Somewhat clumsy, but has good carrying capacity and high running stamina. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def standingheight(self):
+        legs = [part for part in self.owner if 'leg' in part.categories and not part.destroyed(
+        ) and not part.incapacitated()]
+        return min([leg.maxheight for leg in legs])
+
+    def bottomheight(self):
+        if self.owner.owner.stance == 'flying' or self.owner.owner.world.largerocks[self.owner.owner.x, self.owner.owner.y]:
+            return 50
+        else:
+            return 0
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.92, 1, 1, 120, 'blunt', 0, [], False, [], self)]
+        else:
+            return []
+
+    def speed(self):
+        if not (self.destroyed() or self.incapacitated()):
+            if len([part for part in self.owner if 'leg' in part.categories and not (part.destroyed() or part.incapacitated())]) > 1:
+                return 1
+            else:
+                return 0.5
+        else:
+            return 0
+
+
+class VampireHead(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire head', '*', (191, 255, 255))
+        self.categories = ['head']
+        self.childconnections = {
+            'left eye': BodyPartConnection(self, ['eye'], False, 'left ', constantfunction(20)),
+            'right eye': BodyPartConnection(self, ['eye'], False, 'right ', constantfunction(20)),
+            'brain': BodyPartConnection(self, ['brain'], False, '', constantfunction(20), defensecoefficient=0.5, armorapplies=True, internal=True)
+        }
+        self._topheight = 30
+        self._bottomheight = 0
+        self.upperpoorlimit = 25
+        self.upperfinelimit = 20
+        self.lowerfinelimit = -5
+        self.lowerpoorlimit = -15
+        self.maxhp = 95
+        self.material = "undead flesh"
+        self.worn = {'helmet': listwithowner(
+            [], self), 'face': listwithowner([], self)}
+        self._wearwieldname = 'head'
+        self.weight = 7000
+        self.scariness = 20
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self.smell = 2
+        self.hearing = 1
+        self.sound = 1
+        self._info = 'A head consisting of undead flesh. Can scare enemies for up to 20 s. Its bite attack heals the biter\'s flesh. Needs no brain. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins. Strong smell.'
+
+    def attackslist(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.64, 2, 1, 55, 'sharp', 0, [], False, [('bleed', 0.1), ('life-sucking',)], self)]
+        else:
+            return []
+
+
+class VampireEye(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire eye', '*', (155, 255, 255))
+        self.categories = ['eye']
+        self.childconnections = {}
+        self._topheight = 1
+        self._bottomheight = -1
+        self.maxhp = 42
+        self.material = "undead flesh"
+        self.weight = 7
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self.detectiondistance = 1.5
+        self.detectionprobability = 0.1
+        self._info = 'An eye consisting of undead flesh. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+
+    def sight(self):
+        if not (self.destroyed() or self.incapacitated()):
+            return 3
+        else:
+            return 0
+
+    def on_destruction(self, dead):
+        self.owner.owner.fovuptodate = False
+        super().on_destruction(dead)
+
+
+class VampireBrain(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire brain', '*', (150, 178, 82))
+        self.categories = ['brain']
+        self.childconnections = {}
+        self._topheight = 5
+        self._bottomheight = -5
+        self.maxhp = 85
+        self.material = "undead flesh"
+        self.weight = 1000
+        self.log = loglist()
+        self.seen = []
+        for i in range(numlevels):
+            self.seen.append(
+                [[(' ', (255, 255, 255), (0, 0, 0), (0, 0, 0))]*mapheight for j in range(mapwidth)])
+        self.creaturesseen = []
+        self.itemsseen = []
+        self.godsknown = []
+        self.curesknown = []
+        self.frightenedby = []
+        self.intelligence = 15
+        self.manacapacity = 25
+        self.spellsknown = [magic.CurseOfSlowness(np.random.randint(10, 15)), magic.CurseOfWeakness(np.random.randint(10, 15))]
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self._info = 'A brain consisting of undead flesh. Intelligence 15, high mana capacity. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+
+
+class VampireHeart(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire heart', '*', (150, 178, 82))
+        self.categories = ['heart']
+        self.childconnections = {}
+        self.maxhp = 85
+        self.material = "undead flesh"
+        self._topheight = 5
+        self._bottomheight = -5
+        self.weight = 250
+        self.bravery = 0.5
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self.vampiric = True
+        self._info = 'A heart consisting of undead flesh. Average bravery. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons. In the presence of living body parts, accumulates endotoxins.'
+
+
+class VampireLung(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire lung', '*', (150, 178, 82))
+        self.categories = ['lung']
+        self.childconnections = {}
+        self._topheight = 10
+        self._bottomheight = -10
+        self.maxhp = 55
+        self.material = 'undead flesh'
+        self.weight = 600
+        self.breathepoisonresistance = 0.5
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self.runstaminarecoveryspeed = 0.25
+        self._info = 'A lung consisting of undead flesh. Protects living bodyparts from poison gas quite well. Recovers running stamina slowly. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
+
+
+class VampireKidney(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire kidney', '*', (150, 178, 82))
+        self.categories = ['kidney']
+        self.childconnections = {}
+        self._topheight = 4
+        self._bottomheight = -4
+        self.maxhp = 85
+        self.material = 'undead flesh'
+        self.weight = 120
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = -0.5
+        self.silveraccumulation = -0.5
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self._info = 'A kidney consisting of undead flesh. Filters toxins at a slow speed. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage.'
+
+
+class VampireStomach(BodyPart):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'vampire stomach', '*', (150, 178, 82))
+        self.categories = ['stomach']
+        self.childconnections = {}
+        self._topheight = 7
+        self._bottomheight = -7
+        self.maxhp = 85
+        self.material = "undead flesh"
+        self.weight = 1000
+        self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
+            'cooked meat': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'vegetables': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'living flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.'),
+            'undead flesh': (1, 0.5, 'Your undead stomach isn\'t very efficient at processing food.')
+        }
+        self._attackpoisonresistance = 1
+        self._silversicknessresistance = 0
+        self.endotoxicity = 0.25
+        self._resistances['sharp'] = -0.2
+        self._resistances['electric'] = 0.2
+        self.vampiric = True
+        self._info = 'A stomach consisting of undead flesh. Inefficient at processing food. Doesn\'t gain hunger and can\'t be poisoned, but can be made silversick. Weak against sharp damage and very weak against garlicky weapons, but resistant against electric damage. In the presence of living body parts, accumulates endotoxins.'
 
 
 class VelociraptorSkull(BodyPart):
@@ -8233,3 +8584,16 @@ class TyrannosaurusSkull(BodyPart):
             return [Attack('bite', 'bit', 'bit', 'bite', '', '', 1.3, 1, 1, 125, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
         else:
             return []
+
+
+
+# In a weird place to avoid circular imports.
+class Aioli(item.Item):
+    def __init__(self, owner, x, y):
+        super().__init__(owner, x, y, 'tube of aioli', '!', (252, 245, 229))
+        self.material = 'chemical'
+        self.weight = 100
+        self.spreadable_on = (item.Dagger, item.Spear, item.Sword, item.PickAxe, item.Mace, item.Staff, item.Food, BodyPart)
+        self._coatingname = 'aioli'
+        self.wearoffpropability = 0.5
+        self._info = 'Garlicky sauce to make unsuitable foods palatable or weapons extra harmful against vampiric enemies.'

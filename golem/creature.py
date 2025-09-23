@@ -746,7 +746,10 @@ class Creature():
         elif part == self.torso:
             partname = 'torso'
         if healed > 0:
-            self.log().append('Your ' + partname + ' was healed by ' + repr(healed) + ' points.')
+            if alreadyincapacitated and not part.incapacitated():
+                self.log().append('Your ' + partname + ' was healed by ' + repr(healed) + ' points and is no longer incapacitated.')
+            else:
+                self.log().append('Your ' + partname + ' was healed by ' + repr(healed) + ' points.')
         elif healed < 0:
             if part.incapacitated() and not alreadyincapacitated and not part.destroyed():
                 self.log().append('Your ' + partname + ' was incapacitated.')
@@ -1191,8 +1194,12 @@ class Creature():
                                     secondarydemonicresistancemultiplier = 0.5
                                 else:
                                     secondarydemonicresistancemultiplier = 1
+                                if secondarytargetbodypart.vampiric and len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], bodypart.Aioli):
+                                    secondaryvampiricmultiplier = 2
+                                else:
+                                    secondaryvampiricmultiplier = 1
                                 secondarydamage = min(
-                                    int(secondaryresistancemultiplier*secondarydemonicresistancemultiplier*_secondarydamage), secondarytargetbodypart.hp())
+                                    int(secondaryresistancemultiplier*secondarydemonicresistancemultiplier*secondaryvampiricmultiplier*_secondarydamage), secondarytargetbodypart.hp())
                             elif secondarytargetbodypart != None and armorpassingdamage < 2:
                                 targetbodypart = secondarytargetbodypart
                                 secondarytargetbodypart = None
@@ -1207,8 +1214,18 @@ class Creature():
                                 demonicresistancemultiplier = 0.5
                             else:
                                 demonicresistancemultiplier = 1
+                            if targetbodypart.vampiric and len(attack.weapon.coated_with) > 0 and isinstance(attack.weapon.coated_with[0], bodypart.Aioli):
+                                vampiricmultiplier = 2
+                            else:
+                                vampiricmultiplier = 1
                             damage = min(int(
-                                resistancemultiplier*demonicresistancemultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
+                                resistancemultiplier*demonicresistancemultiplier*vampiricmultiplier*(armorpassingdamage - _secondarydamage)), targetbodypart.hp())
+                            attackerheal = 0
+                            if 'life-sucking' in [special[0] for special in attack.special] or attack.weapon.material == 'vampiric gold':
+                                if targetbodypart.material == 'living flesh':
+                                    attackerheal += int(damage/2)
+                                if secondarytargetbodypart != None and secondarytargetbodypart.material == 'living flesh':
+                                    attackerheal += int(secondarydamage/2)
                             bleed = False
                             for special in attack.special:
                                 if special[0] == 'bleed' and np.random.rand() < special[1]:
@@ -1634,6 +1651,12 @@ class Creature():
                             if sound:
                                 infoblast(target.world, target.x, target.y, 15, [
                                           self, target], ('hear only', 'sounds of fighting'))
+                            if attackerheal > 0:
+                                partlist = [part for part in self.bodyparts if part.material in ['living flesh', 'undead flesh'] and not part.destroyed() and part.damagetaken > 0]
+                                if len(partlist) > 0:
+                                    self.heal(max(partlist, key=lambda part : part.damagetaken), attackerheal)
+                                    if not target.dead:
+                                        target.log().append('The ' + self.name + ' was healed by your blood!')
                             if len(attack.weapon.coated_with) > 0 and np.random.rand() < attack.weapon.coated_with[0].wearoffpropability:
                                 coatingname = attack.weapon.coated_with[0].coatingname()
                                 attack.weapon.name = attack.weapon.name[len(coatingname + '-coated '):]
@@ -6065,6 +6088,167 @@ class Dobgoblin(Creature):
             return(['wait', 1])
 
 
+class Vampire(Creature):
+    def __init__(self, world, world_i, x, y):
+        super().__init__(world, world_i)
+        self.factions = ['undead']
+        self.char = 'v'
+        self.color = (191, 255, 255)
+        self.name = 'vampire'
+        self.x = x
+        self.y = y
+        self.torso = bodypart.VampireTorso(self.bodyparts, 0, 0)
+        self.bodyparts[0].connect(
+            'left arm', bodypart.VampireArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right arm', bodypart.VampireArm(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left leg', bodypart.VampireLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right leg', bodypart.VampireLeg(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'heart', bodypart.VampireHeart(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left lung', bodypart.VampireLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right lung', bodypart.VampireLung(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'left kidney', bodypart.VampireKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'right kidney', bodypart.VampireKidney(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'stomach', bodypart.VampireStomach(self.bodyparts, 0, 0))
+        self.bodyparts[0].connect(
+            'head', bodypart.VampireHead(self.bodyparts, 0, 0))
+        self.bodyparts[-1].connect('brain',
+                                   bodypart.VampireBrain(self.bodyparts, 0, 0))
+        self.bodyparts[-2].connect('left eye',
+                                   bodypart.VampireEye(self.bodyparts, 0, 0))
+        self.bodyparts[-3].connect('right eye',
+                                   bodypart.VampireEye(self.bodyparts, 0, 0))
+        self.targetcoords = None
+
+    def attackphrase(self):
+        phrase = np.random.choice(
+            ['Join me in death!', 'Feel the power of necromancy!', 'Take this, mortal!', 'Give me your blood!'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def hurtphrase(self, parts):
+        partname = ''
+        if len(parts) == 1:
+            part = parts[0]
+            if part.parentalconnection != None:
+                partname = list(part.parentalconnection.parent.childconnections.keys())[list(
+                    part.parentalconnection.parent.childconnections.values()).index(part.parentalconnection)]
+            elif part == self.torso:
+                partname = 'torso'
+        if partname != '' and np.random.rand() < 0.5:
+            phrase = 'Ouch, my ' + partname + '!'
+        else:
+            phrase = 'Ouch!'
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def scaredphrase(self):
+        if len(self.godsknown()) > 0 and np.random.rand() < 0.5:
+            phrase = 'O ' + \
+                np.random.choice(self.godsknown()).firstname + \
+                ', please help me!'
+        else:
+            phrase = 'Aagh!'
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seeplayerphrase(self):
+        phrase = np.random.choice(
+            ['Fear me, mortal!', 'Intruder alert!', 'Red alert!', 'Fresh blood!'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def seefactionmatephrase(self):
+        phrase = np.random.choice(['Greetings!', 'Hello!'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def idlephrase(self):
+        phrase = np.random.choice(['Undeath is magical', 'I crave blood...'])
+        return (10, ('see and hear', 'NAME_0', 'said', 'say', phrase))
+
+    def ai(self):
+        disoriented = False
+        if (self.disorientedclock > 0 and np.random.rand() < 0.5) or (self.imbalanced() and np.random.rand() < 0.2):
+            disoriented = True
+            self.log().append('You stumbled around.')
+        # This is for preventing a crash when player dies.
+        if len([creature for creature in self.world.creatures if 'player' in creature.factions]) > 0:
+            player = [
+                creature for creature in self.world.creatures if 'player' in creature.factions][0]
+            fovmap = self.fov()
+            fovmap2 = player.fov()
+            if self.scariness() > 0 and fovmap[player.x, player.y] and fovmap2[self.x, self.y] and self in player.creaturesseen() and not self in player.frightenedby():
+                return(['frighten', 0.75])
+            if fovmap[player.x, player.y] and (abs(self.x - player.x) > 1 or abs(self.y - player.y) > 1) and len([spell for spell in self.spellsknown() if isinstance(spell, magic.TargetedSpell) and self.mana() >= spell.manarequirement]) > 0 and not self.panicked():
+                spell = np.random.choice([spell for spell in self.spellsknown() if isinstance(
+                    spell, magic.TargetedSpell) and self.mana() >= spell.manarequirement])
+                return(['cast', spell, [self, player, np.random.choice(spell.partchoices(player))], spell.castingtime])
+            else:
+                target = None
+                if abs(self.x - player.x) <= 1 and abs(self.y - player.y) <= 1:
+                    target = player
+                elif fovmap[player.x, player.y]:
+                    self.targetcoords = (player.x, player.y)
+                if target != None and len(self.attackslist()) > 0 and not disoriented and not self.panicked():
+                    i = np.random.choice(range(len(self.attackslist())))
+                    atk = self.attackslist()[i]
+                    return(['fight', target, np.random.choice([part for part in target.bodyparts if not part.internal() and not part.destroyed()]), atk, atk[6]])
+                elif self.targetcoords != None and (self.x, self.y) != self.targetcoords and not disoriented:
+                    # dx = round(np.cos(anglebetween((self.x, self.y), self.targetcoords)))
+                    # dy = round(np.sin(anglebetween((self.x, self.y), self.targetcoords)))
+                    dxdylist = [(dx, dy) for dx in [-1, 0, 1] for dy in [-1, 0, 1] if (dx, dy) != (0, 0) and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y ==
+                                                                                                                  self.y+dy]) == 0 and not self.world.walls[self.x+dx, self.y+dy] and not self.world.lavapits[self.x+dx, self.y+dy] and not self.world.campfires[self.x+dx, self.y+dy]]
+                    if len(dxdylist) > 0:
+                        if not self.panicked():
+                            dx, dy = min(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        else:
+                            dx, dy = max(dxdylist, key=lambda dxdy: np.sqrt(
+                                (self.x + dxdy[0] - self.targetcoords[0])**2 + (self.y + dxdy[1] - self.targetcoords[1])**2))
+                        time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                            self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['wait', 1])
+                elif not disoriented:
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    repeats = 0
+                    while repeats < 10 and (dx, dy) == (0, 0) or self.world.walls[self.x+dx, self.y+dy] != 0 or self.world.lavapits[self.x+dx, self.y+dy] != 0 or self.world.campfires[self.x+dx, self.y+dy] != 0 or len([it for it in self.world.items if (it.x, it.y) == (self.x+dx, self.y+dy) and it.trap and (it in self.itemsseen() or not it.hidden)]) > 0:
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
+                        repeats += 1
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if repeats < 10 and len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        return(['move', dx, dy, time])
+                    else:
+                        return(['wait', 1])
+                else:
+                    self.targetcoords = None
+                    dx = 0
+                    dy = 0
+                    while (dx, dy) == (0, 0):
+                        dx = np.random.choice([-1, 0, 1])
+                        dy = np.random.choice([-1, 0, 1])
+                    time = np.sqrt(dx**2 + dy**2) * self.steptime() * (1 + (
+                        self.world.largerocks[player.x+dx, player.y+dy] and self.stance != 'flying'))
+                    if len([creature for creature in self.world.creatures if creature.x == self.x+dx and creature.y == self.y+dy]) == 0:
+                        if not self.world.walls[self.x+dx, self.y+dy]:
+                            return(['move', dx, dy, time])
+                        else:
+                            return(['bump', time/2])
+                    else:
+                        return(['wait', 1])
+        else:
+            return(['wait', 1])
+
+
 enemytypesbylevel = [  # List of tuples for each level. Each tuple is an enemy type and a probability weight for its presence.
     [(Zombie, 10), (MolePerson, 10), (Goblin, 10), (GlassElemental, 10)],  # 1
     [(Zombie, 15), (MolePerson, 15), (Goblin, 15), (GlassElemental, 15),
@@ -6083,5 +6267,6 @@ enemytypesbylevel = [  # List of tuples for each level. Each tuple is an enemy t
     [(Nobgoblin, 10), (Warg, 10)],  # 12
     [(Warg, 10), (Fobgoblin, 10)],  # 13
     [(Fobgoblin, 10), (LargeFireElemental, 10)],  # 14
-    [(LargeFireElemental, 10), (Dobgoblin, 10)]  # 15
+    [(LargeFireElemental, 10), (Dobgoblin, 10)],  # 15
+    [(Dobgoblin, 10), (Vampire, 10)]  # 16
 ]

@@ -2987,6 +2987,8 @@ def game():
                                         if stomach.foodprocessing[selected.material][2] != None:
                                             player.log().append(
                                                 stomach.foodprocessing[selected.material][2])
+                                        if len(selected.coated_with) > 0 and isinstance(selected.coated_with[0], bodypart.Aioli):
+                                            player.log().append('The aioli made it extra tasty!')
                                     elif stomach.foodprocessing[selected.material][0] == 0 and player.starving():
                                         selected.consume(
                                             player, stomach.foodprocessing[selected.material][1])
@@ -2994,6 +2996,20 @@ def game():
                                             if stomach.foodprocessing[selected.material][2] != None:
                                                 player.log().append(
                                                     stomach.foodprocessing[selected.material][2])
+                                                player.log().append('The aioli made it better!')
+                                        else:
+                                            player.log().append('You got food poisoning and started vomiting!')
+                                            infoblast(cave, player.x, player.y, 15, [
+                                                      player], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
+                                            player.vomitclock += np.random.rand()*20
+                                    elif stomach.foodprocessing[selected.material][0] == 0 and len(selected.coated_with) > 0 and isinstance(selected.coated_with[0], bodypart.Aioli):
+                                        selected.consume(
+                                            player, stomach.foodprocessing[selected.material][1])
+                                        if np.random.rand() > 0.2:
+                                            if stomach.foodprocessing[selected.material][2] != None:
+                                                player.log().append(
+                                                    stomach.foodprocessing[selected.material][2])
+                                            player.log().append('The aioli made it tolerable!')
                                         else:
                                             player.log().append('You got food poisoning and started vomiting!')
                                             infoblast(cave, player.x, player.y, 15, [
@@ -3002,8 +3018,21 @@ def game():
                                     elif stomach.foodprocessing[selected.material][0] == 0:
                                         player.log().append('Your stomach doesn\'t tolerate ' + selected.material +
                                                             ' very well, and you are not desperate enough to try.')
+                                    elif stomach.foodprocessing[selected.material][0] == -1 and len(selected.coated_with) > 0 and isinstance(selected.coated_with[0], bodypart.Aioli):
+                                        selected.consume(
+                                            player, stomach.foodprocessing[selected.material][1])
+                                        if np.random.rand() > 0.2:
+                                            if stomach.foodprocessing[selected.material][2] != None:
+                                                player.log().append(
+                                                    stomach.foodprocessing[selected.material][2])
+                                            player.log().append('The aioli made it tolerable!')
+                                        else:
+                                            player.log().append('You got food poisoning and started vomiting!')
+                                            infoblast(cave, player.x, player.y, 15, [
+                                                      player], ('see and hear', 'NAME_0', 'started vomiting', 'start vomiting'))
+                                            player.vomitclock += np.random.rand()*20
                                     elif stomach.foodprocessing[selected.material][0] == -1:
-                                        player.log().append('Your stomach doesn\'t tolerate ' +
+                                        player.log().append('Your stomach doesn\'t tolerate bare ' +
                                                             selected.material + ' under any circumstances.')
                                 else:
                                     player.log().append('You have no stomach, so you cannot eat!')

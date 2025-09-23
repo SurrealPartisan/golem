@@ -10,7 +10,7 @@ import numpy as np
 import pygame.locals as lc
 
 mapwidth, mapheight = 100, 40
-numlevels = 15
+numlevels = 16
 npcrelativebodyparthp = 2/3
 npcrelativetotalhp = 1/3
 smellhalflife = 5
