@@ -182,21 +182,21 @@ def game():
                     y = np.random.randint(mapheight)
                 item.ManaPotion(cave.items, x, y)
 
-            for j in range(np.random.randint(0, 2)):
+            for j in range(np.random.randint(0, 3)):
                 x = y = 0
                 while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.Venom(cave.items, x, y)
 
-            for j in range(np.random.randint(0, 2)):
+            for j in range(np.random.randint(0, 3)):
                 x = y = 0
                 while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)
                     y = np.random.randint(mapheight)
                 item.Silversheen(cave.items, x, y)
 
-            for j in range(np.random.randint(0, 1)):
+            for j in range(np.random.randint(0, 2)):
                 x = y = 0
                 while cave.walls[x, y] != 0 or cave.lavapits[x, y] != 0 or cave.campfires[x, y] != 0:
                     x = np.random.randint(mapwidth)

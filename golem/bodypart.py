@@ -50,7 +50,7 @@ class BodyPart(item.Item):
         self.material = "living flesh"
         self.consumable = True
         self.edible = True
-        self._defensecoefficient = 0.8
+        self._defensecoefficient = 0.8  # See suggested baseline by level at the bottom of the file.
         self._situationaldefensecoefficient = 0.8 + np.random.rand()*0.4
         self._attackpoisonresistance = 0
         self._silversicknessresistance = 1
@@ -384,7 +384,7 @@ class HumanLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.65, 1, 1, 6, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -404,7 +404,7 @@ class HumanHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 20
+        self.maxhp = 25
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -675,7 +675,7 @@ class ZombieLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.65, 1, 1, 6, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -704,7 +704,7 @@ class ZombieHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 20
+        self.maxhp = 25
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
@@ -1006,7 +1006,7 @@ class MolePersonLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.65, 1, 1, 6, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -1026,7 +1026,7 @@ class MolePersonHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 20
+        self.maxhp = 25
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1295,7 +1295,7 @@ class GoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.65, 1, 1, 6, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -1315,7 +1315,7 @@ class GoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 20
+        self.maxhp = 25
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1512,7 +1512,7 @@ class GlassElementalHead(BodyPart):
         }
         self._topheight = 10
         self._bottomheight = 0
-        self.maxhp = 10
+        self.maxhp = 12
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1544,7 +1544,7 @@ class GlassElementalEye(BodyPart):
         self.childconnections = {}
         self._topheight = 1
         self._bottomheight = -1
-        self.maxhp = 5
+        self.maxhp = 2
         self.weight = 10
         self.material = 'elemental'
         self.consumable = False
@@ -1755,7 +1755,7 @@ class GlassElementalArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.8, 1, 1, 12, 'sharp', 0, [], True, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.8, 1, 1, 10, 'sharp', 0, [], True, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -1825,6 +1825,7 @@ class OctopusHead(BodyPart):
         self.lowerfinelimit = 0
         self.lowerpoorlimit = 0
         self.maxhp = 80
+        self._defensecoefficient = 0.78
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner(
             [], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -1837,7 +1838,7 @@ class OctopusHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.42, 1, 1, 15, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.62, 1, 1, 10, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -1856,6 +1857,7 @@ class OctopusTentacle(BodyPart):
         self.maxheight = 120
         self.minheight = 10
         self.maxhp = 10
+        self._defensecoefficient = 0.78
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 0.75
@@ -1929,6 +1931,7 @@ class OctopusEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 7
+        self._defensecoefficient = 0.78
         self.weight = 10
         self.detectiondistance = 2.9
         self.detectionprobability = 0.2
@@ -1952,7 +1955,8 @@ class OctopusBrain(BodyPart):
         self.childconnections = {}
         self._topheight = 6
         self._bottomheight = -6
-        self.maxhp = 20
+        self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 2000
         self.log = loglist()
         self.seen = []
@@ -1977,7 +1981,8 @@ class OctopusHeart(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 20
+        self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 500
         self.bravery = 0.25
         self._resistances['electric'] = -0.2
@@ -1991,7 +1996,8 @@ class OctopusGills(BodyPart):
         self.childconnections = {}
         self._topheight = 10
         self._bottomheight = -10
-        self.maxhp = 20
+        self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 500
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -2005,7 +2011,8 @@ class OctopusMetanephridium(BodyPart):
         self.childconnections = {}
         self._topheight = 4
         self._bottomheight = -4
-        self.maxhp = 20
+        self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 100
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -2019,7 +2026,8 @@ class OctopusStomach(BodyPart):
         self.childconnections = {}
         self._topheight = 7
         self._bottomheight = -7
-        self.maxhp = 10
+        self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -2051,6 +2059,7 @@ class DogTorso(BodyPart):
         self._topheight = 18
         self._bottomheight = -18
         self.maxhp = 75
+        self._defensecoefficient = 0.78
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -2073,6 +2082,7 @@ class DogLeg(BodyPart):
         self.lowerpoorlimit = -54
         self.maxheight = 54
         self.maxhp = 25
+        self._defensecoefficient = 0.78
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 3000
@@ -2106,7 +2116,7 @@ class DogLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.72, 1, 1, 2, 'sharp', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.72, 1, 1, 3, 'sharp', 0, [], False, [], self)]
         else:
             return []
 
@@ -2126,7 +2136,8 @@ class DogHead(BodyPart):
         self.upperfinelimit = 27
         self.lowerfinelimit = -58
         self.lowerpoorlimit = -63
-        self.maxhp = 25
+        self.maxhp = 30
+        self._defensecoefficient = 0.78
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -2152,6 +2163,7 @@ class DogEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 7
+        self._defensecoefficient = 0.78
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -2176,6 +2188,7 @@ class DogBrain(BodyPart):
         self._topheight = 3
         self._bottomheight = -3
         self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 100
         self.log = loglist()
         self.seen = []
@@ -2201,6 +2214,7 @@ class DogHeart(BodyPart):
         self._topheight = 6
         self._bottomheight = -6
         self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 400
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -2216,6 +2230,7 @@ class DogLung(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 450
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -2230,6 +2245,7 @@ class DogKidney(BodyPart):
         self._topheight = 2
         self._bottomheight = -2
         self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 90
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -2244,6 +2260,7 @@ class DogStomach(BodyPart):
         self._topheight = 8
         self._bottomheight = -8
         self.maxhp = 15
+        self._defensecoefficient = 0.78
         self.weight = 800
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -2261,6 +2278,7 @@ class DogTail(BodyPart):
         self.childconnections = {}
         self._bottomheight = -59
         self.maxhp = 7
+        self._defensecoefficient = 0.78
         self.weight = 400
         self.smell = 1
         self._info = 'A tail consisting of living flesh.'
@@ -2288,6 +2306,7 @@ class ImpTorso(BodyPart):
         self._topheight = 40
         self._pronetopheight = 25
         self.maxhp = 50
+        self._defensecoefficient = 0.78
         self.worn = {'chest armor': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -2319,6 +2338,7 @@ class ImpArm(BodyPart):
         self.lowerfinelimit = -15
         self.lowerpoorlimit = -30
         self.maxhp = 20
+        self._defensecoefficient = 0.78
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
@@ -2372,6 +2392,7 @@ class ImpWing(BodyPart):
         self._topheight = 30
         self._bottomheight = -20
         self.maxhp = 20
+        self._defensecoefficient = 0.78
         self.weight = 5000
         self._resistances['fire'] = 0.2
         self.smell = 1
@@ -2404,6 +2425,7 @@ class ImpLeg(BodyPart):
         self.lowerpoorlimit = -70
         self.maxheight = 70
         self.maxhp = 20
+        self._defensecoefficient = 0.78
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 10000
@@ -2437,7 +2459,7 @@ class ImpLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.62, 1, 1, 15, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.67, 1, 1, 12, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -2457,7 +2479,8 @@ class ImpHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 20
+        self.maxhp = 25
+        self._defensecoefficient = 0.78
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -2472,7 +2495,7 @@ class ImpHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.62, 1, 1, 15, 'sharp', 0, [], False, [('bleed', 0.1)], self), Attack('horns', 'gored', 'gored', 'gore', '', '', 0.82, 1, 1, 10, 'sharp', 0, [], False, [('charge', )], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.62, 1, 1, 10, 'sharp', 0, [], False, [('bleed', 0.1)], self), Attack('horns', 'gored', 'gored', 'gore', '', '', 0.82, 1, 1, 10, 'sharp', 0, [], False, [('charge', )], self)]
         else:
             return []
 
@@ -2485,6 +2508,7 @@ class ImpEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 5
+        self._defensecoefficient = 0.78
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -2510,6 +2534,7 @@ class ImpBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 10
+        self._defensecoefficient = 0.78
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -2536,6 +2561,7 @@ class ImpHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 10
+        self._defensecoefficient = 0.78
         self.weight = 250
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -2551,6 +2577,7 @@ class ImpLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 10
+        self._defensecoefficient = 0.78
         self.weight = 600
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -2566,6 +2593,7 @@ class ImpKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 10
+        self._defensecoefficient = 0.78
         self.weight = 120
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -2581,6 +2609,7 @@ class ImpStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 10
+        self._defensecoefficient = 0.78
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -2612,6 +2641,7 @@ class HobgoblinTorso(BodyPart):
         self._topheight = 45
         self._pronetopheight = 27
         self.maxhp = 100
+        self._defensecoefficient = 0.76
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -2643,6 +2673,7 @@ class HobgoblinArm(BodyPart):
         self.lowerfinelimit = -20
         self.lowerpoorlimit = -35
         self.maxhp = 30
+        self._defensecoefficient = 0.76
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
@@ -2701,6 +2732,7 @@ class HobgoblinLeg(BodyPart):
         self.lowerpoorlimit = -75
         self.maxheight = 75
         self.maxhp = 30
+        self._defensecoefficient = 0.76
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 13000
@@ -2734,7 +2766,7 @@ class HobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.64, 1, 1, 22, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.69, 1, 1, 18, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -2754,7 +2786,8 @@ class HobgoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 30
+        self.maxhp = 35
+        self._defensecoefficient = 0.76
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -2768,7 +2801,7 @@ class HobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.64, 1, 1, 22, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.64, 1, 1, 17, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -2781,6 +2814,7 @@ class HobgoblinEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 10
+        self._defensecoefficient = 0.76
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -2805,6 +2839,7 @@ class HobgoblinBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -2830,6 +2865,7 @@ class HobgoblinHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 250
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -2844,6 +2880,7 @@ class HobgoblinLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -2858,6 +2895,7 @@ class HobgoblinKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 120
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -2872,6 +2910,7 @@ class HobgoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -2902,6 +2941,7 @@ class MoleMonkTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 100
+        self._defensecoefficient = 0.76
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -2931,6 +2971,7 @@ class MoleMonkArm(BodyPart):
         self.lowerfinelimit = -25
         self.lowerpoorlimit = -50
         self.maxhp = 30
+        self._defensecoefficient = 0.76
         self.capableofthrowing = True
         self.throwaccuracy = 0.99
         self.throwspeed = 1
@@ -2987,6 +3028,7 @@ class MoleMonkLeg(BodyPart):
         self.lowerpoorlimit = -90
         self.maxheight = 90
         self.maxhp = 30
+        self._defensecoefficient = 0.76
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 17000
@@ -3018,7 +3060,7 @@ class MoleMonkLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.64, 1, 1, 22, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.69, 1, 1, 18, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -3038,7 +3080,8 @@ class MoleMonkHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 30
+        self.maxhp = 35
+        self._defensecoefficient = 0.76
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -3051,7 +3094,7 @@ class MoleMonkHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.44, 1, 1, 22, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.44, 1, 1, 17, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3064,6 +3107,7 @@ class MoleMonkEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 10
+        self._defensecoefficient = 0.76
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.1
@@ -3088,6 +3132,7 @@ class MoleMonkBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 1300
         self.log = loglist()
         self.seen = []
@@ -3114,6 +3159,7 @@ class MoleMonkHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 300
         self.bravery = 0.25
         self._resistances['electric'] = -0.2
@@ -3128,6 +3174,7 @@ class MoleMonkLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 600
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 1
@@ -3142,6 +3189,7 @@ class MoleMonkKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 120
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -3156,6 +3204,7 @@ class MoleMonkStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -3186,6 +3235,7 @@ class ZombieZorcererTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 100
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
@@ -3221,6 +3271,7 @@ class ZombieZorcererArm(BodyPart):
         self.lowerfinelimit = -15
         self.lowerpoorlimit = -30
         self.maxhp = 30
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
@@ -3263,7 +3314,7 @@ class ZombieZorcererArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.8, 1, 1, 5, 'blunt', 0, [], False, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.84, 1, 1, 15, 'blunt', 0, [], False, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -3283,6 +3334,7 @@ class ZombieZorcererLeg(BodyPart):
         self.lowerpoorlimit = -90
         self.maxheight = 90
         self.maxhp = 30
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -3311,7 +3363,7 @@ class ZombieZorcererLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.6, 1, 1, 7, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.69, 1, 1, 18, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -3340,7 +3392,8 @@ class ZombieZorcererHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 30
+        self.maxhp = 35
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
@@ -3359,7 +3412,7 @@ class ZombieZorcererHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.4, 2, 1, 5, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.44, 2, 1, 15, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -3372,6 +3425,7 @@ class ZombieZorcererEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 10
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -3402,6 +3456,7 @@ class ZombieZorcererBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.weight = 1000
         self.log = loglist()
@@ -3434,6 +3489,7 @@ class ZombieZorcererHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.weight = 250
         self.bravery = 0.5
@@ -3452,6 +3508,7 @@ class ZombieZorcererLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = 'undead flesh'
         self.weight = 500
         self.runstaminarecoveryspeed = 0.25
@@ -3472,6 +3529,7 @@ class ZombieZorcererKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = 'undead flesh'
         self.weight = 100
         self._attackpoisonresistance = 1
@@ -3491,6 +3549,7 @@ class ZombieZorcererStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = "undead flesh"
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
@@ -3516,7 +3575,7 @@ class PoisonGasElementalTorso(BodyPart):
             'back left arm': BodyPartConnection(self, ['arm'], False, 'back left ', constantfunction(0)),
             'front right arm': BodyPartConnection(self, ['arm'], False, 'front right ', constantfunction(0)),
             'back right arm': BodyPartConnection(self, ['arm'], False, 'back right ', constantfunction(0)),
-            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(70)),
+            'brain': BodyPartConnection(self, ['brain'], True, '', constantfunction(70), internal=True),
             'front left eye': BodyPartConnection(self, ['eye'], False, 'front left ', constantfunction(50)),
             'back left eye': BodyPartConnection(self, ['eye'], False, 'back left ', constantfunction(50)),
             'front right eye': BodyPartConnection(self, ['eye'], False, 'front right ', constantfunction(50)),
@@ -3530,6 +3589,7 @@ class PoisonGasElementalTorso(BodyPart):
         }
         self._topheight = 100
         self.maxhp = 100
+        self._defensecoefficient = 0.76
         self._wearwieldname = 'torso'
         self.weight = 5
         self.carryingcapacity = 60000
@@ -3572,6 +3632,7 @@ class PoisonGasElementalEye(BodyPart):
         self._topheight = 3
         self._bottomheight = -3
         self.maxhp = 10
+        self._defensecoefficient = 0.76
         self.weight = 0
         self.material = 'elemental'
         self.consumable = False
@@ -3606,6 +3667,7 @@ class PoisonGasElementalBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = "elemental"
         self.consumable = False
         self.edible = False
@@ -3641,6 +3703,7 @@ class PoisonGasElementalHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = "elemental"
         self.consumable = False
         self.edible = False
@@ -3664,6 +3727,7 @@ class PoisonGasElementalLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
@@ -3688,6 +3752,7 @@ class PoisonGasElementalKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 20
+        self._defensecoefficient = 0.76
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
@@ -3716,6 +3781,7 @@ class PoisonGasElementalArm(BodyPart):
         self.lowerfinelimit = -75
         self.lowerpoorlimit = -100
         self.maxhp = 30
+        self._defensecoefficient = 0.76
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
@@ -3788,7 +3854,8 @@ class WolfTorso(BodyPart):
         }
         self._topheight = 20
         self._bottomheight = -20
-        self.maxhp = 150
+        self.maxhp = 125
+        self._defensecoefficient = 0.74
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -3810,7 +3877,8 @@ class WolfLeg(BodyPart):
         self.lowerfinelimit = -60
         self.lowerpoorlimit = -60
         self.maxheight = 60
-        self.maxhp = 30
+        self.maxhp = 35
+        self._defensecoefficient = 0.74
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 4000
@@ -3864,7 +3932,8 @@ class WolfHead(BodyPart):
         self.upperfinelimit = 30
         self.lowerfinelimit = -65
         self.lowerpoorlimit = -70
-        self.maxhp = 30
+        self.maxhp = 40
+        self._defensecoefficient = 0.74
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -3890,6 +3959,7 @@ class WolfEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 12
+        self._defensecoefficient = 0.74
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -3913,7 +3983,8 @@ class WolfBrain(BodyPart):
         self.childconnections = {}
         self._topheight = 3
         self._bottomheight = -3
-        self.maxhp = 20
+        self.maxhp = 25
+        self._defensecoefficient = 0.74
         self.weight = 120
         self.log = loglist()
         self.seen = []
@@ -3938,7 +4009,8 @@ class WolfHeart(BodyPart):
         self.childconnections = {}
         self._topheight = 6
         self._bottomheight = -6
-        self.maxhp = 20
+        self.maxhp = 25
+        self._defensecoefficient = 0.74
         self.weight = 500
         self.bravery = 0.75
         self._resistances['electric'] = -0.2
@@ -3952,7 +4024,8 @@ class WolfLung(BodyPart):
         self.childconnections = {}
         self._topheight = 8
         self._bottomheight = -8
-        self.maxhp = 20
+        self.maxhp = 25
+        self._defensecoefficient = 0.74
         self.weight = 600
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -3966,7 +4039,8 @@ class WolfKidney(BodyPart):
         self.childconnections = {}
         self._topheight = 2
         self._bottomheight = -2
-        self.maxhp = 20
+        self.maxhp = 25
+        self._defensecoefficient = 0.74
         self.weight = 95
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -3980,7 +4054,8 @@ class WolfStomach(BodyPart):
         self.childconnections = {}
         self._topheight = 9
         self._bottomheight = -9
-        self.maxhp = 20
+        self.maxhp = 25
+        self._defensecoefficient = 0.74
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -3998,6 +4073,7 @@ class WolfTail(BodyPart):
         self.childconnections = {}
         self._bottomheight = -65
         self.maxhp = 20
+        self._defensecoefficient = 0.74
         self.weight = 500
         self.smell = 1
         self._info = 'A tail consisting of living flesh.'
@@ -4023,6 +4099,7 @@ class DrillbotChassis(BodyPart):
         }
         self._topheight = 50
         self.maxhp = 150
+        self._defensecoefficient = 0.73
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'chassis'
@@ -4047,7 +4124,8 @@ class DrillbotWheel(BodyPart):
         self._topheight = 40
         self._bottomheight = -40
         self.maxheight = 40
-        self.maxhp = 30
+        self.maxhp = 40
+        self._defensecoefficient = 0.73
         self.worn = {'wheel cover': listwithowner([], self)}
         self._wearwieldname = 'wheel'
         self.weight = 4000
@@ -4099,6 +4177,7 @@ class DrillArm(BodyPart):
         self.lowerfinelimit = -50
         self.lowerpoorlimit = -50
         self.maxhp = 40
+        self._defensecoefficient = 0.73
         self.weight = 7000
         self.material = 'electronics'
         self.consumable = False
@@ -4126,6 +4205,7 @@ class DrillbotCamera(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 15
+        self._defensecoefficient = 0.73
         self.weight = 20
         self.material = 'electronics'
         self.consumable = False
@@ -4156,6 +4236,7 @@ class DrillbotPump(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 1500
         self.material = 'electronics'
         self.consumable = False
@@ -4175,6 +4256,7 @@ class DrillbotAerator(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 600
         self.material = 'electronics'
         self._attackpoisonresistance = 1
@@ -4193,6 +4275,7 @@ class DrillbotFilter(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 600
         self.material = 'electronics'
         self._attackpoisonresistance = 1
@@ -4211,6 +4294,7 @@ class DrillbotProcessor(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 2000
         self.log = loglist()
         self.seen = []
@@ -4242,6 +4326,7 @@ class DrillBotBiomassProcessor(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 2000
         self.material = 'electronics'
         self.consumable = False
@@ -4278,6 +4363,7 @@ class LobgoblinTorso(BodyPart):
         self._topheight = 50
         self._pronetopheight = 30
         self.maxhp = 150
+        self._defensecoefficient = 0.73
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -4309,6 +4395,7 @@ class LobgoblinArm(BodyPart):
         self.lowerfinelimit = -25
         self.lowerpoorlimit = -40
         self.maxhp = 40
+        self._defensecoefficient = 0.73
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
@@ -4347,7 +4434,7 @@ class LobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.9, 1, 1, 25, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.9, 1, 1, 25, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.88, 1, 1, 25, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.9, 1, 1, 25, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -4367,6 +4454,7 @@ class LobgoblinLeg(BodyPart):
         self.lowerpoorlimit = -80
         self.maxheight = 80
         self.maxhp = 40
+        self._defensecoefficient = 0.73
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 16000
@@ -4400,7 +4488,7 @@ class LobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.7, 1, 1, 37, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.73, 1, 1, 30, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -4420,7 +4508,8 @@ class LobgoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 40
+        self.maxhp = 45
+        self._defensecoefficient = 0.73
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -4434,7 +4523,7 @@ class LobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.7, 1, 1, 37, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.68, 1, 1, 27, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -4447,6 +4536,7 @@ class LobgoblinEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 15
+        self._defensecoefficient = 0.73
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -4471,6 +4561,7 @@ class LobgoblinBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -4496,6 +4587,7 @@ class LobgoblinHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 250
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -4510,6 +4602,7 @@ class LobgoblinLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -4524,6 +4617,7 @@ class LobgoblinKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 120
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -4538,6 +4632,7 @@ class LobgoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -4579,6 +4674,7 @@ class RevenantOctopusHead(BodyPart):
         self.lowerfinelimit = 0
         self.lowerpoorlimit = 0
         self.maxhp = 160
+        self._defensecoefficient = 0.73
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner([], self), 'face': listwithowner(
             [], self), 'back': listwithowner([], self), 'belt': listwithowner([], self)}
@@ -4597,7 +4693,7 @@ class RevenantOctopusHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.5, 1, 1, 37, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.68, 1, 1, 25, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -4615,7 +4711,8 @@ class RevenantOctopusTentacle(BodyPart):
         self.lowerpoorlimit = -100
         self.maxheight = 120
         self.minheight = 10
-        self.maxhp = 30
+        self.maxhp = 25
+        self._defensecoefficient = 0.73
         self.material = "undead flesh"
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
@@ -4681,7 +4778,7 @@ class RevenantOctopusTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', 'constrict', '', '', 0.9, timetaken, 1, 13, 'blunt', 0, [], False, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle', 'constricted', 'constricted', 'constrict', '', '', 0.88, timetaken, 1, 8, 'blunt', 0, [], False, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -4696,6 +4793,7 @@ class RevenantOctopusEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 15
+        self._defensecoefficient = 0.73
         self.material = "undead flesh"
         self.weight = 10
         self._attackpoisonresistance = 1
@@ -4726,6 +4824,7 @@ class RevenantOctopusBrain(BodyPart):
         self._topheight = 6
         self._bottomheight = -6
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.material = "undead flesh"
         self.weight = 2000
         self.log = loglist()
@@ -4757,6 +4856,7 @@ class RevenantOctopusHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.material = "undead flesh"
         self.weight = 500
         self.bravery = 0.25
@@ -4775,6 +4875,7 @@ class RevenantOctopusGills(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.material = 'undead flesh'
         self.weight = 500
         self.breathepoisonresistance = 0.5
@@ -4795,6 +4896,7 @@ class RevenantOctopusMetanephridium(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.material = 'undead flesh'
         self.weight = 100
         self._attackpoisonresistance = 1
@@ -4813,7 +4915,8 @@ class RevenantOctopusStomach(BodyPart):
         self.childconnections = {}
         self._topheight = 7
         self._bottomheight = -7
-        self.maxhp = 10
+        self.maxhp = 30
+        self._defensecoefficient = 0.73
         self.material = 'undead flesh'
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
@@ -4850,6 +4953,7 @@ class GhoulTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 175
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
@@ -4884,7 +4988,8 @@ class GhoulArm(BodyPart):
         self.upperfinelimit = 15
         self.lowerfinelimit = -15
         self.lowerpoorlimit = -30
-        self.maxhp = 50
+        self.maxhp = 45
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
@@ -4927,7 +5032,7 @@ class GhoulArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.92, 1, 1, 30, 'blunt', 0, [], False, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.9, 1, 1, 30, 'blunt', 0, [], False, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -4946,7 +5051,8 @@ class GhoulLeg(BodyPart):
         self.lowerfinelimit = -90
         self.lowerpoorlimit = -90
         self.maxheight = 90
-        self.maxhp = 50
+        self.maxhp = 45
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -4975,7 +5081,7 @@ class GhoulLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.72, 1, 1, 45, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.75, 1, 1, 36, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -5005,6 +5111,7 @@ class GhoulHead(BodyPart):
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
         self.maxhp = 50
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
@@ -5023,7 +5130,7 @@ class GhoulHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.52, 2, 1, 30, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.5, 2, 1, 30, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -5036,6 +5143,7 @@ class GhoulEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 17
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -5065,7 +5173,8 @@ class GhoulBrain(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 25
+        self.maxhp = 35
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.weight = 1000
         self.log = loglist()
@@ -5096,7 +5205,8 @@ class GhoulHeart(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 25
+        self.maxhp = 35
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.weight = 250
         self._attackpoisonresistance = 1
@@ -5114,7 +5224,7 @@ class GhoulLung(BodyPart):
         self.childconnections = {}
         self._topheight = 10
         self._bottomheight = -10
-        self.maxhp = 25
+        self.maxhp = 35
         self.material = 'undead flesh'
         self.weight = 600
         self.breathepoisonresistance = 0.5
@@ -5134,7 +5244,8 @@ class GhoulKidney(BodyPart):
         self.childconnections = {}
         self._topheight = 4
         self._bottomheight = -4
-        self.maxhp = 25
+        self.maxhp = 35
+        self._defensecoefficient = 0.71
         self.material = 'undead flesh'
         self.weight = 120
         self._attackpoisonresistance = 1
@@ -5153,7 +5264,8 @@ class GhoulStomach(BodyPart):
         self.childconnections = {}
         self._topheight = 7
         self._bottomheight = -7
-        self.maxhp = 25
+        self.maxhp = 35
+        self._defensecoefficient = 0.71
         self.material = "undead flesh"
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
@@ -5189,6 +5301,7 @@ class SmallFireElementalTorso(BodyPart):
         }
         self._topheight = 100
         self.maxhp = 200
+        self._defensecoefficient = 0.7
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -5215,6 +5328,7 @@ class SmallFireElementalHead(BodyPart):
         self._topheight = 30
         self._bottomheight = 0
         self.maxhp = 55
+        self._defensecoefficient = 0.7
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -5239,6 +5353,7 @@ class SmallFireElementalEye(BodyPart):
         self._topheight = 3
         self._bottomheight = -3
         self.maxhp = 20
+        self._defensecoefficient = 0.7
         self.weight = 0
         self.material = 'elemental'
         self.consumable = False
@@ -5269,7 +5384,8 @@ class SmallFireElementalBrain(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 30
+        self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.material = "elemental"
         self.consumable = False
         self.edible = False
@@ -5301,7 +5417,8 @@ class SmallFireElementalHeart(BodyPart):
         self.childconnections = {}
         self._topheight = 5
         self._bottomheight = -5
-        self.maxhp = 30
+        self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.material = "elemental"
         self.consumable = False
         self.edible = False
@@ -5321,7 +5438,8 @@ class SmallFireElementalBellows(BodyPart):
         self.childconnections = {}
         self._topheight = 10
         self._bottomheight = -10
-        self.maxhp = 30
+        self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
@@ -5342,7 +5460,8 @@ class SmallFireElementalKidney(BodyPart):
         self.childconnections = {}
         self._topheight = 4
         self._bottomheight = -4
-        self.maxhp = 30
+        self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
@@ -5369,7 +5488,8 @@ class SmallFireElementalTentacle(BodyPart):
         self.lowerpoorlimit = -150
         self.maxheight = 200
         self.minheight = 20
-        self.maxhp = 40
+        self.maxhp = 50
+        self._defensecoefficient = 0.7
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 0.75
@@ -5434,7 +5554,7 @@ class SmallFireElementalTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', 'burn', '', '', 0.94, timetaken, 1, 17, 'fire', 0, [], True, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', 'burn', '', '', 0.92, timetaken, 1, 21, 'fire', 0, [], True, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -5461,6 +5581,7 @@ class MobgoblinTorso(BodyPart):
         self._topheight = 55
         self._pronetopheight = 32
         self.maxhp = 200
+        self._defensecoefficient = 0.7
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -5492,6 +5613,7 @@ class MobgoblinArm(BodyPart):
         self.lowerfinelimit = -30
         self.lowerpoorlimit = -45
         self.maxhp = 50
+        self._defensecoefficient = 0.7
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
@@ -5530,7 +5652,7 @@ class MobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.94, 1, 1, 35, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.94, 1, 1, 35, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.92, 1, 1, 35, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.94, 1, 1, 35, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -5550,6 +5672,7 @@ class MobgoblinLeg(BodyPart):
         self.lowerpoorlimit = -85
         self.maxheight = 85
         self.maxhp = 50
+        self._defensecoefficient = 0.7
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 17000
@@ -5583,7 +5706,7 @@ class MobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.74, 1, 1, 52, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.77, 1, 1, 42, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -5603,7 +5726,8 @@ class MobgoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 50
+        self.maxhp = 55
+        self._defensecoefficient = 0.7
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -5617,7 +5741,7 @@ class MobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.74, 1, 1, 52, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.72, 1, 1, 37, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -5630,6 +5754,7 @@ class MobgoblinEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 20
+        self._defensecoefficient = 0.7
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -5654,6 +5779,7 @@ class MobgoblinBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -5679,6 +5805,7 @@ class MobgoblinHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.weight = 250
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -5693,6 +5820,7 @@ class MobgoblinLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -5707,6 +5835,7 @@ class MobgoblinKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.weight = 120
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -5721,6 +5850,7 @@ class MobgoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 40
+        self._defensecoefficient = 0.7
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -5752,6 +5882,7 @@ class DireWolfTorso(BodyPart):
         self._topheight = 22
         self._bottomheight = -22
         self.maxhp = 225
+        self._defensecoefficient = 0.68
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -5773,7 +5904,8 @@ class DireWolfLeg(BodyPart):
         self.lowerfinelimit = -66
         self.lowerpoorlimit = -66
         self.maxheight = 66
-        self.maxhp = 60
+        self.maxhp = 55
+        self._defensecoefficient = 0.68
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 6000
@@ -5807,7 +5939,7 @@ class DireWolfLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.86, 1, 1, 10, 'sharp', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.84, 1, 1, 8, 'sharp', 0, [], False, [], self)]
         else:
             return []
 
@@ -5828,6 +5960,7 @@ class DireWolfHead(BodyPart):
         self.lowerfinelimit = -72
         self.lowerpoorlimit = -77
         self.maxhp = 60
+        self._defensecoefficient = 0.68
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -5840,7 +5973,7 @@ class DireWolfHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.96, 1, 1, 40, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.94, 1, 1, 40, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -5853,6 +5986,7 @@ class DireWolfEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 22
+        self._defensecoefficient = 0.68
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -5877,6 +6011,7 @@ class DireWolfBrain(BodyPart):
         self._topheight = 3
         self._bottomheight = -3
         self.maxhp = 45
+        self._defensecoefficient = 0.68
         self.weight = 120
         self.log = loglist()
         self.seen = []
@@ -5902,6 +6037,7 @@ class DireWolfHeart(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 45
+        self._defensecoefficient = 0.68
         self.weight = 700
         self.bravery = 0.75
         self._resistances['electric'] = -0.2
@@ -5916,6 +6052,7 @@ class DireWolfLung(BodyPart):
         self._topheight = 9
         self._bottomheight = -9
         self.maxhp = 45
+        self._defensecoefficient = 0.68
         self.weight = 800
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -5930,6 +6067,7 @@ class DireWolfKidney(BodyPart):
         self._topheight = 2
         self._bottomheight = -2
         self.maxhp = 45
+        self._defensecoefficient = 0.68
         self.weight = 160
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -5944,6 +6082,7 @@ class DireWolfStomach(BodyPart):
         self._topheight = 9
         self._bottomheight = -9
         self.maxhp = 45
+        self._defensecoefficient = 0.68
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -5961,6 +6100,7 @@ class DireWolfTail(BodyPart):
         self.childconnections = {}
         self._bottomheight = -72
         self.maxhp = 45
+        self._defensecoefficient = 0.68
         self.weight = 600
         self.smell = 1
         self._info = 'A tail consisting of living flesh.'
@@ -5986,6 +6126,7 @@ class JobgoblinTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 34
         self.maxhp = 250
+        self._defensecoefficient = 0.67
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -6017,6 +6158,7 @@ class JobgoblinArm(BodyPart):
         self.lowerfinelimit = -35
         self.lowerpoorlimit = -50
         self.maxhp = 60
+        self._defensecoefficient = 0.67
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
@@ -6055,7 +6197,7 @@ class JobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.98, 1, 1, 45, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.98, 1, 1, 45, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.96, 1, 1, 45, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.98, 1, 1, 45, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -6075,6 +6217,7 @@ class JobgoblinLeg(BodyPart):
         self.lowerpoorlimit = -90
         self.maxheight = 90
         self.maxhp = 60
+        self._defensecoefficient = 0.67
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 18000
@@ -6108,7 +6251,7 @@ class JobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.78, 1, 1, 67, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.81, 1, 1, 54, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -6128,7 +6271,8 @@ class JobgoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 60
+        self.maxhp = 65
+        self._defensecoefficient = 0.67
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -6142,7 +6286,7 @@ class JobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.78, 1, 1, 67, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.76, 1, 1, 47, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -6155,6 +6299,7 @@ class JobgoblinEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 25
+        self._defensecoefficient = 0.67
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -6179,6 +6324,7 @@ class JobgoblinBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 50
+        self._defensecoefficient = 0.67
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -6204,6 +6350,7 @@ class JobgoblinHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 50
+        self._defensecoefficient = 0.67
         self.weight = 300
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -6218,6 +6365,7 @@ class JobgoblinLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 50
+        self._defensecoefficient = 0.67
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -6232,6 +6380,7 @@ class JobgoblinKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 50
+        self._defensecoefficient = 0.67
         self.weight = 100
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -6246,6 +6395,7 @@ class JobgoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 50
+        self._defensecoefficient = 0.67
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -6276,6 +6426,7 @@ class GhastTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 275
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
@@ -6311,6 +6462,7 @@ class GhastArm(BodyPart):
         self.lowerfinelimit = -15
         self.lowerpoorlimit = -30
         self.maxhp = 65
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
@@ -6353,7 +6505,7 @@ class GhastArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.0, 1, 1, 50, 'blunt', 0, [], False, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 0.98, 1, 1, 50, 'blunt', 0, [], False, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -6373,6 +6525,7 @@ class GhastLeg(BodyPart):
         self.lowerpoorlimit = -90
         self.maxheight = 90
         self.maxhp = 65
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -6401,7 +6554,7 @@ class GhastLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.8, 1, 1, 75, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.83, 1, 1, 60, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -6430,7 +6583,8 @@ class GhastHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 65
+        self.maxhp = 70
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
@@ -6449,7 +6603,7 @@ class GhastHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.6, 2, 1, 50, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.58, 2, 1, 50, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -6462,6 +6616,7 @@ class GhastEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 27
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -6492,6 +6647,7 @@ class GhastBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 55
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self.weight = 1000
         self.log = loglist()
@@ -6521,6 +6677,7 @@ class GhastHeart(BodyPart):
         self.categories = ['heart']
         self.childconnections = {}
         self.maxhp = 55
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self._topheight = 5
         self._bottomheight = -5
@@ -6541,6 +6698,7 @@ class GhastLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 55
+        self._defensecoefficient = 0.65
         self.material = 'undead flesh'
         self.weight = 600
         self.breathepoisonresistance = 0.5
@@ -6561,6 +6719,7 @@ class GhastKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 55
+        self._defensecoefficient = 0.65
         self.material = 'undead flesh'
         self.weight = 120
         self._attackpoisonresistance = 1
@@ -6580,6 +6739,7 @@ class GhastStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 55
+        self._defensecoefficient = 0.65
         self.material = "undead flesh"
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
@@ -6616,6 +6776,7 @@ class NobgoblinTorso(BodyPart):
         self._topheight = 65
         self._pronetopheight = 36
         self.maxhp = 300
+        self._defensecoefficient = 0.64
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -6647,6 +6808,7 @@ class NobgoblinArm(BodyPart):
         self.lowerfinelimit = -40
         self.lowerpoorlimit = -55
         self.maxhp = 70
+        self._defensecoefficient = 0.64
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
@@ -6685,7 +6847,7 @@ class NobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.02, 1, 1, 55, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 1.02, 1, 1, 55, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.0, 1, 1, 55, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 1.02, 1, 1, 55, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -6705,6 +6867,7 @@ class NobgoblinLeg(BodyPart):
         self.lowerpoorlimit = -95
         self.maxheight = 95
         self.maxhp = 70
+        self._defensecoefficient = 0.64
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 19000
@@ -6738,7 +6901,7 @@ class NobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.82, 1, 1, 82, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.85, 1, 1, 66, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -6758,7 +6921,8 @@ class NobgoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 70
+        self.maxhp = 75
+        self._defensecoefficient = 0.64
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -6772,7 +6936,7 @@ class NobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.82, 1, 1, 82, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.80, 1, 1, 57, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -6785,6 +6949,7 @@ class NobgoblinEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 30
+        self._defensecoefficient = 0.64
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -6809,6 +6974,7 @@ class NobgoblinBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 60
+        self._defensecoefficient = 0.64
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -6834,6 +7000,7 @@ class NobgoblinHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 60
+        self._defensecoefficient = 0.64
         self.weight = 300
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -6848,6 +7015,7 @@ class NobgoblinLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 60
+        self._defensecoefficient = 0.64
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -6862,6 +7030,7 @@ class NobgoblinKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 60
+        self._defensecoefficient = 0.64
         self.weight = 100
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -6876,6 +7045,7 @@ class NobgoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 60
+        self._defensecoefficient = 0.64
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -6907,6 +7077,7 @@ class WargTorso(BodyPart):
         self._topheight = 25
         self._bottomheight = -25
         self.maxhp = 325
+        self._defensecoefficient = 0.63
         self.worn = {'barding': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -6928,7 +7099,8 @@ class WargLeg(BodyPart):
         self.lowerfinelimit = -76
         self.lowerpoorlimit = -76
         self.maxheight = 76
-        self.maxhp = 90
+        self.maxhp = 75
+        self._defensecoefficient = 0.63
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 9000
@@ -6962,7 +7134,7 @@ class WargLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.86, 1, 1, 12, 'sharp', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 0.92, 1, 1, 12, 'sharp', 0, [], False, [], self)]
         else:
             return []
 
@@ -6982,7 +7154,8 @@ class WargHead(BodyPart):
         self.upperfinelimit = 38
         self.lowerfinelimit = -83
         self.lowerpoorlimit = -89
-        self.maxhp = 90
+        self.maxhp = 80
+        self._defensecoefficient = 0.63
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -6995,7 +7168,7 @@ class WargHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.96, 1, 1, 60, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 1.02, 1, 1, 60, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
         else:
             return []
 
@@ -7008,6 +7181,7 @@ class WargEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 32
+        self._defensecoefficient = 0.63
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.2
@@ -7032,6 +7206,7 @@ class WargBrain(BodyPart):
         self._topheight = 3
         self._bottomheight = -3
         self.maxhp = 65
+        self._defensecoefficient = 0.63
         self.weight = 120
         self.log = loglist()
         self.seen = []
@@ -7057,6 +7232,7 @@ class WargHeart(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 65
+        self._defensecoefficient = 0.63
         self.weight = 700
         self.bravery = 0.75
         self._resistances['electric'] = -0.2
@@ -7071,6 +7247,7 @@ class WargLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 65
+        self._defensecoefficient = 0.63
         self.weight = 1000
         self.breathepoisonresistance = 0
         self.runstaminarecoveryspeed = 0.5
@@ -7085,6 +7262,7 @@ class WargKidney(BodyPart):
         self._topheight = 2
         self._bottomheight = -2
         self.maxhp = 65
+        self._defensecoefficient = 0.63
         self.weight = 160
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -7099,6 +7277,7 @@ class WargStomach(BodyPart):
         self._topheight = 9
         self._bottomheight = -9
         self.maxhp = 65
+        self._defensecoefficient = 0.63
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -7116,6 +7295,7 @@ class WargTail(BodyPart):
         self.childconnections = {}
         self._bottomheight = -83
         self.maxhp = 65
+        self._defensecoefficient = 0.63
         self.weight = 900
         self.smell = 1
         self._info = 'A tail consisting of living flesh.'
@@ -7141,6 +7321,7 @@ class FobgoblinTorso(BodyPart):
         self._topheight = 70
         self._pronetopheight = 38
         self.maxhp = 350
+        self._defensecoefficient = 0.62
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -7172,6 +7353,7 @@ class FobgoblinArm(BodyPart):
         self.lowerfinelimit = -45
         self.lowerpoorlimit = -60
         self.maxhp = 80
+        self._defensecoefficient = 0.62
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
@@ -7210,7 +7392,7 @@ class FobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.06, 1, 1, 65, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 1.06, 1, 1, 65, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.04, 1, 1, 65, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 1.06, 1, 1, 65, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -7230,6 +7412,7 @@ class FobgoblinLeg(BodyPart):
         self.lowerpoorlimit = -100
         self.maxheight = 100
         self.maxhp = 80
+        self._defensecoefficient = 0.62
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 30000
@@ -7263,7 +7446,7 @@ class FobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.86, 1, 1, 97, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.89, 1, 1, 78, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -7283,7 +7466,8 @@ class FobgoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 80
+        self.maxhp = 85
+        self._defensecoefficient = 0.62
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -7297,7 +7481,7 @@ class FobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.86, 1, 1, 97, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.84, 1, 1, 67, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -7310,6 +7494,7 @@ class FobgoblinEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 35
+        self._defensecoefficient = 0.62
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -7334,6 +7519,7 @@ class FobgoblinBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 70
+        self._defensecoefficient = 0.62
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -7359,6 +7545,7 @@ class FobgoblinHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 70
+        self._defensecoefficient = 0.62
         self.weight = 300
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -7373,6 +7560,7 @@ class FobgoblinLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 70
+        self._defensecoefficient = 0.62
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -7387,6 +7575,7 @@ class FobgoblinKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 70
+        self._defensecoefficient = 0.62
         self.weight = 100
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -7401,6 +7590,7 @@ class FobgoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 70
+        self._defensecoefficient = 0.62
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -7432,6 +7622,7 @@ class LargeFireElementalTorso(BodyPart):
         }
         self._topheight = 150
         self.maxhp = 375
+        self._defensecoefficient = 0.6
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -7459,6 +7650,7 @@ class LargeFireElementalArm(BodyPart):
         self.lowerfinelimit = -50
         self.lowerpoorlimit = -65
         self.maxhp = 85
+        self._defensecoefficient = 0.6
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
         self.throwspeed = 1
@@ -7501,7 +7693,7 @@ class LargeFireElementalArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist burn', 'burned', 'burned', 'burn', '', '', 1.08, 1, 1, 70, 'fire', 0, [], True, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist burn', 'burned', 'burned', 'burn', '', '', 1.06, 1, 1, 70, 'fire', 0, [], True, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -7520,6 +7712,7 @@ class LargeFireElementalHead(BodyPart):
         self._topheight = 30
         self._bottomheight = 0
         self.maxhp = 90
+        self._defensecoefficient = 0.6
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -7544,6 +7737,7 @@ class LargeFireElementalEye(BodyPart):
         self._topheight = 3
         self._bottomheight = -3
         self.maxhp = 37
+        self._defensecoefficient = 0.6
         self.weight = 0
         self.material = 'elemental'
         self.consumable = False
@@ -7575,6 +7769,7 @@ class LargeFireElementalBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 75
+        self._defensecoefficient = 0.6
         self.material = "elemental"
         self.consumable = False
         self.edible = False
@@ -7607,6 +7802,7 @@ class LargeFireElementalHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 75
+        self._defensecoefficient = 0.6
         self.material = "elemental"
         self.consumable = False
         self.edible = False
@@ -7627,6 +7823,7 @@ class LargeFireElementalBellows(BodyPart):
         self._topheight = 12
         self._bottomheight = -12
         self.maxhp = 75
+        self._defensecoefficient = 0.6
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
@@ -7648,6 +7845,7 @@ class LargeFireElementalKidney(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 75
+        self._defensecoefficient = 0.6
         self.material = 'elemental'
         self.consumable = False
         self.edible = False
@@ -7674,7 +7872,8 @@ class LargeFireElementalTentacle(BodyPart):
         self.lowerpoorlimit = -150
         self.maxheight = 200
         self.minheight = 30
-        self.maxhp = 90
+        self.maxhp = 85
+        self._defensecoefficient = 0.6
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 0.75
@@ -7739,7 +7938,7 @@ class LargeFireElementalTentacle(BodyPart):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
                 timetaken = 2 / len([part for part in self.owner if 'tentacle' in part.categories and not (part.destroyed() or part.incapacitated())])
-                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', 'burn', '', '', 1.08, timetaken, 1, 35, 'fire', 0, [], True, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'tentacle burn', 'burned', 'burned', 'burn', '', '', 1.06, timetaken, 1, 42, 'fire', 0, [], True, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -7766,6 +7965,7 @@ class DobgoblinTorso(BodyPart):
         self._topheight = 75
         self._pronetopheight = 40
         self.maxhp = 400
+        self._defensecoefficient = 0.59
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
         self._wearwieldname = 'torso'
@@ -7797,6 +7997,7 @@ class DobgoblinArm(BodyPart):
         self.lowerfinelimit = -50
         self.lowerpoorlimit = -65
         self.maxhp = 90
+        self._defensecoefficient = 0.59
         self.capableofthrowing = True
         self.throwaccuracy = 0.95
         self.throwspeed = 1.5
@@ -7835,7 +8036,7 @@ class DobgoblinArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.10, 1, 1, 75, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 1.10, 1, 1, 75, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.08, 1, 1, 75, 'blunt', 0, [], False, [('knockback', 0.2)], self), Attack(self.parentalconnection.prefix + 'claws', 'clawed', 'clawed', 'claw', '', '', 1.10, 1, 1, 75, 'sharp', 0, [], False, [('bleed', 0.2)], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -7855,6 +8056,7 @@ class DobgoblinLeg(BodyPart):
         self.lowerpoorlimit = -105
         self.maxheight = 105
         self.maxhp = 90
+        self._defensecoefficient = 0.59
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
         self.weight = 21000
@@ -7888,7 +8090,7 @@ class DobgoblinLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.90, 1, 1, 112, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.93, 1, 1, 90, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -7908,7 +8110,8 @@ class DobgoblinHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 90
+        self.maxhp = 95
+        self._defensecoefficient = 0.59
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -7922,7 +8125,7 @@ class DobgoblinHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.90, 1, 1, 112, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.88, 1, 1, 77, 'sharp', 0, [], False, [('bleed', 0.1)], self)]
         else:
             return []
 
@@ -7935,6 +8138,7 @@ class DobgoblinEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 40
+        self._defensecoefficient = 0.59
         self.weight = 5
         self.detectiondistance = 1.5
         self.detectionprobability = 0.3
@@ -7959,6 +8163,7 @@ class DobgoblinBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 80
+        self._defensecoefficient = 0.59
         self.weight = 1000
         self.log = loglist()
         self.seen = []
@@ -7984,6 +8189,7 @@ class DobgoblinHeart(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 80
+        self._defensecoefficient = 0.59
         self.weight = 300
         self.bravery = 0.5
         self._resistances['electric'] = -0.2
@@ -7998,6 +8204,7 @@ class DobgoblinLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 80
+        self._defensecoefficient = 0.59
         self.weight = 600
         self.breathepoisonresistance = 0.2
         self.runstaminarecoveryspeed = 0.5
@@ -8012,6 +8219,7 @@ class DobgoblinKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 80
+        self._defensecoefficient = 0.59
         self.weight = 100
         self.endotoxicity = -1
         self.silveraccumulation = -1
@@ -8026,6 +8234,7 @@ class DobgoblinStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 80
+        self._defensecoefficient = 0.59
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
             'cooked meat': (1, 1, None),
@@ -8056,6 +8265,7 @@ class VampireTorso(BodyPart):
         self._topheight = 60
         self._pronetopheight = 30
         self.maxhp = 425
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self.worn = {'chest armor': listwithowner([], self), 'back': listwithowner(
             [], self), 'belt': listwithowner([], self)}
@@ -8092,6 +8302,7 @@ class VampireArm(BodyPart):
         self.lowerfinelimit = -15
         self.lowerpoorlimit = -30
         self.maxhp = 95
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self.capableofthrowing = True
         self.throwaccuracy = 0.97
@@ -8135,7 +8346,7 @@ class VampireArm(BodyPart):
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
             if len(self.wielded) == 0:
-                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.12, 1, 1, 80, 'blunt', 0, [], False, [], self)]
+                return [Attack(self.parentalconnection.prefix + 'fist', 'punched', 'punched', 'punch', '', '', 1.1, 1, 1, 80, 'blunt', 0, [], False, [], self)]
             else:
                 return self.wielded[0].attackslist()
         else:
@@ -8155,6 +8366,7 @@ class VampireLeg(BodyPart):
         self.lowerpoorlimit = -90
         self.maxheight = 90
         self.maxhp = 95
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self.worn = {'leg armor': listwithowner([], self)}
         self._wearwieldname = 'leg'
@@ -8184,7 +8396,7 @@ class VampireLeg(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.92, 1, 1, 120, 'blunt', 0, [], False, [], self)]
+            return [Attack(self.parentalconnection.prefix + 'foot kick', 'kicked', 'kicked', 'kick', '', '', 0.95, 1, 1, 96, 'blunt', 0, [], False, [], self)]
         else:
             return []
 
@@ -8213,7 +8425,8 @@ class VampireHead(BodyPart):
         self.upperfinelimit = 20
         self.lowerfinelimit = -5
         self.lowerpoorlimit = -15
-        self.maxhp = 95
+        self.maxhp = 100
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
@@ -8233,7 +8446,7 @@ class VampireHead(BodyPart):
 
     def attackslist(self):
         if not (self.destroyed() or self.incapacitated()):
-            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.64, 2, 1, 55, 'sharp', 0, [], False, [('bleed', 0.1), ('life-sucking',)], self)]
+            return [Attack('bite', 'bit', 'bit', 'bite', '', '', 0.7, 2, 1, 80, 'sharp', 0, [], False, [('bleed', 0.1), ('life-sucking',)], self)]
         else:
             return []
 
@@ -8246,6 +8459,7 @@ class VampireEye(BodyPart):
         self._topheight = 1
         self._bottomheight = -1
         self.maxhp = 42
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self.weight = 7
         self._attackpoisonresistance = 1
@@ -8277,6 +8491,7 @@ class VampireBrain(BodyPart):
         self._topheight = 5
         self._bottomheight = -5
         self.maxhp = 85
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self.weight = 1000
         self.log = loglist()
@@ -8307,6 +8522,7 @@ class VampireHeart(BodyPart):
         self.categories = ['heart']
         self.childconnections = {}
         self.maxhp = 85
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self._topheight = 5
         self._bottomheight = -5
@@ -8328,6 +8544,7 @@ class VampireLung(BodyPart):
         self._topheight = 10
         self._bottomheight = -10
         self.maxhp = 55
+        self._defensecoefficient = 0.58
         self.material = 'undead flesh'
         self.weight = 600
         self.breathepoisonresistance = 0.5
@@ -8349,6 +8566,7 @@ class VampireKidney(BodyPart):
         self._topheight = 4
         self._bottomheight = -4
         self.maxhp = 85
+        self._defensecoefficient = 0.58
         self.material = 'undead flesh'
         self.weight = 120
         self._attackpoisonresistance = 1
@@ -8369,6 +8587,7 @@ class VampireStomach(BodyPart):
         self._topheight = 7
         self._bottomheight = -7
         self.maxhp = 85
+        self._defensecoefficient = 0.58
         self.material = "undead flesh"
         self.weight = 1000
         self.foodprocessing = {  # Tuples, first item: is 1 if can eat normally, 0 if refuses to eat unless starving and may get sick and -1 if refuses to eat whatsoever. Second item (needed even if the first is -1, because of aioli) is efficiency. Third is message to be displayed, if any.
@@ -8401,7 +8620,8 @@ class VelociraptorSkull(BodyPart):
         self.upperfinelimit = 30
         self.lowerfinelimit = -65
         self.lowerpoorlimit = -70
-        self.maxhp = 50
+        self.maxhp = 45
+        self._defensecoefficient = 0.73
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -8441,7 +8661,8 @@ class DeinonychusSkull(BodyPart):
         self.upperfinelimit = 40
         self.lowerfinelimit = -70
         self.lowerpoorlimit = -80
-        self.maxhp = 75
+        self.maxhp = 70
+        self._defensecoefficient = 0.65
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -8481,7 +8702,8 @@ class CeratosaurusSkull(BodyPart):
         self.upperfinelimit = 45
         self.lowerfinelimit = -75
         self.lowerpoorlimit = -85
-        self.maxhp = 100
+        self.maxhp = 95
+        self._defensecoefficient = 0.59
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -8521,7 +8743,8 @@ class AllosaurusSkull(BodyPart):
         self.upperfinelimit = 60
         self.lowerfinelimit = -80
         self.lowerpoorlimit = -100
-        self.maxhp = 125
+        self.maxhp = 120
+        self._defensecoefficient = 0.54
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -8561,7 +8784,8 @@ class TyrannosaurusSkull(BodyPart):
         self.upperfinelimit = 100
         self.lowerfinelimit = -100
         self.lowerpoorlimit = -120
-        self.maxhp = 150
+        self.maxhp = 145
+        self._defensecoefficient = 0.5
         self.worn = {'helmet': listwithowner(
             [], self), 'face': listwithowner([], self)}
         self._wearwieldname = 'head'
@@ -8597,3 +8821,32 @@ class Aioli(item.Item):
         self._coatingname = 'aioli'
         self.wearoffpropability = 0.5
         self._info = 'Garlicky sauce to make unsuitable foods palatable or weapons extra harmful against vampiric enemies.'
+
+
+
+# Baseline _defencecoefficient by level:
+# 1: 0.8
+# 2: 0.7804878048780489
+# 3: 0.7619047619047619
+# 4: 0.744186046511628
+# 5: 0.7272727272727274
+# 6: 0.7111111111111111
+# 7: 0.6956521739130436
+# 8: 0.6808510638297872
+# 9: 0.6666666666666667
+# 10: 0.653061224489796
+# 11: 0.64
+# 12: 0.627450980392157
+# 13: 0.6153846153846154
+# 14: 0.6037735849056605
+# 15: 0.5925925925925926
+# 16: 0.5818181818181819
+# 17: 0.5714285714285714
+# 18: 0.5614035087719298
+# 19: 0.5517241379310345
+# 20: 0.5423728813559322
+# 21: 0.5333333333333333
+# 22: 0.5245901639344263
+# 23: 0.5161290322580646
+# 24: 0.507936507936508
+# 25: 0.5000000000000001
