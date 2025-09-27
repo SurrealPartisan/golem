@@ -1028,6 +1028,7 @@ class PieceOfArmor(Item):
         self.wearcategory = wearcategory
         self.wearable = True
         self.isarmor = True
+        self.maxhp = materials[material].hp
         self.mindamage = 0 + enchantment
         self.maxdamage = materials[material].armor + enchantment
         density = materials[material].density
