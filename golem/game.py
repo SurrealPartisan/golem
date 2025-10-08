@@ -1090,11 +1090,16 @@ def game():
                     num = '0: '
                 else:
                     num = ''
+                if [item for item in player.inventory if item.wearable].maxhp < np.inf:
+                    itname = [item for item in player.inventory if item.wearable][j].name + ' hp: ' + repr(
+                        [item for item in player.inventory if item.wearable][j].hp()) + '/' + repr(
+                            [item for item in player.inventory if item.wearable][j].maxhp) + ')'
+                else:
+                    itname = [item for item in player.inventory if item.wearable][j].name
                 if j != chosen:
-                    win.write(num + [item for item in player.inventory if item.wearable]
-                              [j].name, x=0, y=mapheight+statuslines+i+1, fgcolor=(255, 255, 255))
+                    win.write(num + itname, x=0, y=mapheight+statuslines+i+1, fgcolor=(255, 255, 255))
                 if j == chosen:
-                    win.write(num + [item for item in player.inventory if item.wearable][j].name,
+                    win.write(num + itname,
                               x=0, y=mapheight+statuslines+i+1, bgcolor=(255, 255, 255), fgcolor=(0, 0, 0))
 
         elif gamestate == 'wearchoosebodypart':
@@ -1138,11 +1143,17 @@ def game():
                     num = '0: '
                 else:
                     num = ''
+                if wornlist[j].maxhp < np.inf:
+                    itname = wornlist[j].name + ' (wt: ' + repr(wornlist[j].weight) + ' g,' + ' hp: ' + repr(
+                        wornlist[j].hp()) + '/' + repr(wornlist[j].maxhp) + ')'
+                else:
+                    itname = wornlist[j].name + \
+                        ' (wt: ' + repr(wornlist[j].weight) + ' g)'
                 if j != chosen:
-                    win.write(num + wornlist[j].name + ' on the ' + wornlist[j].owner.owner.wearwieldname(
+                    win.write(num + itname + ' on the ' + wornlist[j].owner.owner.wearwieldname(
                     ), x=0, y=mapheight+statuslines+i+1, fgcolor=(255, 255, 255))
                 if j == chosen:
-                    win.write(num + wornlist[j].name + ' on the ' + wornlist[j].owner.owner.wearwieldname(
+                    win.write(num + itname + ' on the ' + wornlist[j].owner.owner.wearwieldname(
                     ), x=0, y=mapheight+statuslines+i+1, bgcolor=(255, 255, 255), fgcolor=(0, 0, 0))
 
         elif gamestate == 'chooseattack':
@@ -3007,7 +3018,8 @@ def game():
                                             if stomach.foodprocessing[selected.material][2] != None:
                                                 player.log().append(
                                                     stomach.foodprocessing[selected.material][2])
-                                                player.log().append('The aioli made it better!')
+                                                if len(selected.coated_with) > 0 and isinstance(selected.coated_with[0], bodypart.Aioli):
+                                                    player.log().append('The aioli made it better!')
                                         else:
                                             player.log().append('You got food poisoning and started vomiting!')
                                             infoblast(cave, player.x, player.y, 15, [

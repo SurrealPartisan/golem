@@ -713,7 +713,7 @@ class Creature():
         if len(hearingpartlist) > 0:
             return(min(hearingpartlist))
         else:
-            return 0
+            return np.inf
 
     def sight(self):
         if (self.world.largerocks[self.x, self.y] or self.stance == 'flying') and sum([part.sight() for part in self.bodyparts]) > 0:
@@ -787,7 +787,7 @@ class Creature():
             self.world.items.append(it)
             it.x = self.x
             it.y = self.y
-        for part in self.bodyparts:
+        for part in np.random.permutation(self.bodyparts).tolist():
             if not part.destroyed():
                 part.owner = self.world.items
                 self.world.items.append(part)
@@ -1564,7 +1564,7 @@ class Creature():
                                               target, self], ('see only', 'NAME_0 was imbalanced.'))
                                 if panic:
                                     volume, details = target.scaredphrase()
-                                    if len(details) > 0 and volume > 0 and self.hearing() > 0 and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                                    if len(details) > 0 and volume > self.hearing() and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                         if len(details) == 5:
                                             self.log().append('The ' + target.name + ' got panicked and ' +
                                                               details[2] + ': "' + details[4] + '".')
@@ -1582,7 +1582,7 @@ class Creature():
                                         target.log().append('You got panicked.')
                                 elif scared:
                                     volume, details = target.scaredphrase()
-                                    if len(details) > 0 and volume > 0 and self.hearing() > 0 and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
+                                    if len(details) > 0 and volume > self.hearing() and len([p for p in target.bodyparts if hasattr(p, 'sound') and p.sound > 0 and not p.destroyed() and not p.incapacitated()]):
                                         if len(details) == 5:
                                             self.log().append('The ' + target.name + ' got scared and ' +
                                                               details[2] + ': "' + details[4] + '".')
