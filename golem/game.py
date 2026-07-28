@@ -1090,7 +1090,7 @@ def game():
                     num = '0: '
                 else:
                     num = ''
-                if [item for item in player.inventory if item.wearable].maxhp < np.inf:
+                if [item for item in player.inventory if item.wearable][j].maxhp < np.inf:
                     itname = [item for item in player.inventory if item.wearable][j].name + ' hp: ' + repr(
                         [item for item in player.inventory if item.wearable][j].hp()) + '/' + repr(
                             [item for item in player.inventory if item.wearable][j].maxhp) + ')'
@@ -1445,27 +1445,30 @@ def game():
                         limb.parentalconnection.parent.childconnections.values()).index(limb.parentalconnection)]
                 elif limb == player.torso:
                     partname = 'torso'
-                if (player.stance == 'flying' or cave.largerocks[player.x, player.y]) and target.stance != 'flying' and not cave.largerocks[target.x, target.y]:
-                    highgroundcoefficient = 1.05
-                elif player.stance != 'flying' and not cave.largerocks[player.x, player.y] and (target.stance == 'flying' or cave.largerocks[target.x, target.y]):
-                    highgroundcoefficient = 0.95
+                if target:
+                    if (player.stance == 'flying' or cave.largerocks[player.x, player.y]) and target.stance != 'flying' and not cave.largerocks[target.x, target.y]:
+                        highgroundcoefficient = 1.05
+                    elif player.stance != 'flying' and not cave.largerocks[player.x, player.y] and (target.stance == 'flying' or cave.largerocks[target.x, target.y]):
+                        highgroundcoefficient = 0.95
+                    else:
+                        highgroundcoefficient = 1
+                    distance = np.sqrt(
+                        (targetcoords[0] - player.x)**2 + (targetcoords[1] - player.y)**2)
+                    wornlist = [
+                        it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
+                    notwielded = selectedattack.weapon.owner == player.inventory and not np.any(
+                        [hasattr(it, 'quickdraw') and it.quickdraw for it in wornlist])
+                    throwtime = (1/limb.throwspeed + notwielded) * \
+                        (1 + player.slowed())
+                    if int(throwtime) == throwtime:
+                        throwtime = int(throwtime)
+                    else:
+                        throwtime = round(throwtime, 2)
+                    limbdescription = num + partname + \
+                        ' (' + repr(int(highgroundcoefficient*limb.throwaccuracy **
+                                        distance * 100)) + '%, ' + repr(throwtime) + ' s)'
                 else:
-                    highgroundcoefficient = 1
-                distance = np.sqrt(
-                    (targetcoords[0] - player.x)**2 + (targetcoords[1] - player.y)**2)
-                wornlist = [
-                    it[0] for part in player.bodyparts for it in part.worn.values() if len(it) > 0]
-                notwielded = selectedattack.weapon.owner == player.inventory and not np.any(
-                    [hasattr(it, 'quickdraw') and it.quickdraw for it in wornlist])
-                throwtime = (1/limb.throwspeed + notwielded) * \
-                    (1 + player.slowed())
-                if int(throwtime) == throwtime:
-                    throwtime = int(throwtime)
-                else:
-                    throwtime = round(throwtime, 2)
-                limbdescription = num + partname + \
-                    ' (' + repr(int(highgroundcoefficient*limb.throwaccuracy **
-                                    distance * 100)) + '%, ' + repr(throwtime) + ' s)'
+                    limbdescription = num + partname
                 if j != chosen:
                     win.write(limbdescription, x=0, y=mapheight +
                               statuslines+i+1, fgcolor=(255, 255, 255))
